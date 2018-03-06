@@ -3,15 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <title>cg-dnd examples</title>
+  <link rel="stylesheet" href="index.css">
   <script type="text/javascript" src="cg-dnd.js"></script>
 </head>
 <body>
-<div class="content">
+<div class="content" id="first-example">
   <h1>cg-dnd</h1>
+    <div class="example" id="example-1">
+        <div class="drag-item-container">
+            <div id="drag-item-1">drag item 1</div>
+            <div id="drag-item-2">drag item 2</div>
+        </div>
+        <div class="drop-area-container">
+            <div id="drop-area-1">drop area 1</div>
+            <div id="drop-area-2">drop area 2</div>
+        </div>
+    </div>
 </div>
 
 <script>
-  var dnd = new CgDnd({});
+
+    var settings = {
+        bounds: '#first-example',
+        dragItems: [
+            {
+                node: 'drag-item-1',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: 'drag-item-2',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            }
+        ],
+        dropAreas: [
+            {
+                node: 'drop-area-1',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            },
+            {
+                node: 'drop-area-2',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            }
+        ]
+    };
+
+  var dnd = new CgDnd(settings);
 
   console.log(dnd);
 </script>

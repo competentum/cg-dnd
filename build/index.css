@@ -1,0 +1,21 @@
+.example {
+    display: flex;
+    justify-content: space-between;
+    max-width: 800px;
+}
+
+.drag-item,
+.drop-area {
+    padding: 10px 5px;
+    margin: 15px 5px;
+    user-select: none;
+}
+
+.drag-item {
+    background-color: #2bb4f1;
+    color: #fff;
+}
+
+.drop-area {
+    background-color: #5bf197;
+}
