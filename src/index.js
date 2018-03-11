@@ -5,17 +5,17 @@ import merge from 'merge';
 import utils from 'cg-component-utils';
 
 /* For ES-Lint comment
-const DND_CLASS = 'cg-dnd';
+ const DND_CLASS = 'cg-dnd';
 
-const CLASS = {
-  DND: DND_CLASS,
-  DRAG: `${DND_CLASS}-drag-item`
-};
+ const CLASS = {
+ DND: DND_CLASS,
+ DRAG: `${DND_CLASS}-drag-item`
+ };
 
-const KEY_CODE = {
-  ESC: 27,
-  TAB: 9
-}; */
+ const KEY_CODE = {
+ ESC: 27,
+ TAB: 9
+ }; */
 
 /**
  * Accessible DnD Component
@@ -50,7 +50,11 @@ class CgDnd extends EventEmitter {
             data: null,
             className: ''
           }
-        ]
+        ],
+        onCreate: null,
+        onDragStart: null,
+        onDragMove: null,
+        onDragStop: null
       };
     }
 
@@ -67,11 +71,26 @@ class CgDnd extends EventEmitter {
     if (!this._EVENTS) {
       this._EVENTS = {
         CREATE: 'create',
-        DRAG_START: 'drag_start'
+        DRAG_START: 'drag_start',
+        DRAG_MOVE: 'drag_move',
+        DRAG_STOP: 'drag_stop'
       };
     }
 
     return this._EVENTS;
+  }
+
+  static get EVENTS_HANDLER_RELATIONS() {
+    if (!this._EVENTS_HANDLER_RELATIONS) {
+      this._EVENTS_HANDLER_RELATIONS = {
+        onCreate: this.EVENTS.CREATE,
+        onDragStart: this.EVENTS.DRAG_START,
+        onDragMove: this.EVENTS.DRAG_MOVE,
+        onDragStop: this.EVENTS.DRAG_STOP
+      };
+    }
+
+    return this._EVENTS_HANDLER_RELATIONS;
   }
 
   /**
@@ -85,7 +104,7 @@ class CgDnd extends EventEmitter {
 
     this._setHandlersForEachDragElems();
 
-    this._render();
+    // This._render();
 
     this._addListeners();
   }
@@ -95,63 +114,92 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _addListeners() {
+    this.EVENTS = this.constructor.EVENTS;
+
     this.settings.dragItems.forEach((item) => {
-      item.dragHandler.addEventListener('mousedown', (e) => this.emit(this.constructor.EVENTS.DRAG_START, e, item));
+      item.dragHandler.addEventListener('mousedown', (e) => this._onMouseDown(e, item));
     });
-    this._addCustomListeners();
   }
 
-  _addCustomListeners() {
-    this.on(this.constructor.EVENTS.DRAG_START, (e, item) => {
-      const draggedNode = item.node;
-      const box = item.node.getBoundingClientRect();
-      const shiftX = e.pageX - box.left + draggedNode.offsetLeft;
-      const shiftY = e.pageY - box.top + draggedNode.offsetTop;
+  _onMouseDown(e, item) {
+    const draggedNode = item.node;
+    const box = draggedNode.getBoundingClientRect();
+    const shiftX = e.pageX - box.left + draggedNode.offsetLeft;
+    const shiftY = e.pageY - box.top + draggedNode.offsetTop;
 
-      /* With document correct dnd
-      const clientHeight = this.settings.bounds.documentElement.clientHeight;
-      const clientWidth = this.settings.bounds.documentElement.clientWidth;
-      const boundsLimits = {
-        minHeight: e.pageY - box.top,
-        minWidth: e.pageX - box.left,
-        maxHeight: clientHeight - (box.top + box.height - e.pageY),
-        maxWidth: clientWidth - (box.left + box.width - e.pageX)
-      };
+    // TODO: (early dnd) fix max height, when bounds = document, fix functionality and productivity
 
-      const clientHeight = this.settings.bounds.clientHeight;
-      const clientWidth = this.settings.bounds.clientWidth;
-       */
+    let boundsParams;
 
-      // TODO: (early dnd) fix max height, when bounds = document, fix functionality and productivity
-      const dragContainerLimits = this.settings.bounds === document
-        ? document.documentElement.getBoundingClientRect()
-        : this.settings.bounds.getBoundingClientRect();
-      // Comment dragContainerLimits.height = this.settings.bounds === document
-      // ? this.settings.bounds.clientHeight : dragContainerLimits.height;
+    if (this.settings.bounds === document) {
+      const trueDocumentParams = document.documentElement.getBoundingClientRect();
 
-      const boundsLimits = {
-        minHeight: dragContainerLimits.top + e.pageY - box.top,
-        minWidth: dragContainerLimits.left + e.pageX - box.left,
-        maxHeight: dragContainerLimits.height + dragContainerLimits.top - (box.top + box.height - e.pageY),
-        maxWidth: dragContainerLimits.width + dragContainerLimits.left - (box.left + box.width - e.pageX)
-      };
+      boundsParams = merge({}, trueDocumentParams, {
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight
+      });
+      // Console.log(boundsParams);
+      /*
+       {
+       left: trueDocumentParams.left,
+       top: trueDocumentParams.top,
+       width: document.documentElement.clientWidth,
+       height: document.documentElement.clientHeight
+       };*/
+    } else {
+      boundsParams = this.settings.bounds.getBoundingClientRect();
+    }
 
-      document.onmousemove = (e) => {
-        const xPos = e.pageX >= boundsLimits.maxWidth
-          ? boundsLimits.maxWidth : e.pageX <= boundsLimits.minWidth
-                       ? boundsLimits.minWidth : e.pageX;
+    this.currentDragParams = {
+      draggedItem: item,
+      xShift: shiftX,
+      yShift: shiftY,
+      trueBounds: {
+        x0: boundsParams.left + e.pageX - box.left,
+        y0: boundsParams.top + e.pageY - box.top,
+        x1: boundsParams.width + boundsParams.left - (box.left + box.width - e.pageX),
+        y1: boundsParams.height + boundsParams.top - (box.top + box.height - e.pageY)
+      }
+    };
 
-        const yPos = e.pageY >= boundsLimits.maxHeight
-          ? boundsLimits.maxHeight : e.pageY <= boundsLimits.minHeight
-                       ? boundsLimits.minHeight : e.pageY;
+    const onMouseMoveHandler = this._onMouseMove.bind(this);
+    const onMouseUpHandler = this._onMouseUp;
 
-        draggedNode.style.transform = `translate(${xPos - shiftX}px, ${yPos - shiftY}px)`;
-      };
+    document.addEventListener('mousemove', onMouseMoveHandler);
+    document.addEventListener('mouseup', onMouseUpHandler.bind(this, onMouseMoveHandler, onMouseUpHandler));
 
-      document.onmouseup = () => {
-        document.onmousemove = null;
-      };
-    });
+    if (this.settings.onDragStart) {
+      this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+    }
+  }
+
+  _onMouseMove(e) {
+    const {
+            trueBounds: currentBounds,
+            xShift: shiftX,
+            yShift: shiftY,
+            draggedItem
+          } = this.currentDragParams;
+
+    const xPos = (e.pageX >= currentBounds.x1 ? currentBounds.x1 : e.pageX <= currentBounds.x0 ? currentBounds.x0 : e.pageX) - shiftX;
+    const yPos = (e.pageY >= currentBounds.y1 ? currentBounds.y1 : e.pageY <= currentBounds.y0 ? currentBounds.y0 : e.pageY) - shiftY;
+
+    draggedItem.node.style.transform = `translate(${xPos}px, ${yPos}px)`;
+
+    if (this.settings.onDragMove) {
+      this.emit(this.constructor.EVENTS.DRAG_MOVE, e, draggedItem);
+    }
+  }
+
+  _onMouseUp(onMouseMoveHandler, onMouseUpHandler, e) {
+    const some = onMouseUpHandler;
+
+    document.removeEventListener('mousemove', onMouseMoveHandler);
+    document.removeEventListener('mouseup', some);
+
+    if (this.settings.onDragStart) {
+      this.emit(this.constructor.EVENTS.DRAG_STOP, e, this.currentDragParams.item);
+    }
   }
 
   /**
@@ -170,7 +218,6 @@ class CgDnd extends EventEmitter {
         this.settings[key] = this._checkSetting(key, this.settings[key]);
       }
     }
-
   }
 
   /**
@@ -253,6 +300,17 @@ class CgDnd extends EventEmitter {
           verifiedValue = settingValue;
         } else {
           this._showSettingError(settingName, settingValue, 'Please set string.');
+        }
+        break;
+      case 'onCreate':
+      case 'onDragStart':
+      case 'onDragMove':
+      case 'onDragStop':
+        if (typeof settingValue === 'function') {
+          verifiedValue = settingValue;
+          this.on(this.constructor.EVENTS_HANDLER_RELATIONS[settingName], settingValue);
+        } else if (settingValue !== null) {
+          this._showSettingError(settingName, settingValue, 'Please set function as event handler.');
         }
         break;
       default:
@@ -370,26 +428,26 @@ class CgDnd extends EventEmitter {
    * @private
    */
   /* For ES-Lint comment
-  _render() {
+   _render() {
 
-  } */
+   } */
 
   /**
    * Disable drag
    * @param {boolean} [disabled = true]
    */
-/* For ES-Lint comment
-  disable(disabled = true) {
+  /* For ES-Lint comment
+   disable(disabled = true) {
 
-  }
+   }
 
-  reset() {
+   reset() {
 
-  }
+   }
 
-  destroy() {
+   destroy() {
 
-  } */
+   } */
 }
 
 export default CgDnd;
