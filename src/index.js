@@ -175,11 +175,11 @@ class CgDnd extends EventEmitter {
       }
     };
 
-    const onMouseMoveHandler = this._onMouseMove.bind(this);
-    const onMouseUpHandler = this._onMouseUp;
+    this.onMouseMoveHandler = this._onMouseMove.bind(this);
+    this.onMouseUpHandler = this._onMouseUp.bind(this);
 
-    document.addEventListener('mousemove', onMouseMoveHandler);
-    document.addEventListener('mouseup', onMouseUpHandler.bind(this, onMouseMoveHandler, onMouseUpHandler));
+    document.addEventListener('mousemove', this.onMouseMoveHandler);
+    document.addEventListener('mouseup', this.onMouseUpHandler);
 
     if (this.settings.onDragStart) {
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
@@ -204,11 +204,9 @@ class CgDnd extends EventEmitter {
     }
   }
 
-  _onMouseUp(onMouseMoveHandler, onMouseUpHandler, e) {
-    const some = onMouseUpHandler;
-
-    document.removeEventListener('mousemove', onMouseMoveHandler);
-    document.removeEventListener('mouseup', some);
+  _onMouseUp(e) {
+    document.removeEventListener('mousemove', this.onMouseMoveHandler);
+    document.removeEventListener('mouseup', this.onMouseUpHandler);
 
     this._checkDragItemPosition(this.currentDragParams.draggedItem);
 
