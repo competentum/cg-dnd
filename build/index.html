@@ -13,6 +13,9 @@
         <div class="drag-item-container">
             <div id="drag-item-1">drag item 1</div>
             <div id="drag-item-2">drag item 2</div>
+            <div id="drag-item-3">drag item 3</div>
+            <div id="drag-item-4">drag item 4</div>
+            <div id="drag-item-5">drag item 5</div>
         </div>
         <div class="drop-area-container">
             <div id="drop-area-1">drop area 1</div>
@@ -23,44 +26,61 @@
 
 <script>
 
-  var settings = {
-    bounds: '#first-example',
-    dragItems: [
-      {
-        node: 'drag-item-1',
-        data: null,
-        ariaLabel: '',
-        className: 'drag-item'
-      },
-      {
-        node: 'drag-item-2',
-        data: null,
-        ariaLabel: '',
-        className: 'drag-item'
-      }
-    ],
-    dropAreas: [
-      {
-        node: 'drop-area-1',
-        ariaLabel: '',
-        data: null,
-        className: 'drop-area'
-      },
-      {
-        node: 'drop-area-2',
-        ariaLabel: '',
-        data: null,
-        className: 'drop-area'
-      }
-    ],
-    onDragStart: function(e, item) {
-    },
-    onDragMove: function (e, item) {
-    },
-    onDragStop: function (e, item) {
-        console.log('stop')
-    }
-  };
+    var settings = {
+        bounds: '#first-example',
+        dragItems: [
+            {
+                node: 'drag-item-1',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: 'drag-item-2',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: 'drag-item-3',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: 'drag-item-4',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: 'drag-item-5',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            }
+        ],
+        dropAreas: [
+            {
+                node: 'drop-area-1',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            },
+            {
+                node: 'drop-area-2',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            }
+        ],
+        onDragStart: function (e, item) {
+        },
+        onDragMove: function (e, item) {
+        },
+        onDragStop: function (e, item) {
+        }
+    };
 
   var dnd = new CgDnd(settings);
 

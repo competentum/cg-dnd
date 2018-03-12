@@ -35,12 +35,14 @@ class CgDnd extends EventEmitter {
         handler: '',
         snap: true,
         maxItemsInDropArea: 1,
+        animateDuration: 500,
         dragItems: [
           {
             node: '',
             data: null,
             ariaLabel: '',
-            className: ''
+            className: '',
+            _isInsideDropArea: false
           }
         ],
         dropAreas: [
@@ -48,7 +50,8 @@ class CgDnd extends EventEmitter {
             node: '',
             ariaLabel: '',
             data: null,
-            className: ''
+            className: '',
+            _isEmpty: true
           }
         ],
         onCreate: null,
@@ -115,7 +118,7 @@ class CgDnd extends EventEmitter {
 
     this._applySettings(settings);
 
-    this._setHandlersForEachDragElems();
+    this._setAdditionalPropertiesForDragElems();
 
     // This._render();
 
@@ -236,10 +239,30 @@ class CgDnd extends EventEmitter {
       const yPos = chosenDropArea.nodeCoordinates.y0 - dragItem.defaultCoordinates.y0;
 
       if (this.settings.snap) {
-        this.translateNodeTo(dragItem.node, xPos, yPos, true, { duration: 500 });
+        this.translateNodeTo(dragItem.node, xPos, yPos, true, { duration: this.settings.animateDuration });
       }
+
+      dragItem._isInsideDropArea = true;
+      dragItem.dropArea = chosenDropArea;
+      chosenDropArea._isEmpty = false;
+      dragItem.defaultCoordinates._isEmpty = true;
+
+      this.remainingDragItems.splice(this.remainingDragItems.indexOf(dragItem), 1);
+      this._shiftRemainingDragItems();
     } else {
-      this.translateNodeTo(dragItem.node, 0, 0, true, { duration: 500 });
+      this.translateNodeTo(dragItem.node, 0, 0, true, { duration: this.settings.animateDuration });
+
+      dragItem._isInsideDropArea = false;
+      if (dragItem.dropArea) {
+        // ToDo: add checking on multiple possible drag items
+        dragItem.dropArea = null;
+      }
+
+      const inRemainingIndex = this.remainingDragItems.indexOf(dragItem);
+
+      if (inRemainingIndex === -1) {
+        this.remainingDragItems.push(dragItem);
+      }
     }
   }
 
@@ -281,6 +304,32 @@ class CgDnd extends EventEmitter {
    */
   _isPointInsideRect(checkedPoint, rect) {
     return checkedPoint.x >= rect.x0 && checkedPoint.x <= rect.x1 && checkedPoint.y >= rect.y0 && checkedPoint.y <= rect.y1;
+  }
+
+  _shiftRemainingDragItems() {
+    this.remainingDragItems.forEach((item) => {
+      const prevEmptyDragItem = this._findPrevEmptyDefaultDragItemPosition(item);
+
+      if (prevEmptyDragItem) {
+        const x = prevEmptyDragItem.defaultCoordinates.x0 - item.defaultCoordinates.x0;
+        const y = prevEmptyDragItem.defaultCoordinates.y0 - item.defaultCoordinates.y0;
+
+        item.defaultCoordinates._isEmpty = true;
+        this.translateNodeTo(item.node, x, y, true, { duration: this.settings.animateDuration });
+      }
+    });
+  }
+
+  _findPrevEmptyDefaultDragItemPosition(dragItem) {
+    if (dragItem.prevNeighbor.defaultCoordinates._isEmpty && !dragItem.prevNeighbor.isLastItem) {
+      dragItem.prevNeighbor.defaultCoordinates._isEmpty = false;
+
+      return dragItem.prevNeighbor;
+    } else if (dragItem.prevNeighbor.isLastItem) {
+      return null;
+    }
+
+    return this._findPrevEmptyDefaultDragItemPosition(dragItem.prevNeighbor);
   }
 
   /**
@@ -349,6 +398,8 @@ class CgDnd extends EventEmitter {
         this.settings[key] = this._checkSetting(key, this.settings[key]);
       }
     }
+
+    this.remainingDragItems = [...this.settings.dragItems];
   }
 
   /**
@@ -368,26 +419,37 @@ class CgDnd extends EventEmitter {
       case 'dragItems':
       case 'dropAreas':
         if (Array.isArray(settingValue) && settingValue.length) {
-          const items = [...settingValue];
+          let items = [...settingValue];
 
-          items.forEach((item) => {
+          items = items.map((item) => {
+            let mergedItem;
+
             if (typeof item === 'object') {
+              const templateDnDElement = settingName === 'dragItems'
+                ? this.constructor.DEFAULT_SETTINGS.dragItems[0]
+                : this.constructor.DEFAULT_SETTINGS.dropAreas[0];
+
+              mergedItem = merge({}, templateDnDElement, item);
 
               // We search elements nodes by first, because then we set params to them
-              if (item.hasOwnProperty('node')) {
-                item.node = this._getHTMLNodeElement(item.node, true);
+              if (mergedItem.hasOwnProperty('node')) {
+                mergedItem.node = this._getHTMLNodeElement(mergedItem.node, true);
               } else {
                 throw new Error('Element must have node property');
               }
 
-              for (const key in item) {
-                if (item.hasOwnProperty(key) && key !== 'node') {
-                  item[key] = this._checkSetting(key, item[key], item.node);
+              for (const key in mergedItem) {
+                if (mergedItem.hasOwnProperty(key) && key !== 'node') {
+                  mergedItem[key] = this._checkSetting(key, mergedItem[key], mergedItem.node);
                 }
               }
 
-              item.defaultCoordinates = this._getHTMLNodePosition(item.node);
+              mergedItem.defaultCoordinates = this._getHTMLNodePosition(mergedItem.node);
+            } else {
+              this._showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
+
+            return mergedItem;
           });
 
           verifiedValue = items;
@@ -448,6 +510,13 @@ class CgDnd extends EventEmitter {
           this._showSettingError(settingName, settingValue, 'Please set function as event handler.');
         }
         break;
+      case 'animateDuration':
+        verifiedValue = +settingValue;
+
+        if (!verifiedValue || isNaN(verifiedValue)) {
+          this._showSettingError(settingName, settingValue, 'Please set number for animation duration value');
+        }
+        break;
       default:
         verifiedValue = settingValue;
     }
@@ -479,9 +548,23 @@ class CgDnd extends EventEmitter {
    * Set drag-handlers for each drag item, if Element was got, otherwise set drag-item as drag-handler
    * @private
    */
-  _setHandlersForEachDragElems() {
-    this.settings.dragItems.forEach((item) => {
+  _setAdditionalPropertiesForDragElems() {
+    const dragItemsLength = this.settings.dragItems.length;
+
+    this.settings.dragItems[0].prevNeighbor = this.settings.dragItems[dragItemsLength - 1];
+    this.settings.dragItems[0].isFirstItem = true;
+    this.settings.dragItems[dragItemsLength - 1].nextNeighbor = this.settings.dragItems[0];
+    this.settings.dragItems[dragItemsLength - 1].isLastItem = true;
+
+    this.settings.dragItems.forEach((item, index) => {
       item.dragHandler = this._getHTMLNodeElement(this.settings.handler, false, item.node, true) || item.node;
+
+      if (!item.nextNeighbor) {
+        item.nextNeighbor = this.settings.dragItems[index + 1];
+      }
+      if (!item.prevNeighbor) {
+        item.prevNeighbor = this.settings.dragItems[index - 1];
+      }
     });
   }
 
