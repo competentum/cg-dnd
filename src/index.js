@@ -93,6 +93,19 @@ class CgDnd extends EventEmitter {
     return this._EVENTS_HANDLER_RELATIONS;
   }
 
+  static get DEFAULT_ANIMATION_PARAMS() {
+    if (!this._DEFAULT_ANIMATION_PARAMS) {
+      this._DEFAULT_ANIMATION_PARAMS = {
+        animatedProperty: 'transform',
+        duration: 500,
+        func: 'ease',
+        delay: 0
+      };
+    }
+
+    return this._DEFAULT_ANIMATION_PARAMS;
+  }
+
   /**
    * @param {DndSettings} settings - Dnd's settings, all undefined settings will be taken from {@link CgDnd.DEFAULT_SETTINGS}
    * @constructor
@@ -184,7 +197,7 @@ class CgDnd extends EventEmitter {
     const xPos = (e.pageX >= currentBounds.x1 ? currentBounds.x1 : e.pageX <= currentBounds.x0 ? currentBounds.x0 : e.pageX) - shiftX;
     const yPos = (e.pageY >= currentBounds.y1 ? currentBounds.y1 : e.pageY <= currentBounds.y0 ? currentBounds.y0 : e.pageY) - shiftY;
 
-    draggedItem.node.style.transform = `translate(${xPos}px, ${yPos}px)`;
+    this.translateNodeTo(draggedItem.node, xPos, yPos);
 
     if (this.settings.onDragMove) {
       this.emit(this.constructor.EVENTS.DRAG_MOVE, e, draggedItem);
@@ -197,9 +210,129 @@ class CgDnd extends EventEmitter {
     document.removeEventListener('mousemove', onMouseMoveHandler);
     document.removeEventListener('mouseup', some);
 
+    this._checkDragItemPosition(this.currentDragParams.draggedItem);
+
     if (this.settings.onDragStart) {
       this.emit(this.constructor.EVENTS.DRAG_STOP, e, this.currentDragParams.item);
     }
+  }
+
+  /**
+   * Checks, is drop area was intersects by drag item. If it's true and settings.snap is true,
+   * then align drag item by drop area, else move drag item to default position
+   * @param {object} dragItem
+   * @private
+   */
+  _checkDragItemPosition(dragItem) {
+    let chosenDropArea;
+
+    for (let i = 0; i < this.settings.dropAreas.length; i++) {
+      if (this._checkIntersection(dragItem, this.settings.dropAreas[i])) {
+        chosenDropArea = this.settings.dropAreas[i];
+        break;
+      }
+    }
+
+    if (chosenDropArea) {
+      const xPos = chosenDropArea.nodeCoordinates.x0 - dragItem.defaultCoordinates.x0;
+      const yPos = chosenDropArea.nodeCoordinates.y0 - dragItem.defaultCoordinates.y0;
+
+      if (this.settings.snap) {
+        this.translateNodeTo(dragItem.node, xPos, yPos, true, { duration: 500 });
+      }
+    } else {
+      this.translateNodeTo(dragItem.node, 0, 0, true, { duration: 500 });
+    }
+  }
+
+  /**
+   * Checks, is drop area was intersects by drag item
+   * @param {object} dragItem
+   * @param {object} dropArea
+   * @return {boolean} - return intersection result (true/false)
+   * @private
+   */
+  _checkIntersection(dragItem, dropArea) {
+    dragItem.nodeCoordinates = this._getHTMLNodePosition(dragItem.node);
+    dropArea.nodeCoordinates = this._getHTMLNodePosition(dropArea.node);
+
+    const checkedPoints = [['x0', 'y0'], ['x0', 'y1'], ['x1', 'y1'], ['x1', 'y0']];
+    const POINTS_COUNT = checkedPoints.length;
+    let isIntersect = false;
+
+    for (let i = 0; i < POINTS_COUNT; i++) {
+      isIntersect = this._isPointInsideRect({
+        x: dragItem.nodeCoordinates[checkedPoints[i][0]],
+        y: dragItem.nodeCoordinates[checkedPoints[i][1]]
+      }, dropArea.nodeCoordinates);
+
+      if (isIntersect) {
+        break;
+      }
+    }
+
+    return isIntersect;
+  }
+
+  /**
+   * Checks, is point crosses html-rect
+   * @param {object} checkedPoint - point coordinates
+   * @param {object} rect - rect angles coordinates
+   * @return {boolean} - return intersection result (true/false)
+   * @private
+   */
+  _isPointInsideRect(checkedPoint, rect) {
+    return checkedPoint.x >= rect.x0 && checkedPoint.x <= rect.x1 && checkedPoint.y >= rect.y0 && checkedPoint.y <= rect.y1;
+  }
+
+  /**
+   * Moves html-node element to (x, y) coordinates by transform: translate with/without animation
+   * @param {node} node - html-node.
+   * @param {number} x
+   * @param {number} y
+   * @param {boolean} isAnimate - animate flag
+   * @param {object} animateParams - params for css-transition
+   * @public
+   */
+  translateNodeTo(node, x, y, isAnimate, animateParams) {
+    const props = merge({}, this.constructor.DEFAULT_ANIMATION_PARAMS, animateParams);
+
+    if (isAnimate) {
+      node.style.transition = `${props.animatedProperty} ${props.duration}ms ${props.func} ${props.delay}ms`;
+
+      setTimeout(() => {
+        node.style.transition = '';
+      }, props.duration + props.delay);
+    }
+
+    node.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  /**
+   * Checks and fix HTML Element or Selector string.
+   * @param {string|Element} value - checked string.
+   * @param {boolean} byID - if true - we'll find Element by ID, otherwise we'll find it by class.
+   * @param {Element} container - HTML-container in which we'll try find checked value
+   * @param {boolean} allowEmpty - if true, function'll get possible empty selector string, otherwise error'll show
+   * @return {Element|null} - return HTML Element node or null, if it wasn't found
+   * @private
+   */
+  _getHTMLNodeElement(value, byID, container = document, allowEmpty = false) {
+    let htmlNode = null;
+
+    if (typeof value === 'string' && value.length) {
+      const selector = byID ? this._checkIDSelector(value) : this._fixClassSelector(value);
+
+      htmlNode = container.querySelector(selector);
+    } else if (value instanceof Element) {
+      htmlNode = value;
+    }
+
+    if (!htmlNode && !allowEmpty) {
+      throw new Error(`${value} wasn't found!`);
+    }
+
+    return htmlNode;
   }
 
   /**
@@ -245,6 +378,8 @@ class CgDnd extends EventEmitter {
               // We search elements nodes by first, because then we set params to them
               if (item.hasOwnProperty('node')) {
                 item.node = this._getHTMLNodeElement(item.node, true);
+              } else {
+                throw new Error('Element must have node property');
               }
 
               for (const key in item) {
@@ -252,6 +387,8 @@ class CgDnd extends EventEmitter {
                   item[key] = this._checkSetting(key, item[key], item.node);
                 }
               }
+
+              item.defaultCoordinates = this._getHTMLNodePosition(item.node);
             }
           });
 
@@ -351,30 +488,20 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Checks and fix HTML Element or Selector string.
-   * @param {string|Element} value - checked string.
-   * @param {boolean} byID - if true - we'll find Element by ID, otherwise we'll find it by class.
-   * @param {Element} container - HTML-container in which we'll try find checked value
-   * @param {boolean} allowEmpty - if true, function'll get possible empty selector string, otherwise error'll show
-   * @return {Element|null} - return HTML Element node or null, if it wasn't found
+   * Get node rect angles coordinates.
+   * @param {node} node - html-node.
+   * @return {object} - rect coordinates
    * @private
    */
-  _getHTMLNodeElement(value, byID, container = document, allowEmpty = false) {
-    let htmlNode = null;
+  _getHTMLNodePosition(node) {
+    const domRect = node.getBoundingClientRect();
 
-    if (typeof value === 'string' && value.length) {
-      const selector = byID ? this._checkIDSelector(value) : this._fixClassSelector(value);
-
-      htmlNode = container.querySelector(selector);
-    } else if (value instanceof Element) {
-      htmlNode = value;
-    }
-
-    if (!htmlNode && !allowEmpty) {
-      throw new Error(`${value} wasn't found!`);
-    }
-
-    return htmlNode;
+    return {
+      x0: domRect.left,
+      y0: domRect.top,
+      x1: domRect.left + domRect.width,
+      y1: domRect.top + domRect.height
+    };
   }
 
   /**
