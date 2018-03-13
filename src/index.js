@@ -163,14 +163,21 @@ class CgDnd extends EventEmitter {
        height: document.documentElement.clientHeight
        };*/
     } else {
-      boundsParams = this.settings.bounds.getBoundingClientRect();
+      boundsParams = Array.isArray(this.settings.bounds) ? this.settings.bounds : this.settings.bounds.getBoundingClientRect();
     }
 
     this.currentDragParams = {
       draggedItem: item,
       xShift: shiftX,
       yShift: shiftY,
-      trueBounds: {
+      trueBounds: Array.isArray(this.settings.bounds)
+        ? {
+          x0: boundsParams[0] + e.pageX - box.left,
+          y0: boundsParams[1] + e.pageY - box.top,
+          x1: boundsParams[2] - (box.left + box.width - e.pageX),
+          y1: boundsParams[3] - (box.top + box.height - e.pageY)
+        }
+      : {
         x0: boundsParams.left + e.pageX - box.left,
         y0: boundsParams.top + e.pageY - box.top,
         x1: boundsParams.width + boundsParams.left - (box.left + box.width - e.pageX),
@@ -419,6 +426,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _checkSetting(settingName, settingValue, elemNode) {
+    const BOUNDS_ARRAY_LENGTH = 4;
     let verifiedValue;
     let isNodeAttrribute = false;
     let isNodeClassName = false;
@@ -427,9 +435,7 @@ class CgDnd extends EventEmitter {
       case 'dragItems':
       case 'dropAreas':
         if (Array.isArray(settingValue) && settingValue.length) {
-          let items = [...settingValue];
-
-          items = items.map((item) => {
+          verifiedValue = settingValue.map((item) => {
             let mergedItem;
 
             if (typeof item === 'object') {
@@ -459,8 +465,6 @@ class CgDnd extends EventEmitter {
 
             return mergedItem;
           });
-
-          verifiedValue = items;
         } else {
           this._showSettingError(settingName, settingValue, `Please set Array of ${settingName}.`);
         }
@@ -474,10 +478,19 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'bounds':
-
         // TODO: translate ndoeElement in array of bounds coordinates
+        if (Array.isArray(settingValue)) {
+          const isValidBoundsArray = settingValue.length === BOUNDS_ARRAY_LENGTH
+                                     && settingValue.every((item) => !isNaN(+item) && item >= 0)
+                                     && (settingValue[0] < settingValue[2] && settingValue[1] < settingValue[3]);
 
-        verifiedValue = this._getHTMLNodeElement(settingValue, true, document, true) || document;
+          if (!isValidBoundsArray) {
+            this._showSettingError(settingName, settingValue, 'Please set array of 4 positive numbers as [x0, y0, x1, y1]');
+          }
+          verifiedValue = settingValue;
+        } else {
+          verifiedValue = this._getHTMLNodeElement(settingValue, true, document, true) || document;
+        }
         break;
       case 'helper':
         verifiedValue = settingValue.toLowerCase() === 'clone' ? 'clone' : this.constructor.DEFAULT_SETTINGS.helper;
