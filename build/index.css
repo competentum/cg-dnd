@@ -19,3 +19,7 @@
 .drop-area {
     background-color: #5bf197;
 }
+
+#first-example {
+    border: 1px solid #000;
+}

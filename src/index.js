@@ -36,13 +36,13 @@ class CgDnd extends EventEmitter {
         snap: true,
         maxItemsInDropArea: 1,
         animateDuration: 500,
+        alignRemainingDragItems: false,
         dragItems: [
           {
             node: '',
             data: null,
             ariaLabel: '',
-            className: '',
-            _isInsideDropArea: false
+            className: ''
           }
         ],
         dropAreas: [
@@ -235,34 +235,37 @@ class CgDnd extends EventEmitter {
     }
 
     if (chosenDropArea) {
-      const xPos = chosenDropArea.nodeCoordinates.x0 - dragItem.defaultCoordinates.x0;
-      const yPos = chosenDropArea.nodeCoordinates.y0 - dragItem.defaultCoordinates.y0;
-
       if (this.settings.snap) {
+        const xPos = chosenDropArea.nodeCoordinates.x0 - dragItem.defaultCoordinates.x0;
+        const yPos = chosenDropArea.nodeCoordinates.y0 - dragItem.defaultCoordinates.y0;
+
         this.translateNodeTo(dragItem.node, xPos, yPos, true, { duration: this.settings.animateDuration });
       }
 
-      dragItem._isInsideDropArea = true;
       dragItem.dropArea = chosenDropArea;
       chosenDropArea._isEmpty = false;
-      dragItem.defaultCoordinates._isEmpty = true;
 
-      this.remainingDragItems.splice(this.remainingDragItems.indexOf(dragItem), 1);
-      this._shiftRemainingDragItems();
+      const inRemainingItemsIndex = this.remainingDragItems.indexOf(dragItem);
+
+      if (inRemainingItemsIndex !== -1) {
+        this.remainingDragItems.splice(inRemainingItemsIndex, 1);
+        this._shiftRemainingDragItems();
+        this.resetNeighbors(dragItem);
+      }
     } else {
       this.translateNodeTo(dragItem.node, 0, 0, true, { duration: this.settings.animateDuration });
 
-      dragItem._isInsideDropArea = false;
       if (dragItem.dropArea) {
         // ToDo: add checking on multiple possible drag items
         dragItem.dropArea = null;
       }
 
-      const inRemainingIndex = this.remainingDragItems.indexOf(dragItem);
-
-      if (inRemainingIndex === -1) {
+      if (this.remainingDragItems.indexOf(dragItem) === -1) {
         this.remainingDragItems.push(dragItem);
+        this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
       }
+
+      this._shiftRemainingDragItems();
     }
   }
 
@@ -306,30 +309,31 @@ class CgDnd extends EventEmitter {
     return checkedPoint.x >= rect.x0 && checkedPoint.x <= rect.x1 && checkedPoint.y >= rect.y0 && checkedPoint.y <= rect.y1;
   }
 
-  _shiftRemainingDragItems() {
-    this.remainingDragItems.forEach((item) => {
-      const prevEmptyDragItem = this._findPrevEmptyDefaultDragItemPosition(item);
+  /**
+   * Set new relations of remaining drag items for future keyboard access
+   * @param {object} draggedItem - drag item, which set to drop area
+   */
+  resetNeighbors(draggedItem) {
+    draggedItem.prevNeighbor.nextNeighbor = draggedItem.nextNeighbor;
+    draggedItem.nextNeighbor.prevNeighbor = draggedItem.prevNeighbor;
 
-      if (prevEmptyDragItem) {
-        const x = prevEmptyDragItem.defaultCoordinates.x0 - item.defaultCoordinates.x0;
-        const y = prevEmptyDragItem.defaultCoordinates.y0 - item.defaultCoordinates.y0;
-
-        item.defaultCoordinates._isEmpty = true;
-        this.translateNodeTo(item.node, x, y, true, { duration: this.settings.animateDuration });
-      }
-    });
+    if (draggedItem.isFirstItem) {
+      draggedItem.nextNeighbor.isFirstItem = true;
+    }
   }
 
-  _findPrevEmptyDefaultDragItemPosition(dragItem) {
-    if (dragItem.prevNeighbor.defaultCoordinates._isEmpty && !dragItem.prevNeighbor.isLastItem) {
-      dragItem.prevNeighbor.defaultCoordinates._isEmpty = false;
+  /**
+   * Align remaining free drag items
+   */
+  _shiftRemainingDragItems() {
+    if (this.settings.alignDragItems) {
+      this.remainingDragItems.forEach((item, index) => {
+        const x = this.initDragItemsPlaces[index].x0 - item.defaultCoordinates.x0;
+        const y = this.initDragItemsPlaces[index].y0 - item.defaultCoordinates.y0;
 
-      return dragItem.prevNeighbor;
-    } else if (dragItem.prevNeighbor.isLastItem) {
-      return null;
+        this.translateNodeTo(item.node, x, y, true);
+      });
     }
-
-    return this._findPrevEmptyDefaultDragItemPosition(dragItem.prevNeighbor);
   }
 
   /**
@@ -400,6 +404,10 @@ class CgDnd extends EventEmitter {
     }
 
     this.remainingDragItems = [...this.settings.dragItems];
+    this.initDragItemsPlaces = [];
+    this.settings.dragItems.forEach((item, index) => {
+      this.initDragItemsPlaces[index] = merge({}, {}, item.defaultCoordinates);
+    });
   }
 
   /**
@@ -485,6 +493,7 @@ class CgDnd extends EventEmitter {
         break;
       case 'snap':
       case 'disabled':
+      case 'alignDragItems':
         verifiedValue = this._checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {
@@ -565,6 +574,8 @@ class CgDnd extends EventEmitter {
       if (!item.prevNeighbor) {
         item.prevNeighbor = this.settings.dragItems[index - 1];
       }
+
+      item.index = index;
     });
   }
 
