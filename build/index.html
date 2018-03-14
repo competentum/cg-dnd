@@ -13,7 +13,7 @@
         <div class="drag-item-container">
             <div id="drag-item-1">drag item 1</div>
             <div id="drag-item-2">drag item 2</div>
-            <div id="drag-item-3">drag item 3</div>
+            <div id="drag-item-3" class="with-handler">item<div class="handler">handler</div></div>
             <div id="drag-item-4">drag item 4</div>
             <div id="drag-item-5">drag item 5</div>
         </div>
@@ -30,6 +30,7 @@
         bounds: '#first-example',
         //bounds: [0, 0, 800, 600],
         alignDragItems: true,
+        handler: '.handler',
         dragItems: [
             {
                 node: 'drag-item-1',

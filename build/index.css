@@ -14,6 +14,20 @@
 .drag-item {
     background-color: #2bb4f1;
     color: #fff;
+    text-align: center;
+}
+
+.with-handler {
+    display: flex;
+}
+
+.with-handler .handler {
+    display: flex;
+    align-items: center;
+    background-color: red;
+    position: relative;
+    margin: -10px -5px -10px 5px;
+    cursor: pointer;
 }
 
 .drop-area {
