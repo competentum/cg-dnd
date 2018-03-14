@@ -266,6 +266,17 @@ class CgDnd extends EventEmitter {
     } else {
       // Drag item wasn't dropped on drop area
 
+      this.reset(dragItem);
+    }
+  }
+
+  /**
+   * Reset drag item, moves it to default empty position
+   * @param {object} dragItem
+   * @ublic
+   */
+  reset(dragItem) {
+    if (dragItem) {
       this.translateNodeTo(dragItem.node, 0, 0, true, { duration: this.settings.animateDuration });
 
       if (dragItem.chosenDropArea) {
@@ -283,6 +294,8 @@ class CgDnd extends EventEmitter {
       }
 
       this._shiftRemainingDragItems();
+    } else {
+      // TODO: add reset all drag items if attributes were empty
     }
   }
 
@@ -344,6 +357,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _shiftRemainingDragItems() {
+    // TODO: add changes checking
     if (this.settings.alignDragItems) {
       this.remainingDragItems.forEach((item, index) => {
         const x = this.initDragItemsPlaces[index].x0 - item.defaultCoordinates.x0;
