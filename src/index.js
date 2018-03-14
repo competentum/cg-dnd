@@ -142,10 +142,9 @@ class CgDnd extends EventEmitter {
     const box = draggedNode.getBoundingClientRect();
     const shiftX = e.pageX - box.left + draggedNode.offsetLeft;
     const shiftY = e.pageY - box.top + draggedNode.offsetTop;
+    let boundsParams;
 
     // TODO: (early dnd) fix max height, when bounds = document, fix functionality and productivity
-
-    let boundsParams;
 
     if (this.settings.bounds === document) {
       const trueDocumentParams = document.documentElement.getBoundingClientRect();
@@ -221,7 +220,9 @@ class CgDnd extends EventEmitter {
     this._checkDragItemPosition(this.currentDragParams.draggedItem);
 
     if (this.settings.onDragStart) {
-      this.emit(this.constructor.EVENTS.DRAG_STOP, e, this.currentDragParams.item);
+      const dragItem = this.currentDragParams.draggedItem;
+
+      this.emit(this.constructor.EVENTS.DRAG_STOP, e, dragItem, dragItem.chosenDropArea);
     }
   }
 
@@ -242,6 +243,8 @@ class CgDnd extends EventEmitter {
     }
 
     if (chosenDropArea) {
+      // Drag item was dropped on drop area
+
       if (this.settings.snap) {
         const xPos = chosenDropArea.nodeCoordinates.x0 - dragItem.defaultCoordinates.x0;
         const yPos = chosenDropArea.nodeCoordinates.y0 - dragItem.defaultCoordinates.y0;
@@ -249,27 +252,34 @@ class CgDnd extends EventEmitter {
         this.translateNodeTo(dragItem.node, xPos, yPos, true, { duration: this.settings.animateDuration });
       }
 
-      dragItem.dropArea = chosenDropArea;
+      dragItem.chosenDropArea = chosenDropArea;
       chosenDropArea._isEmpty = false;
 
       const inRemainingItemsIndex = this.remainingDragItems.indexOf(dragItem);
 
       if (inRemainingItemsIndex !== -1) {
+        // If dropped dragItem isn't on dropArea and remaining drag items array doesn't include it, we add it to remaining drag items array
         this.remainingDragItems.splice(inRemainingItemsIndex, 1);
         this._shiftRemainingDragItems();
-        this.resetNeighbors(dragItem);
+        this._resetNeighbors(dragItem);
       }
     } else {
+      // Drag item wasn't dropped on drop area
+
       this.translateNodeTo(dragItem.node, 0, 0, true, { duration: this.settings.animateDuration });
 
-      if (dragItem.dropArea) {
+      if (dragItem.chosenDropArea) {
         // ToDo: add checking on multiple possible drag items
-        dragItem.dropArea = null;
+        dragItem.chosenDropArea = null;
       }
 
       if (this.remainingDragItems.indexOf(dragItem) === -1) {
+        // If dropped dragItem is on dropArea and remaining drag items array includes it, we remove it from remaining drag items array
         this.remainingDragItems.push(dragItem);
-        this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
+
+        if (this.remainingDragItems.length > 1) {
+          this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
+        }
       }
 
       this._shiftRemainingDragItems();
@@ -320,7 +330,7 @@ class CgDnd extends EventEmitter {
    * Set new relations of remaining drag items for future keyboard access
    * @param {object} draggedItem - drag item, which set to drop area
    */
-  resetNeighbors(draggedItem) {
+  _resetNeighbors(draggedItem) {
     draggedItem.prevNeighbor.nextNeighbor = draggedItem.nextNeighbor;
     draggedItem.nextNeighbor.prevNeighbor = draggedItem.prevNeighbor;
 
@@ -331,6 +341,7 @@ class CgDnd extends EventEmitter {
 
   /**
    * Align remaining free drag items
+   * @private
    */
   _shiftRemainingDragItems() {
     if (this.settings.alignDragItems) {
@@ -364,33 +375,6 @@ class CgDnd extends EventEmitter {
     }
 
     node.style.transform = `translate(${x}px, ${y}px)`;
-  }
-
-  /**
-   * Checks and fix HTML Element or Selector string.
-   * @param {string|Element} value - checked string.
-   * @param {boolean} byID - if true - we'll find Element by ID, otherwise we'll find it by class.
-   * @param {Element} container - HTML-container in which we'll try find checked value
-   * @param {boolean} allowEmpty - if true, function'll get possible empty selector string, otherwise error'll show
-   * @return {Element|null} - return HTML Element node or null, if it wasn't found
-   * @private
-   */
-  _getHTMLNodeElement(value, byID, container = document, allowEmpty = false) {
-    let htmlNode = null;
-
-    if (typeof value === 'string' && value.length) {
-      const selector = byID ? this._checkIDSelector(value) : this._fixClassSelector(value);
-
-      htmlNode = container.querySelector(selector);
-    } else if (value instanceof Element) {
-      htmlNode = value;
-    }
-
-    if (!htmlNode && !allowEmpty) {
-      throw new Error(`${value} wasn't found!`);
-    }
-
-    return htmlNode;
   }
 
   /**
@@ -428,7 +412,7 @@ class CgDnd extends EventEmitter {
   _checkSetting(settingName, settingValue, elemNode) {
     const BOUNDS_ARRAY_LENGTH = 4;
     let verifiedValue;
-    let isNodeAttrribute = false;
+    let nodeAttrribute = null;
     let isNodeClassName = false;
 
     switch (settingName) {
@@ -478,7 +462,6 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'bounds':
-        // TODO: translate ndoeElement in array of bounds coordinates
         if (Array.isArray(settingValue)) {
           const isValidBoundsArray = settingValue.length === BOUNDS_ARRAY_LENGTH
                                      && settingValue.every((item) => !isNaN(+item) && item >= 0)
@@ -514,9 +497,12 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'ariaLabel':
-        isNodeAttrribute = true;
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue;
+          nodeAttrribute = {
+            name: 'aria-label',
+            value: verifiedValue
+          };
         } else {
           this._showSettingError(settingName, settingValue, 'Please set string.');
         }
@@ -543,11 +529,11 @@ class CgDnd extends EventEmitter {
         verifiedValue = settingValue;
     }
 
-    if (isNodeClassName && verifiedValue.length) {
+    if (isNodeClassName && verifiedValue.length && elemNode instanceof Element) {
       utils.addClass(elemNode, verifiedValue);
     }
-    if (isNodeAttrribute && verifiedValue.length) {
-      elemNode.setAttribute('aria-label', verifiedValue);
+    if (nodeAttrribute && nodeAttrribute.name && nodeAttrribute.value && elemNode instanceof Element) {
+      elemNode.setAttribute(nodeAttrribute.name, nodeAttrribute.value);
     }
 
     return verifiedValue;
@@ -564,6 +550,33 @@ class CgDnd extends EventEmitter {
     const errorValue = typeof settingValue === 'string' ? settingValue : typeof settingValue;
 
     throw new Error(`${errorValue} isn't valid value for ${settingName}! ${validMessage}`);
+  }
+
+  /**
+   * Checks and fix HTML Element or Selector string.
+   * @param {string|Element} value - checked string.
+   * @param {boolean} byID - if true - we'll find Element by ID, otherwise we'll find it by class.
+   * @param {Element} container - HTML-container in which we'll try find checked value
+   * @param {boolean} allowEmpty - if true, function'll get possible empty selector string, otherwise error'll show
+   * @return {Element|null} - return HTML Element node or null, if it wasn't found
+   * @private
+   */
+  _getHTMLNodeElement(value, byID, container = document, allowEmpty = false) {
+    let htmlNode = null;
+
+    if (typeof value === 'string' && value.length) {
+      const selector = byID ? this._checkIDSelector(value) : this._fixClassSelector(value);
+
+      htmlNode = container.querySelector(selector);
+    } else if (value instanceof Element) {
+      htmlNode = value;
+    }
+
+    if (!htmlNode && !allowEmpty) {
+      throw new Error(`${value} wasn't found!`);
+    }
+
+    return htmlNode;
   }
 
   /**

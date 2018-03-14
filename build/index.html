@@ -27,8 +27,8 @@
 <script>
 
     var settings = {
-        //bounds: '#first-example',
-        bounds: [0, 0, 800, 600],
+        bounds: '#first-example',
+        //bounds: [0, 0, 800, 600],
         alignDragItems: true,
         dragItems: [
             {
@@ -80,7 +80,11 @@
         },
         onDragMove: function (e, item) {
         },
-        onDragStop: function (e, item) {
+        onDragStop: function (e, dragItem, dropArea) {
+            if (dropArea) {
+                console.log(dragItem);
+                console.log(dropArea);
+            }
         }
     };
 
