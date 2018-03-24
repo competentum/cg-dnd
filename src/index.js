@@ -2,7 +2,10 @@ import './common.less';
 
 import EventEmitter from 'events';
 import merge from 'merge';
-import utils from 'cg-component-utils';
+// Import cgUtils from 'cg-component-utils';
+import localUtils from 'utils';
+import DragItem from 'DragItem';
+import DropArea from 'DropArea';
 
 /* For ES-Lint comment
  const DND_CLASS = 'cg-dnd';
@@ -35,16 +38,7 @@ class CgDnd extends EventEmitter {
         handler: '',
         snap: true,
         maxItemsInDropArea: 1,
-        animateDuration: 500,
         alignRemainingDragItems: false,
-        dragItems: [
-          {
-            node: '',
-            data: null,
-            ariaLabel: '',
-            className: ''
-          }
-        ],
         dropAreas: [
           {
             node: '',
@@ -54,10 +48,16 @@ class CgDnd extends EventEmitter {
             _isEmpty: true
           }
         ],
-        onCreate: null,
-        onDragStart: null,
-        onDragMove: null,
-        onDragStop: null
+        animationParams: {
+          animatedProperty: 'transform',
+          duration: 500,
+          timingFunction: 'ease',
+          delay: 0
+        },
+        onCreate: () => {},
+        onDragStart: () => {},
+        onDragMove: () => {},
+        onDragStop: () => {}
       };
     }
 
@@ -96,19 +96,6 @@ class CgDnd extends EventEmitter {
     return this._EVENTS_HANDLER_RELATIONS;
   }
 
-  static get DEFAULT_ANIMATION_PARAMS() {
-    if (!this._DEFAULT_ANIMATION_PARAMS) {
-      this._DEFAULT_ANIMATION_PARAMS = {
-        animatedProperty: 'transform',
-        duration: 500,
-        func: 'ease',
-        delay: 0
-      };
-    }
-
-    return this._DEFAULT_ANIMATION_PARAMS;
-  }
-
   /**
    * @param {DndSettings} settings - Dnd's settings, all undefined settings will be taken from {@link CgDnd.DEFAULT_SETTINGS}
    * @constructor
@@ -130,100 +117,95 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _addListeners() {
-    this.EVENTS = this.constructor.EVENTS;
-
     this.settings.dragItems.forEach((item) => {
-      item.dragHandler.addEventListener('mousedown', (e) => this._onMouseDown(e, item));
+      item.handler.addEventListener('mousedown', (e) => this._onMouseDown(e, item));
+      item.handler.addEventListener('touchstart', (e) => this._onMouseDown(e, item), { passive: false });
     });
+
+    this.on(DragItem.EVENTS.DRAG_ITEM_RESET, this._onDragItemReset);
   }
 
   _onMouseDown(e, item) {
+    e.preventDefault();
+
     const draggedNode = item.node;
     const box = draggedNode.getBoundingClientRect();
-    const shiftX = e.pageX - box.left + draggedNode.offsetLeft;
-    const shiftY = e.pageY - box.top + draggedNode.offsetTop;
     let boundsParams;
+
+    item.shiftX = e.pageX - box.left + draggedNode.offsetLeft;
+    item.shiftY = e.pageY - box.top + draggedNode.offsetTop;
 
     // TODO: (early dnd) fix max height, when bounds = document, fix functionality and productivity
 
     if (this.settings.bounds === document) {
       const trueDocumentParams = document.documentElement.getBoundingClientRect();
 
-      boundsParams = merge({}, trueDocumentParams, {
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight
+      boundsParams = merge({}, localUtils.translateDOMRectToObject(trueDocumentParams), {
+        bottom: document.documentElement.clientHeight
       });
-      // Console.log(boundsParams);
-      /*
-       {
-       left: trueDocumentParams.left,
-       top: trueDocumentParams.top,
-       width: document.documentElement.clientWidth,
-       height: document.documentElement.clientHeight
-       };*/
     } else {
-      boundsParams = Array.isArray(this.settings.bounds) ? this.settings.bounds : this.settings.bounds.getBoundingClientRect();
+      boundsParams = this.settings.bounds instanceof Element ? this.settings.bounds.getBoundingClientRect() : this.settings.bounds;
     }
 
     this.currentDragParams = {
       draggedItem: item,
-      xShift: shiftX,
-      yShift: shiftY,
-      trueBounds: Array.isArray(this.settings.bounds)
-        ? {
-          x0: boundsParams[0] + e.pageX - box.left,
-          y0: boundsParams[1] + e.pageY - box.top,
-          x1: boundsParams[2] - (box.left + box.width - e.pageX),
-          y1: boundsParams[3] - (box.top + box.height - e.pageY)
-        }
-      : {
-        x0: boundsParams.left + e.pageX - box.left,
-        y0: boundsParams.top + e.pageY - box.top,
-        x1: boundsParams.width + boundsParams.left - (box.left + box.width - e.pageX),
-        y1: boundsParams.height + boundsParams.top - (box.top + box.height - e.pageY)
-      }
+      trueBounds: localUtils.calculateCurrentBounds(box, boundsParams, e.pageX, e.pageY)
     };
 
     this.onMouseMoveHandler = this._onMouseMove.bind(this);
     this.onMouseUpHandler = this._onMouseUp.bind(this);
 
     document.addEventListener('mousemove', this.onMouseMoveHandler);
+    document.addEventListener('touchmove', this.onMouseMoveHandler, { passive: false });
     document.addEventListener('mouseup', this.onMouseUpHandler);
+    document.addEventListener('touchend', this.onMouseUpHandler, { passive: false });
 
-    if (this.settings.onDragStart) {
-      this.emit(this.constructor.EVENTS.DRAG_START, e, item);
-    }
+    this.emit(this.constructor.EVENTS.DRAG_START, e, item);
   }
 
   _onMouseMove(e) {
-    const {
-            trueBounds: currentBounds,
-            xShift: shiftX,
-            yShift: shiftY,
-            draggedItem
-          } = this.currentDragParams;
+    e.preventDefault();
 
-    const xPos = (e.pageX >= currentBounds.x1 ? currentBounds.x1 : e.pageX <= currentBounds.x0 ? currentBounds.x0 : e.pageX) - shiftX;
-    const yPos = (e.pageY >= currentBounds.y1 ? currentBounds.y1 : e.pageY <= currentBounds.y0 ? currentBounds.y0 : e.pageY) - shiftY;
+    const x = localUtils.applyLimit(e.pageX, this.currentDragParams.trueBounds.left, this.currentDragParams.trueBounds.right);
+    const y = localUtils.applyLimit(e.pageY, this.currentDragParams.trueBounds.top, this.currentDragParams.trueBounds.bottom);
 
-    this.translateNodeTo(draggedItem.node, xPos, yPos);
+    this.currentDragParams.draggedItem.translateTo(x - this.currentDragParams.draggedItem.shiftX,
+                                                   y - this.currentDragParams.draggedItem.shiftY);
 
-    if (this.settings.onDragMove) {
-      this.emit(this.constructor.EVENTS.DRAG_MOVE, e, draggedItem);
-    }
+    this.emit(this.constructor.EVENTS.DRAG_MOVE, e, this.currentDragParams.draggedItem);
   }
 
   _onMouseUp(e) {
+    e.preventDefault();
+
     document.removeEventListener('mousemove', this.onMouseMoveHandler);
+    document.removeEventListener('touchmove', this.onMouseMoveHandler, { passive: false });
     document.removeEventListener('mouseup', this.onMouseUpHandler);
+    document.removeEventListener('touchend', this.onMouseUpHandler, { passive: false });
 
     this._checkDragItemPosition(this.currentDragParams.draggedItem);
 
-    if (this.settings.onDragStart) {
-      const dragItem = this.currentDragParams.draggedItem;
+    const dragItem = this.currentDragParams.draggedItem;
 
-      this.emit(this.constructor.EVENTS.DRAG_STOP, e, dragItem, dragItem.chosenDropArea);
+    this.emit(this.constructor.EVENTS.DRAG_STOP, e, dragItem, dragItem.chosenDropArea);
+  }
+
+  _onDragItemReset(dragItem) {
+    if (dragItem.chosenDropArea) {
+      // ToDo: add checking on multiple possible drag items
+      dragItem.chosenDropArea = null;
     }
+
+    if (this.remainingDragItems.indexOf(dragItem) === -1) {
+      // If dropped dragItem is on dropArea and remaining drag items array includes it, we remove it from remaining drag items array
+      this.remainingDragItems.push(dragItem);
+
+      if (this.remainingDragItems.length > 1) {
+        this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
+      }
+    }
+
+    this._shiftRemainingDragItems();
   }
 
   /**
@@ -246,10 +228,10 @@ class CgDnd extends EventEmitter {
       // Drag item was dropped on drop area
 
       if (this.settings.snap) {
-        const xPos = chosenDropArea.nodeCoordinates.x0 - dragItem.defaultCoordinates.x0;
-        const yPos = chosenDropArea.nodeCoordinates.y0 - dragItem.defaultCoordinates.y0;
+        const x = chosenDropArea.coordinates.default.left - dragItem.coordinates.default.left;
+        const y = chosenDropArea.coordinates.default.top - dragItem.coordinates.default.top;
 
-        this.translateNodeTo(dragItem.node, xPos, yPos, true, { duration: this.settings.animateDuration });
+        dragItem.translateTo(x, y, true);
       }
 
       dragItem.chosenDropArea = chosenDropArea;
@@ -261,41 +243,12 @@ class CgDnd extends EventEmitter {
         // If dropped dragItem isn't on dropArea and remaining drag items array doesn't include it, we add it to remaining drag items array
         this.remainingDragItems.splice(inRemainingItemsIndex, 1);
         this._shiftRemainingDragItems();
-        this._resetNeighbors(dragItem);
+        this._reSetSiblings(dragItem);
       }
     } else {
       // Drag item wasn't dropped on drop area
 
-      this.reset(dragItem);
-    }
-  }
-
-  /**
-   * Reset drag item, moves it to default empty position
-   * @param {object} dragItem
-   * @ublic
-   */
-  reset(dragItem) {
-    if (dragItem) {
-      this.translateNodeTo(dragItem.node, 0, 0, true, { duration: this.settings.animateDuration });
-
-      if (dragItem.chosenDropArea) {
-        // ToDo: add checking on multiple possible drag items
-        dragItem.chosenDropArea = null;
-      }
-
-      if (this.remainingDragItems.indexOf(dragItem) === -1) {
-        // If dropped dragItem is on dropArea and remaining drag items array includes it, we remove it from remaining drag items array
-        this.remainingDragItems.push(dragItem);
-
-        if (this.remainingDragItems.length > 1) {
-          this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
-        }
-      }
-
-      this._shiftRemainingDragItems();
-    } else {
-      // TODO: add reset all drag items if attributes were empty
+      dragItem.reset();
     }
   }
 
@@ -307,48 +260,22 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _checkIntersection(dragItem, dropArea) {
-    dragItem.nodeCoordinates = this._getHTMLNodePosition(dragItem.node);
-    dropArea.nodeCoordinates = this._getHTMLNodePosition(dropArea.node);
+    dragItem.updateCurrentCoordinates();
+    dropArea.updateDefaultCoordinates();
 
-    const checkedPoints = [['x0', 'y0'], ['x0', 'y1'], ['x1', 'y1'], ['x1', 'y0']];
-    const POINTS_COUNT = checkedPoints.length;
-    let isIntersect = false;
-
-    for (let i = 0; i < POINTS_COUNT; i++) {
-      isIntersect = this._isPointInsideRect({
-        x: dragItem.nodeCoordinates[checkedPoints[i][0]],
-        y: dragItem.nodeCoordinates[checkedPoints[i][1]]
-      }, dropArea.nodeCoordinates);
-
-      if (isIntersect) {
-        break;
-      }
-    }
-
-    return isIntersect;
-  }
-
-  /**
-   * Checks, is point crosses html-rect
-   * @param {object} checkedPoint - point coordinates
-   * @param {object} rect - rect angles coordinates
-   * @return {boolean} - return intersection result (true/false)
-   * @private
-   */
-  _isPointInsideRect(checkedPoint, rect) {
-    return checkedPoint.x >= rect.x0 && checkedPoint.x <= rect.x1 && checkedPoint.y >= rect.y0 && checkedPoint.y <= rect.y1;
+    return localUtils.isIntersectRect(dragItem.coordinates.current, dropArea.coordinates.default);
   }
 
   /**
    * Set new relations of remaining drag items for future keyboard access
    * @param {object} draggedItem - drag item, which set to drop area
    */
-  _resetNeighbors(draggedItem) {
-    draggedItem.prevNeighbor.nextNeighbor = draggedItem.nextNeighbor;
-    draggedItem.nextNeighbor.prevNeighbor = draggedItem.prevNeighbor;
+  _reSetSiblings(draggedItem) {
+    draggedItem.siblings.prev.siblings.next = draggedItem.siblings.next;
+    draggedItem.siblings.next.siblings.prev = draggedItem.siblings.prev;
 
     if (draggedItem.isFirstItem) {
-      draggedItem.nextNeighbor.isFirstItem = true;
+      draggedItem.siblings.next.isFirstItem = true;
     }
   }
 
@@ -360,35 +287,14 @@ class CgDnd extends EventEmitter {
     // TODO: add changes checking
     if (this.settings.alignDragItems) {
       this.remainingDragItems.forEach((item, index) => {
-        const x = this.initDragItemsPlaces[index].x0 - item.defaultCoordinates.x0;
-        const y = this.initDragItemsPlaces[index].y0 - item.defaultCoordinates.y0;
+        const x = this.initDragItemsPlaces[index].left - item.coordinates.default.left;
+        const y = this.initDragItemsPlaces[index].top - item.coordinates.default.top;
 
-        this.translateNodeTo(item.node, x, y, true);
+        item.translateTo(x, y, true);
+        item.updateCurrentCoordinates();
+        item.updateCurrentStartCoordinates();
       });
     }
-  }
-
-  /**
-   * Moves html-node element to (x, y) coordinates by transform: translate with/without animation
-   * @param {node} node - html-node.
-   * @param {number} x
-   * @param {number} y
-   * @param {boolean} isAnimate - animate flag
-   * @param {object} animateParams - params for css-transition
-   * @public
-   */
-  translateNodeTo(node, x, y, isAnimate, animateParams) {
-    const props = merge({}, this.constructor.DEFAULT_ANIMATION_PARAMS, animateParams);
-
-    if (isAnimate) {
-      node.style.transition = `${props.animatedProperty} ${props.duration}ms ${props.func} ${props.delay}ms`;
-
-      setTimeout(() => {
-        node.style.transition = '';
-      }, props.duration + props.delay);
-    }
-
-    node.style.transform = `translate(${x}px, ${y}px)`;
   }
 
   /**
@@ -400,7 +306,8 @@ class CgDnd extends EventEmitter {
     /**
      * @type DndSettings
      */
-    this.settings = merge({}, this.constructor.DEFAULT_SETTINGS, settings);
+    this.settings = merge.recursive({}, this.constructor.DEFAULT_SETTINGS, settings);
+    this.dragSettings = settings.dragItems;
 
     for (const key in this.settings) {
       if (this.settings.hasOwnProperty(key)) {
@@ -408,10 +315,12 @@ class CgDnd extends EventEmitter {
       }
     }
 
+    DragItem.mainDnDEmitter = this;
+
     this.remainingDragItems = [...this.settings.dragItems];
     this.initDragItemsPlaces = [];
     this.settings.dragItems.forEach((item, index) => {
-      this.initDragItemsPlaces[index] = merge({}, {}, item.defaultCoordinates);
+      this.initDragItemsPlaces[index] = merge({}, {}, localUtils.translateDOMRectToObject(item.coordinates.default));
     });
   }
 
@@ -423,56 +332,27 @@ class CgDnd extends EventEmitter {
    * @return {string|number|object|boolean} - return verified value
    * @private
    */
-  _checkSetting(settingName, settingValue, elemNode) {
+  _checkSetting(settingName, settingValue) {
     const BOUNDS_ARRAY_LENGTH = 4;
     let verifiedValue;
-    let nodeAttrribute = null;
-    let isNodeClassName = false;
 
     switch (settingName) {
       case 'dragItems':
       case 'dropAreas':
         if (Array.isArray(settingValue) && settingValue.length) {
-          verifiedValue = settingValue.map((item) => {
-            let mergedItem;
+          verifiedValue = settingValue.map((settings) => {
+            let dndElement;
 
-            if (typeof item === 'object') {
-              const templateDnDElement = settingName === 'dragItems'
-                ? this.constructor.DEFAULT_SETTINGS.dragItems[0]
-                : this.constructor.DEFAULT_SETTINGS.dropAreas[0];
-
-              mergedItem = merge({}, templateDnDElement, item);
-
-              // We search elements nodes by first, because then we set params to them
-              if (mergedItem.hasOwnProperty('node')) {
-                mergedItem.node = this._getHTMLNodeElement(mergedItem.node, true);
-              } else {
-                throw new Error('Element must have node property');
-              }
-
-              for (const key in mergedItem) {
-                if (mergedItem.hasOwnProperty(key) && key !== 'node') {
-                  mergedItem[key] = this._checkSetting(key, mergedItem[key], mergedItem.node);
-                }
-              }
-
-              mergedItem.defaultCoordinates = this._getHTMLNodePosition(mergedItem.node);
+            if (typeof settings === 'object') {
+              dndElement = settingName === 'dragItems' ? new DragItem(settings, this) : new DropArea(settings);
             } else {
-              this._showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
+              localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
 
-            return mergedItem;
+            return dndElement;
           });
         } else {
-          this._showSettingError(settingName, settingValue, `Please set Array of ${settingName}.`);
-        }
-        break;
-      case 'className':
-        isNodeClassName = true;
-        if (typeof settingValue === 'string') {
-          verifiedValue = settingValue.replace(/^\./, '');
-        } else {
-          this._showSettingError(settingName, settingValue, 'Please set string of class name.');
+          localUtils.showSettingError(settingName, settingValue, `Please set Array of ${settingName}.`);
         }
         break;
       case 'bounds':
@@ -482,11 +362,16 @@ class CgDnd extends EventEmitter {
                                      && (settingValue[0] < settingValue[2] && settingValue[1] < settingValue[3]);
 
           if (!isValidBoundsArray) {
-            this._showSettingError(settingName, settingValue, 'Please set array of 4 positive numbers as [x0, y0, x1, y1]');
+            localUtils.showSettingError(settingName, settingValue, 'Please set array of 4 positive numbers as [x0, y0, x1, y1]');
           }
-          verifiedValue = settingValue;
+          verifiedValue = {
+            left: settingValue[0],
+            top: settingValue[1],
+            right: settingValue[2],
+            bottom: settingValue[3]
+          };
         } else {
-          verifiedValue = this._getHTMLNodeElement(settingValue, true, document, true) || document;
+          verifiedValue = localUtils.getElement(settingValue) || document;
         }
         break;
       case 'helper':
@@ -495,30 +380,19 @@ class CgDnd extends EventEmitter {
       case 'handler':
         if (typeof settingValue === 'string') {
           if (settingValue.length) {
-            verifiedValue = this._fixClassSelector(settingValue);
+            verifiedValue = localUtils.checkClassSelector(settingValue);
           }
         } else {
-          this._showSettingError(settingName, settingValue, 'Please set class selector string.');
+          localUtils.showSettingError(settingName, settingValue, 'Please set class selector string.');
         }
         break;
       case 'snap':
       case 'disabled':
       case 'alignDragItems':
-        verifiedValue = this._checkOnBoolean(settingValue);
+        verifiedValue = localUtils.checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {
-          this._showSettingError(settingName, settingValue, 'Please set true or false.');
-        }
-        break;
-      case 'ariaLabel':
-        if (typeof settingValue === 'string') {
-          verifiedValue = settingValue;
-          nodeAttrribute = {
-            name: 'aria-label',
-            value: verifiedValue
-          };
-        } else {
-          this._showSettingError(settingName, settingValue, 'Please set string.');
+          localUtils.showSettingError(settingName, settingValue, 'Please set true or false.');
         }
         break;
       case 'onCreate':
@@ -529,68 +403,44 @@ class CgDnd extends EventEmitter {
           verifiedValue = settingValue;
           this.on(this.constructor.EVENTS_HANDLER_RELATIONS[settingName], settingValue);
         } else if (settingValue !== null) {
-          this._showSettingError(settingName, settingValue, 'Please set function as event handler.');
+          localUtils.showSettingError(settingName, settingValue, 'Please set function as event handler.');
         }
         break;
-      case 'animateDuration':
+      case 'animationParams':
+        if (typeof settingValue === 'object') {
+          for (const key in settingValue) {
+            if (settingValue.hasOwnProperty(key)) {
+              settingValue[key] = this._checkSetting(key, settingValue[key]);
+            }
+          }
+
+          verifiedValue = settingValue;
+          DragItem.animationParams = verifiedValue;
+        } else {
+          localUtils.showSettingError(settingName, settingValue, 'Please set object of css animataion settings.');
+        }
+        break;
+      case 'delay':
+      case 'duration':
         verifiedValue = +settingValue;
 
-        if (!verifiedValue || isNaN(verifiedValue)) {
-          this._showSettingError(settingName, settingValue, 'Please set number for animation duration value');
+        if (!verifiedValue && verifiedValue !== 0 || isNaN(verifiedValue)) {
+          localUtils.showSettingError(settingName, settingValue, `Please set number for animation ${settingName} value in ms`);
+        }
+        break;
+      case 'animatedProperty':
+      case 'timingFunction':
+        if (typeof settingValue === 'string' && settingValue.length) {
+          verifiedValue = settingValue;
+        } else {
+          localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
         }
         break;
       default:
         verifiedValue = settingValue;
     }
 
-    if (isNodeClassName && verifiedValue.length && elemNode instanceof Element) {
-      utils.addClass(elemNode, verifiedValue);
-    }
-    if (nodeAttrribute && nodeAttrribute.name && nodeAttrribute.value && elemNode instanceof Element) {
-      elemNode.setAttribute(nodeAttrribute.name, nodeAttrribute.value);
-    }
-
     return verifiedValue;
-  }
-
-  /**
-   * Shows error in console.
-   * @param {string} settingName - name of setting property.
-   * @param {string|number|object|boolean} settingValue - wrong value
-   * @param {string} validMessage - message, which contains correct value type
-   * @private
-   */
-  _showSettingError(settingName, settingValue, validMessage) {
-    const errorValue = typeof settingValue === 'string' ? settingValue : typeof settingValue;
-
-    throw new Error(`${errorValue} isn't valid value for ${settingName}! ${validMessage}`);
-  }
-
-  /**
-   * Checks and fix HTML Element or Selector string.
-   * @param {string|Element} value - checked string.
-   * @param {boolean} byID - if true - we'll find Element by ID, otherwise we'll find it by class.
-   * @param {Element} container - HTML-container in which we'll try find checked value
-   * @param {boolean} allowEmpty - if true, function'll get possible empty selector string, otherwise error'll show
-   * @return {Element|null} - return HTML Element node or null, if it wasn't found
-   * @private
-   */
-  _getHTMLNodeElement(value, byID, container = document, allowEmpty = false) {
-    let htmlNode = null;
-
-    if (typeof value === 'string' && value.length) {
-      const selector = byID ? this._checkIDSelector(value) : this._fixClassSelector(value);
-
-      htmlNode = container.querySelector(selector);
-    } else if (value instanceof Element) {
-      htmlNode = value;
-    }
-
-    if (!htmlNode && !allowEmpty) {
-      throw new Error(`${value} wasn't found!`);
-    }
-
-    return htmlNode;
   }
 
   /**
@@ -600,86 +450,25 @@ class CgDnd extends EventEmitter {
   _setAdditionalPropertiesForDragElems() {
     const dragItemsLength = this.settings.dragItems.length;
 
-    this.settings.dragItems[0].prevNeighbor = this.settings.dragItems[dragItemsLength - 1];
+    this.settings.dragItems[0].siblings.prev = this.settings.dragItems[dragItemsLength - 1];
     this.settings.dragItems[0].isFirstItem = true;
-    this.settings.dragItems[dragItemsLength - 1].nextNeighbor = this.settings.dragItems[0];
+    this.settings.dragItems[dragItemsLength - 1].siblings.next = this.settings.dragItems[0];
     this.settings.dragItems[dragItemsLength - 1].isLastItem = true;
 
     this.settings.dragItems.forEach((item, index) => {
-      item.dragHandler = this._getHTMLNodeElement(this.settings.handler, false, item.node, true) || item.node;
-
-      if (!item.nextNeighbor) {
-        item.nextNeighbor = this.settings.dragItems[index + 1];
+      if (!item.handler) {
+        item.handler = localUtils.getElement(this.settings.handler, item.node) || item.node;
       }
-      if (!item.prevNeighbor) {
-        item.prevNeighbor = this.settings.dragItems[index - 1];
+
+      if (!item.siblings.next) {
+        item.siblings.next = this.settings.dragItems[index + 1];
+      }
+      if (!item.siblings.prev) {
+        item.siblings.prev = this.settings.dragItems[index - 1];
       }
 
       item.index = index;
     });
-  }
-
-  /**
-   * Get node rect angles coordinates.
-   * @param {node} node - html-node.
-   * @return {object} - rect coordinates
-   * @private
-   */
-  _getHTMLNodePosition(node) {
-    const domRect = node.getBoundingClientRect();
-
-    return {
-      x0: domRect.left,
-      y0: domRect.top,
-      x1: domRect.left + domRect.width,
-      y1: domRect.top + domRect.height
-    };
-  }
-
-  /**
-   * Checks and fix ID selector string.
-   * @param {string} selectorString - checked string.
-   * @return {string} - return valid ID selector string
-   * @private
-   */
-  _checkIDSelector(selectorString) {
-    if (selectorString.search(/^\./) !== -1) {
-      throw new Error('ID selector was expected, but Class selector was found');
-    }
-
-    return selectorString.search(/^#/) === -1 ? `#${selectorString}` : selectorString;
-  }
-
-  /**
-   * Checks and fix class selector string.
-   * @param {string} selectorString - checked string.
-   * @return {string} - return valid class selector string
-   * @private
-   */
-  _fixClassSelector(selectorString) {
-    if (selectorString.search(/^#/) !== -1) {
-      throw new Error('Class selector was expected, but ID selector was found');
-    }
-
-    return selectorString.search(/^\./) === -1 ? `.${selectorString}` : selectorString;
-  }
-
-  /**
-   * Checks user setting's boolean values.
-   * @param {boolean|string|number} value - checked value.
-   * @return {boolean|null} - return boolean value or null
-   * @private
-   */
-  _checkOnBoolean(value) {
-    let boolElem = null;
-
-    if (typeof value === 'string') {
-      boolElem = value.search(/^true$/i) !== -1 ? true : value.search(/^false$/i) !== -1 ? false : null;
-    } else {
-      boolElem = !!value;
-    }
-
-    return boolElem;
   }
 
   /**
