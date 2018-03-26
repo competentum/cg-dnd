@@ -17,7 +17,9 @@ class DropArea extends DefaultDndElement {
         ariaLabel: '',
         className: '',
         accept: '',
-        _isEmpty: true
+        _isEmpty: true,
+        innerDragItems: [],
+        innerDragItemsCount: 0
       };
     }
 
@@ -26,6 +28,24 @@ class DropArea extends DefaultDndElement {
 
   updateDefaultCoordinates() {
     this.coordinates.default = localUtils.getElementPosition(this.node);
+  }
+
+  includeDragItem(dragItem) {
+    const existingItemIndex = this.innerDragItems.indexOf(dragItem);
+
+    if (existingItemIndex === -1) {
+      this.innerDragItems.push(dragItem);
+      this.innerDragItemsCount++;
+    }
+  }
+
+  excludeDragItem(dragItem) {
+    const existingItemIndex = this.innerDragItems.indexOf(dragItem);
+
+    if (existingItemIndex !== -1) {
+      this.innerDragItems.splice(existingItemIndex, 1);
+      this.innerDragItemsCount--;
+    }
   }
 }
 

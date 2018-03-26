@@ -160,6 +160,10 @@ class CgDnd extends EventEmitter {
     document.addEventListener('mouseup', this.onMouseUpHandler);
     document.addEventListener('touchend', this.onMouseUpHandler, { passive: false });
 
+    if (item.chosenDropArea) {
+      item.chosenDropArea.excludeDragItem(item);
+    }
+
     this.emit(this.constructor.EVENTS.DRAG_START, e, item);
   }
 
@@ -192,7 +196,7 @@ class CgDnd extends EventEmitter {
 
   _onDragItemReset(dragItem) {
     if (dragItem.chosenDropArea) {
-      // ToDo: add checking on multiple possible drag items
+      dragItem.chosenDropArea.excludeDragItem(dragItem);
       dragItem.chosenDropArea = null;
     }
 
@@ -226,6 +230,13 @@ class CgDnd extends EventEmitter {
 
     if (chosenDropArea) {
       // Drag item was dropped on drop area
+
+      if (this.settings.maxItemsInDropArea && chosenDropArea.innerDragItemsCount === this.settings.maxItemsInDropArea) {
+        dragItem.reset();
+
+        return;
+      }
+      chosenDropArea.includeDragItem(dragItem);
 
       if (this.settings.snap) {
         const x = chosenDropArea.coordinates.default.left - dragItem.coordinates.default.left;
@@ -307,7 +318,6 @@ class CgDnd extends EventEmitter {
      * @type DndSettings
      */
     this.settings = merge.recursive({}, this.constructor.DEFAULT_SETTINGS, settings);
-    this.dragSettings = settings.dragItems;
 
     for (const key in this.settings) {
       if (this.settings.hasOwnProperty(key)) {
@@ -393,6 +403,13 @@ class CgDnd extends EventEmitter {
 
         if (verifiedValue === null) {
           localUtils.showSettingError(settingName, settingValue, 'Please set true or false.');
+        }
+        break;
+      case 'maxItemsInDropArea':
+        verifiedValue = +settingValue;
+
+        if (isNaN(verifiedValue) || verifiedValue < 0) {
+          localUtils.showSettingError(settingName, settingValue, 'Please set positive number or 0');
         }
         break;
       case 'onCreate':
