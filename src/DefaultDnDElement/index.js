@@ -101,10 +101,12 @@ class DefaultDndElement {
           localUtils.showSettingError(settingName, settingValue, 'Please set string.');
         }
         break;
-      case 'group':
+      case 'groups':
       case 'accept':
-        if (typeof settingValue === 'string' || (Array.isArray(settingValue) && settingValue.every((item) => typeof item === 'string'))) {
-          verifiedValue = settingValue;
+        if (typeof settingValue === 'string') {
+          verifiedValue = [...settingValue.split(' ')];
+        } else if (Array.isArray(settingValue) && settingValue.every((item) => typeof item === 'string')) {
+          verifiedValue = [...settingValue];
         } else {
           localUtils.showSettingError(settingName, settingValue, 'Please set string or array of strings.');
         }

@@ -18,7 +18,7 @@ class DragItem extends DefaultDndElement {
         data: null,
         ariaLabel: '',
         className: '',
-        group: ''
+        groups: []
       };
     }
 

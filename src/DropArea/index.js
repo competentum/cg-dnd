@@ -16,7 +16,7 @@ class DropArea extends DefaultDndElement {
         data: null,
         ariaLabel: '',
         className: '',
-        accept: '',
+        accept: [],
         innerDragItems: [],
         innerDragItemsCount: 0
       };
@@ -45,6 +45,20 @@ class DropArea extends DefaultDndElement {
       this.innerDragItems.splice(existingItemIndex, 1);
       this.innerDragItemsCount--;
     }
+  }
+
+  checkAccept(dragItem) {
+    if (!this.accept.length) {
+      return true;
+    }
+
+    for (let i = 0; i < dragItem.groups.length; i++) {
+      if (this.accept.includes(dragItem.groups[i])) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 

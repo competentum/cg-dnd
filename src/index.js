@@ -230,7 +230,8 @@ class CgDnd extends EventEmitter {
     if (chosenDropArea) {
       // Drag item was dropped on drop area
 
-      if (this.settings.maxItemsInDropArea && chosenDropArea.innerDragItemsCount === this.settings.maxItemsInDropArea) {
+      if (this.settings.maxItemsInDropArea && chosenDropArea.innerDragItemsCount === this.settings.maxItemsInDropArea
+          || !chosenDropArea.checkAccept(dragItem)) {
         dragItem.reset();
 
         return;
