@@ -17,7 +17,6 @@ class DropArea extends DefaultDndElement {
         ariaLabel: '',
         className: '',
         accept: '',
-        _isEmpty: true,
         innerDragItems: [],
         innerDragItemsCount: 0
       };

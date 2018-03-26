@@ -45,7 +45,6 @@ class CgDnd extends EventEmitter {
             ariaLabel: '',
             data: null,
             className: '',
-            _isEmpty: true
           }
         ],
         animationParams: {
@@ -129,13 +128,11 @@ class CgDnd extends EventEmitter {
     e.preventDefault();
 
     const draggedNode = item.node;
-    const box = draggedNode.getBoundingClientRect();
+    const box = localUtils.getElementPosition(draggedNode);
     let boundsParams;
 
-    item.shiftX = e.pageX - box.left + draggedNode.offsetLeft;
-    item.shiftY = e.pageY - box.top + draggedNode.offsetTop;
-
-    // TODO: (early dnd) fix max height, when bounds = document, fix functionality and productivity
+    item.shiftX = e.pageX - box.left;
+    item.shiftY = e.pageY - box.top;
 
     if (this.settings.bounds === document) {
       const trueDocumentParams = document.documentElement.getBoundingClientRect();
@@ -149,7 +146,7 @@ class CgDnd extends EventEmitter {
 
     this.currentDragParams = {
       draggedItem: item,
-      trueBounds: localUtils.calculateCurrentBounds(box, boundsParams, e.pageX, e.pageY)
+      currentBounds: localUtils.calculateCurrentBounds(box, boundsParams, e.pageX, e.pageY)
     };
 
     this.onMouseMoveHandler = this._onMouseMove.bind(this);
@@ -170,11 +167,13 @@ class CgDnd extends EventEmitter {
   _onMouseMove(e) {
     e.preventDefault();
 
-    const x = localUtils.applyLimit(e.pageX, this.currentDragParams.trueBounds.left, this.currentDragParams.trueBounds.right);
-    const y = localUtils.applyLimit(e.pageY, this.currentDragParams.trueBounds.top, this.currentDragParams.trueBounds.bottom);
+    const x = localUtils.applyLimit(e.pageX, this.currentDragParams.currentBounds.left, this.currentDragParams.currentBounds.right);
+    const y = localUtils.applyLimit(e.pageY, this.currentDragParams.currentBounds.top, this.currentDragParams.currentBounds.bottom);
 
-    this.currentDragParams.draggedItem.translateTo(x - this.currentDragParams.draggedItem.shiftX,
-                                                   y - this.currentDragParams.draggedItem.shiftY);
+    this.currentDragParams.draggedItem.translateTo({
+      x: x - this.currentDragParams.draggedItem.shiftX,
+      y: y - this.currentDragParams.draggedItem.shiftY
+    });
 
     this.emit(this.constructor.EVENTS.DRAG_MOVE, e, this.currentDragParams.draggedItem);
   }
@@ -239,14 +238,10 @@ class CgDnd extends EventEmitter {
       chosenDropArea.includeDragItem(dragItem);
 
       if (this.settings.snap) {
-        const x = chosenDropArea.coordinates.default.left - dragItem.coordinates.default.left;
-        const y = chosenDropArea.coordinates.default.top - dragItem.coordinates.default.top;
-
-        dragItem.translateTo(x, y, true);
+        dragItem.translateTo(chosenDropArea.coordinates.default, true);
       }
 
       dragItem.chosenDropArea = chosenDropArea;
-      chosenDropArea._isEmpty = false;
 
       const inRemainingItemsIndex = this.remainingDragItems.indexOf(dragItem);
 
@@ -298,10 +293,7 @@ class CgDnd extends EventEmitter {
     // TODO: add changes checking
     if (this.settings.alignDragItems) {
       this.remainingDragItems.forEach((item, index) => {
-        const x = this.initDragItemsPlaces[index].left - item.coordinates.default.left;
-        const y = this.initDragItemsPlaces[index].top - item.coordinates.default.top;
-
-        item.translateTo(x, y, true);
+        item.translateTo(this.initDragItemsPlaces[index], true);
         item.updateCurrentCoordinates();
         item.updateCurrentStartCoordinates();
       });

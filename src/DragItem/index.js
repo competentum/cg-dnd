@@ -79,16 +79,15 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Moves drag item element to (x, y) coordinates by transform: translate with/without animation
-   * @param {number} x
-   * @param {number} y
+   * @param {object} coords - object of x/left y/top node's coordinates
    * @param {boolean} isAnimate - animate flag
    * @param {object} animateParams - params for css-transition
    * @public
    */
-  translateTo(x, y, isAnimate, animateParams) {
+  translateTo(coords, isAnimate, animateParams) {
     const props = merge({}, this.constructor.animationParams, animateParams);
-    const left = x;
-    const top = y;
+    const left = (coords.x || coords.left) - this.coordinates.default.left;
+    const top = (coords.y || coords.top) - this.coordinates.default.top;
 
     if (isAnimate) {
       this.node.style.transition = `${props.animatedProperty} ${props.duration}ms ${props.timingFunction} ${props.delay}ms`;
@@ -110,10 +109,7 @@ class DragItem extends DefaultDndElement {
   }
 
   reset() {
-    const x = this.coordinates.default.left - this.coordinates.currentStart.left;
-    const y = this.coordinates.default.top - this.coordinates.currentStart.top;
-
-    this.translateTo(x, y, true);
+    this.translateTo(this.coordinates.currentStart, true);
 
     this.constructor.mainDnDEmitter.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this);
   }
