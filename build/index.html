@@ -90,12 +90,14 @@
                 console.log(dragItem);
                 console.log(dropArea);
             }
+        },
+        onCreate: function (dndObj) {
+            console.log(dndObj);
         }
     };
 
   var dnd = new CgDnd(settings);
 
-  console.log(dnd);
 </script>
 </body>
 </html>

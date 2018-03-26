@@ -109,6 +109,8 @@ class CgDnd extends EventEmitter {
     // This._render();
 
     this._addListeners();
+
+    this.emit(this.constructor.EVENTS.CREATE, this);
   }
 
   /**
