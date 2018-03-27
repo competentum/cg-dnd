@@ -46,6 +46,28 @@ class DefaultDndElement {
     return this.sibling.prev;
   }
 
+  get tabIndex() {
+    return this._tabIndex;
+  }
+
+  set tabIndex(value) {
+    const number = +value;
+
+    this._tabIndex = !isNaN(number) ? number : -1;
+    this.node.setAttribute('tabindex', this._tabIndex);
+  }
+
+  get disabled() {
+    return this._disabled;
+  }
+
+  set disabled(flag) {
+    this._disabled = localUtils.checkOnBoolean(flag);
+
+    this.node.setAttribute('aria-disabled', this._disabled);
+    this.tabIndex = -1;
+  }
+
   _applySettings(settings) {
     merge(this, this.constructor.DEFAULT_SETTINGS, settings);
 
@@ -60,6 +82,12 @@ class DefaultDndElement {
         this[key] = this._checkSetting(key, this[key]);
       }
     }
+
+    this.tabIndex = -1;
+  }
+
+  disable() {
+    this.disabled = true;
   }
 
   _checkSetting(settingName, settingValue) {
@@ -80,15 +108,6 @@ class DefaultDndElement {
           cgUtils.addClass(this.node, verifiedValue);
         } else {
           localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
-        }
-        break;
-      case 'handler':
-        if (typeof settingValue === 'string') {
-          if (settingValue.length) {
-            verifiedValue = localUtils.getElement(settingValue, this.node);
-          }
-        } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set class selector or empty string.');
         }
         break;
       case 'ariaLabel':

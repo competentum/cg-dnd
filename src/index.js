@@ -39,6 +39,7 @@ class CgDnd extends EventEmitter {
         snap: true,
         maxItemsInDropArea: 1,
         alignRemainingDragItems: false,
+        possibleToReturnItem: false,
         dropAreas: [
           {
             node: '',
@@ -75,11 +76,25 @@ class CgDnd extends EventEmitter {
         CREATE: 'create',
         DRAG_START: 'drag_start',
         DRAG_MOVE: 'drag_move',
-        DRAG_STOP: 'drag_stop'
+        DRAG_STOP: 'drag_stop',
+        KEY_DOWN: 'keydown'
       };
     }
 
     return this._EVENTS;
+  }
+
+  static get KEY_CODES() {
+    if (!this._KEY_CODES) {
+      this._KEY_CODES = {
+        ENTER: 13,
+        SPACE: 32,
+        UP_ARROW: 38,
+        DOWN_ARROW: 40
+      };
+    }
+
+    return this._KEY_CODES;
   }
 
   static get EVENTS_HANDLER_RELATIONS() {
@@ -104,7 +119,10 @@ class CgDnd extends EventEmitter {
 
     this._applySettings(settings);
 
-    this._setAdditionalPropertiesForDragElems();
+    this._setSiblings(this.settings.dragItems);
+    this._setSiblings(this.settings.dropAreas);
+    this.currentFirstDragItem = this.settings.dragItems[0];
+    this.currentFirstDropArea = this.settings.dropAreas[0];
 
     // This._render();
 
@@ -113,20 +131,49 @@ class CgDnd extends EventEmitter {
     this.emit(this.constructor.EVENTS.CREATE, this);
   }
 
+  set currentFirstDragItem(dragItem) {
+    if (this._currentFirstDragItem) {
+      this._currentFirstDragItem.tabIndex = -1;
+    }
+
+    this._currentFirstDragItem = dragItem;
+    this._currentFirstDragItem.tabIndex = 0;
+  }
+
+  get currentFirstDragItem() {
+    return this._currentFirstDragItem;
+  }
+
+  set currentFirstDropArea(dropArea) {
+    this._currentFirstDropArea = dropArea;
+  }
+
+  get currentFirstDropArea() {
+    return this._currentFirstDropArea;
+  }
+
   /**
    * Add event listeners
    * @private
    */
   _addListeners() {
     this.settings.dragItems.forEach((item) => {
-      item.handler.addEventListener('mousedown', (e) => this._onMouseDown(e, item));
-      item.handler.addEventListener('touchstart', (e) => this._onMouseDown(e, item), { passive: false });
+      item.onMouseDownHandler = this._onMouseDown.bind(this, item);
+      item.handler.addEventListener('mousedown', item.onMouseDownHandler);
+      item.handler.addEventListener('touchstart', item.onMouseDownHandler, { passive: false });
+      item.node.addEventListener('keydown', this._onKeyDown.bind(this, item));
+      item.node.addEventListener('click', this._onDragItemClick.bind(this, item));
+    });
+
+    this.settings.dropAreas.forEach((area) => {
+      area.node.addEventListener('keydown', this._onKeyDown.bind(this, area));
+      area.node.addEventListener('click', this._onDropAreaClick.bind(this, area));
     });
 
     this.on(DragItem.EVENTS.DRAG_ITEM_RESET, this._onDragItemReset);
   }
 
-  _onMouseDown(e, item) {
+  _onMouseDown(item, e) {
     e.preventDefault();
 
     const draggedNode = item.node;
@@ -208,9 +255,55 @@ class CgDnd extends EventEmitter {
       if (this.remainingDragItems.length > 1) {
         this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
       }
+
+      if (this._currentFirstDragItem !== this.remainingDragItems[0]) {
+        this.currentFirstDragItem = this.remainingDragItems[0];
+      }
     }
 
     this._shiftRemainingDragItems();
+  }
+
+  _onKeyDown(item, e) {
+    // E.preventDefault();
+
+    const KEY_CODES = this.constructor.KEY_CODES;
+
+    switch (e.keyCode) {
+      case KEY_CODES.UP_ARROW:
+        if (item.siblings.prev) {
+          item.siblings.prev.node.focus();
+        }
+        break;
+      case KEY_CODES.DOWN_ARROW:
+        if (item.siblings.next) {
+          item.siblings.next.node.focus();
+        }
+        break;
+      case KEY_CODES.ENTER:
+      case KEY_CODES.SPACE:
+        item.node.click();
+        break;
+      default:
+    }
+  }
+
+  _onDragItemClick(item, e) {
+    this._currentFirstDropArea.node.focus();
+    this.currentDragParams = { draggedItem: item };
+
+    this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+  }
+
+  _onDropAreaClick(area, e) {
+    this._currentFirstDropArea.node.focus();
+
+    if (this.currentDragParams.draggedItem) {
+      this.currentDragParams.draggedItem.translateTo(area.coordinates.default, true);
+      this.currentDragParams.draggedItem.disable();
+    }
+
+    this.emit(this.constructor.EVENTS.DRAG_STOP, e, this.currentDragParams.draggedItem, area);
   }
 
   /**
@@ -252,7 +345,11 @@ class CgDnd extends EventEmitter {
         // If dropped dragItem isn't on dropArea and remaining drag items array doesn't include it, we add it to remaining drag items array
         this.remainingDragItems.splice(inRemainingItemsIndex, 1);
         this._shiftRemainingDragItems();
-        this._reSetSiblings(dragItem);
+
+        if (!this.settings.possibleToReturnItem) {
+          this._updateSiblings(dragItem);
+          dragItem.disable();
+        }
       }
     } else {
       // Drag item wasn't dropped on drop area
@@ -277,15 +374,17 @@ class CgDnd extends EventEmitter {
 
   /**
    * Set new relations of remaining drag items for future keyboard access
-   * @param {object} draggedItem - drag item, which set to drop area
+   * @param {object} draggedOutItem - drag item, which set to drop area
    */
-  _reSetSiblings(draggedItem) {
-    draggedItem.siblings.prev.siblings.next = draggedItem.siblings.next;
-    draggedItem.siblings.next.siblings.prev = draggedItem.siblings.prev;
+  _updateSiblings(draggedOutItem) {
+    draggedOutItem.siblings.prev.siblings.next = draggedOutItem.siblings.next;
+    draggedOutItem.siblings.next.siblings.prev = draggedOutItem.siblings.prev;
 
-    if (draggedItem.isFirstItem) {
-      draggedItem.siblings.next.isFirstItem = true;
+    if (this._currentFirstDragItem === draggedOutItem && draggedOutItem.siblings.next !== draggedOutItem) {
+      this.currentFirstDragItem = draggedOutItem.siblings.next;
     }
+
+    draggedOutItem.siblings.next = draggedOutItem.siblings.prev = null;
   }
 
   /**
@@ -294,7 +393,7 @@ class CgDnd extends EventEmitter {
    */
   _shiftRemainingDragItems() {
     // TODO: add changes checking
-    if (this.settings.alignDragItems) {
+    if (this.settings.alignRemainingDragItems) {
       this.remainingDragItems.forEach((item, index) => {
         item.translateTo(this.initDragItemsPlaces[index], true);
         item.updateCurrentCoordinates();
@@ -349,7 +448,9 @@ class CgDnd extends EventEmitter {
             let dndElement;
 
             if (typeof settings === 'object') {
-              dndElement = settingName === 'dragItems' ? new DragItem(settings, this) : new DropArea(settings);
+              dndElement = settingName === 'dragItems'
+                ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this)
+                : new DropArea(settings);
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
@@ -382,18 +483,10 @@ class CgDnd extends EventEmitter {
       case 'helper':
         verifiedValue = settingValue.toLowerCase() === 'clone' ? 'clone' : this.constructor.DEFAULT_SETTINGS.helper;
         break;
-      case 'handler':
-        if (typeof settingValue === 'string') {
-          if (settingValue.length) {
-            verifiedValue = localUtils.checkClassSelector(settingValue);
-          }
-        } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set class selector string.');
-        }
-        break;
       case 'snap':
       case 'disabled':
-      case 'alignDragItems':
+      case 'alignRemainingDragItems':
+      case 'possibleToReturnItem':
         verifiedValue = localUtils.checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {
@@ -457,26 +550,21 @@ class CgDnd extends EventEmitter {
 
   /**
    * Set drag-handlers for each drag item, if Element was got, otherwise set drag-item as drag-handler
+   * @param {array} dndElements - array of DragItem/DropArea objects
    * @private
    */
-  _setAdditionalPropertiesForDragElems() {
-    const dragItemsLength = this.settings.dragItems.length;
+  _setSiblings(dndElements) {
+    const dndElementsLength = dndElements.length;
 
-    this.settings.dragItems[0].siblings.prev = this.settings.dragItems[dragItemsLength - 1];
-    this.settings.dragItems[0].isFirstItem = true;
-    this.settings.dragItems[dragItemsLength - 1].siblings.next = this.settings.dragItems[0];
-    this.settings.dragItems[dragItemsLength - 1].isLastItem = true;
+    dndElements[0].siblings.prev = dndElements[dndElementsLength - 1];
+    dndElements[dndElementsLength - 1].siblings.next = dndElements[0];
 
-    this.settings.dragItems.forEach((item, index) => {
-      if (!item.handler) {
-        item.handler = localUtils.getElement(this.settings.handler, item.node) || item.node;
-      }
-
+    dndElements.forEach((item, index) => {
       if (!item.siblings.next) {
-        item.siblings.next = this.settings.dragItems[index + 1];
+        item.siblings.next = dndElements[index + 1];
       }
       if (!item.siblings.prev) {
-        item.siblings.prev = this.settings.dragItems[index - 1];
+        item.siblings.prev = dndElements[index - 1];
       }
 
       item.index = index;

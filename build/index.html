@@ -20,6 +20,9 @@
         <div class="drop-area-container">
             <div id="drop-area-1">drop area 1</div>
             <div id="drop-area-2">drop area 2</div>
+            <div id="drop-area-3">drop area 3</div>
+            <div id="drop-area-4">drop area 4</div>
+            <div id="drop-area-5">drop area 5</div>
         </div>
     </div>
 </div>
@@ -29,7 +32,7 @@
     var settings = {
         bounds: '#first-example',
         //bounds: [0, 0, 800, 600],
-        alignDragItems: true,
+        alignRemainingDragItems: true,
         handler: '.handler',
         maxItemsInDropArea: 3,
         dragItems: [
@@ -78,7 +81,25 @@
                 ariaLabel: '',
                 data: null,
                 className: 'drop-area',
-                accept: 'something'
+              //  accept: 'something'
+            },
+            {
+                node: '#drop-area-3',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            },
+            {
+                node: '#drop-area-4',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            },
+            {
+                node: '#drop-area-5',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
             }
         ],
         onDragStart: function (e, item) {
@@ -98,6 +119,21 @@
 
   var dnd = new CgDnd(settings);
 
+/*
+    document.addEventListener("mousemove", function(e) {
+        console.log(e.pageX + ' , ' + e.pageY);
+    })
+
+
+    var x = 100;
+    document.querySelector('#btn').addEventListener('click', function () {
+        var event = new Event("mousemove", {bubbles : true})
+        x++;
+        event.pageX = x;
+        event.pageY = 100;
+
+        document.documentElement.dispatchEvent(event, 'aaaa');
+    }); */
 </script>
 </body>
 </html>

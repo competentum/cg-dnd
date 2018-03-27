@@ -18,7 +18,8 @@ class DragItem extends DefaultDndElement {
         data: null,
         ariaLabel: '',
         className: '',
-        groups: []
+        groups: [],
+        handler: ''
       };
     }
 
@@ -75,6 +76,45 @@ class DragItem extends DefaultDndElement {
 
   get group() {
     return this._group;
+  }
+
+  set isFirstItem(value) {
+    this.tabIndex = value ? 0 : -1;
+
+    this._isFirstItem = value;
+  }
+
+  get isFirstItem() {
+    return this._isFirstItem;
+  }
+
+  set disabled(flag) {
+    super.disabled = flag;
+
+    if (flag && this.onMouseDownHandler) {
+      this.handler.removeEventListener('mousedown', this.onMouseDownHandler);
+      this.handler.removeEventListener('touchstart', this.onMouseDownHandler, { passive: false });
+      this.onMouseDownHandler = null;
+    }
+  }
+
+  _checkSetting(settingName, settingValue) {
+    let verifiedValue;
+    const sheckingSetting = super._checkSetting(settingName, settingValue);
+
+    switch (settingName) {
+      case 'handler':
+        if (typeof sheckingSetting === 'string') {
+          verifiedValue = localUtils.getElement(sheckingSetting, this.node) || this.node;
+        } else {
+          localUtils.showSettingError(settingName, sheckingSetting, 'Please set class selector or empty string.');
+        }
+        break;
+      default:
+        verifiedValue = sheckingSetting;
+    }
+
+    return verifiedValue;
   }
 
   /**
