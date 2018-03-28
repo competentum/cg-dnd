@@ -69,7 +69,9 @@ class DefaultDndElement {
   }
 
   _applySettings(settings) {
-    merge(this, this.constructor.DEFAULT_SETTINGS, settings);
+    const correctDeepMergedObj = merge.recursive(true, this.constructor.DEFAULT_SETTINGS, settings);
+
+    merge.recursive(this, correctDeepMergedObj);
 
     if (this.hasOwnProperty('node')) {
       this.node = this._checkSetting('node', this.node);
