@@ -1,4 +1,22 @@
 const utils = {
+  IS_TOUCH: !!navigator.userAgent.match(/Android|webOS|webOS|iPad|iPod|BlackBerry|Windows Phone/i),
+
+  getDeviceEvents() {
+    if (this.IS_TOUCH) {
+      return {
+        dragStart: 'touchstart',
+        dragMove: 'touchmove',
+        draEnd: 'touchend'
+      };
+    }
+
+    return {
+      dragStart: 'mousedown',
+      dragMove: 'mousemove',
+      draEnd: 'mouseup'
+    };
+  },
+
   /**
    * Shows error in console.
    * @param {string} settingName - name of setting property.
