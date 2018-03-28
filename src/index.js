@@ -374,6 +374,10 @@ class CgDnd extends EventEmitter {
         dragItem.disable();
       }
     }
+
+    if (this.remainingDragItems[0]) {
+      this.remainingDragItems[0].node.focus();
+    }
   }
 
   /**
