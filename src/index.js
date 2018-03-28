@@ -468,7 +468,7 @@ class CgDnd extends EventEmitter {
       }
     }
 
-    DragItem.mainDnDEmitter = this;
+    // DragItem.mainDnDEmitter = this;
 
     this.remainingDragItems = [...this.settings.dragItems];
     this.initDragItemsPlaces = [];
@@ -498,7 +498,7 @@ class CgDnd extends EventEmitter {
 
             if (typeof settings === 'object') {
               dndElement = settingName === 'dragItems'
-                ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this)
+                ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this.emit.bind(this))
                 : new DropArea(settings);
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);

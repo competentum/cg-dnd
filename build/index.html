@@ -26,6 +26,19 @@
         </div>
     </div>
 </div>
+<div id="second-example">
+    <div class="example" id="example-2">
+        <div id="drop-area-11">drop area 1</div>
+        <div class="drag-item-container">
+            <div id="drag-item-11">drag item 1</div>
+            <div id="drag-item-12">drag item 2</div>
+            <div id="drag-item-13">drag item 3</div>
+            <div id="drag-item-14">drag item 4</div>
+            <div id="drag-item-15">drag item 5</div>
+        </div>
+        <div id="drop-area-12">drop area 2</div>
+    </div>
+</div>
 
 <script>
 
@@ -35,7 +48,7 @@
         alignRemainingDragItems: true,
         handler: '.handler',
         maxItemsInDropArea: 1,
-        possibleToReturnItem: false,
+        possibleToReplaceItem: true,
         dragItems: [
             {
                 node: '#drag-item-1',
@@ -108,10 +121,6 @@
         onDragMove: function (e, item) {
         },
         onDragStop: function (e, dragItem, dropArea) {
-            if (dropArea) {
-                console.log(dragItem);
-                console.log(dropArea);
-            }
         },
         onCreate: function (dndObj) {
             console.log(dndObj);
@@ -120,21 +129,65 @@
 
   var dnd = new CgDnd(settings);
 
-/*
-    document.addEventListener("mousemove", function(e) {
-        console.log(e.pageX + ' , ' + e.pageY);
-    })
+    var secondSettings = {
+        bounds: '#second-example',
+        //bounds: [0, 0, 800, 600],
+        alignRemainingDragItems: true,
+        handler: '.handler',
+        maxItemsInDropArea: 0,
+        possibleToReplaceItem: true,
+        dragItems: [
+            {
+                node: '#drag-item-11',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-12',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item',
+            },
+            {
+                node: '#drag-item-13',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-14',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-15',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            }
+        ],
+        dropAreas: [
+            {
+                node: '#drop-area-11',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area'
+            },
+            {
+                node: '#drop-area-12',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area',
+            }
+        ],
+        onCreate: function (dndObj) {
+            console.log(dndObj);
+        }
+    };
 
-
-    var x = 100;
-    document.querySelector('#btn').addEventListener('click', function () {
-        var event = new Event("mousemove", {bubbles : true})
-        x++;
-        event.pageX = x;
-        event.pageY = 100;
-
-        document.documentElement.dispatchEvent(event, 'aaaa');
-    }); */
+    var secondDnd = new CgDnd(secondSettings);
 </script>
 </body>
 </html>

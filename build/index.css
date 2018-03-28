@@ -34,10 +34,36 @@
     background-color: #5bf197;
 }
 
-#first-example {
+#first-example, #second-example {
     border: 1px solid #000;
 }
 
 *:focus {
     outline: 2px dashed #000;
+}
+
+#second-example {
+    margin-top: 50px;
+}
+
+#example-2 {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    max-width: 1000px;
+}
+
+#example-2 .drag-item-container {
+    width: 95px;
+}
+
+#example-2 .drop-area-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+#example-2 .drop-area {
+    width: 200px;
+    height: 400px;
 }

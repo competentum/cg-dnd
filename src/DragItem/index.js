@@ -68,6 +68,12 @@ class DragItem extends DefaultDndElement {
     return this._dndEmitter;
   }
 
+  constructor(settings, dndEmitterFunc) {
+    super(settings);
+
+    this.emit = dndEmitterFunc;
+  }
+
   set currentDragStartPosition(coordinatesObj) {
     if (typeof coordinatesObj === 'object') {
       // Const currentPos = merge({}, this.coordinates.currentStart)
@@ -151,7 +157,7 @@ class DragItem extends DefaultDndElement {
   reset() {
     this.translateTo(this.coordinates.currentStart, true);
 
-    this.constructor.mainDnDEmitter.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this);
+    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this);
   }
 }
 
