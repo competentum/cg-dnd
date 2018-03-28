@@ -39,7 +39,7 @@ class CgDnd extends EventEmitter {
         snap: true,
         maxItemsInDropArea: 1,
         alignRemainingDragItems: false,
-        possibleToReturnItem: false,
+        possibleToReplaceItem: false,
         dropAreas: [
           {
             node: '',
@@ -293,11 +293,13 @@ class CgDnd extends EventEmitter {
 
   _onDragItemClick(item, e) {
     if (this.isClick) {
+      this.currentDragParams = { draggedItem: item };
+
       if (!item.chosenDropArea) {
         this._currentFirstDropArea.node.focus();
-        this.currentDragParams = { draggedItem: item };
-      } else if (this.settings.possibleToReturnItem) {
-        item.reset();
+      } else if (this.settings.possibleToReplaceItem) {
+        // Item.reset();
+        this._currentFirstDropArea.node.focus();
       }
 
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
@@ -348,6 +350,12 @@ class CgDnd extends EventEmitter {
   _putDragItemIntoDropArea(dragItem, chosenDropArea) {
     // Drag item was dropped on drop area
 
+    if (this.settings.maxItemsInDropArea === 1 && chosenDropArea.innerDragItemsCount) {
+      this.replaceDragItems(dragItem, chosenDropArea.innerDragItems[0]);
+
+      return;
+    }
+
     if (this.settings.maxItemsInDropArea && chosenDropArea.innerDragItemsCount === this.settings.maxItemsInDropArea
         || !chosenDropArea.checkAccept(dragItem)) {
       dragItem.reset();
@@ -369,7 +377,7 @@ class CgDnd extends EventEmitter {
       this.remainingDragItems.splice(inRemainingItemsIndex, 1);
       this._shiftRemainingDragItems();
 
-      if (!this.settings.possibleToReturnItem) {
+      if (!this.settings.possibleToReplaceItem) {
         this._updateSiblings(dragItem);
         dragItem.disable();
       }
@@ -421,6 +429,25 @@ class CgDnd extends EventEmitter {
         item.updateCurrentCoordinates();
         item.updateCurrentStartCoordinates();
       });
+    }
+  }
+
+  replaceDragItems(dragItem1, dragItem2) {
+    const firstItemDropArea = dragItem1.chosenDropArea;
+    const secondItemDropArea = dragItem2.chosenDropArea;
+
+    if (firstItemDropArea) {
+      firstItemDropArea.excludeDragItem(dragItem1);
+      this._putDragItemIntoDropArea(dragItem2, firstItemDropArea);
+    } else {
+      dragItem2.reset();
+    }
+
+    if (secondItemDropArea) {
+      secondItemDropArea.excludeDragItem(dragItem2);
+      this._putDragItemIntoDropArea(dragItem1, secondItemDropArea);
+    } else {
+      dragItem1.reset();
     }
   }
 
@@ -508,7 +535,7 @@ class CgDnd extends EventEmitter {
       case 'snap':
       case 'disabled':
       case 'alignRemainingDragItems':
-      case 'possibleToReturnItem':
+      case 'possibleToReplaceItem':
         verifiedValue = localUtils.checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {
