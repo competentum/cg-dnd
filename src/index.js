@@ -54,6 +54,10 @@ class CgDnd extends EventEmitter {
           timingFunction: 'ease',
           delay: 0
         },
+        snapAlignParams: {
+          horizontalAlign: 'left',
+          verticalAlign: 'top'
+        },
         onCreate: () => {},
         onDragStart: () => {},
         onDragMove: () => {},
@@ -208,10 +212,6 @@ class CgDnd extends EventEmitter {
     document.addEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler, { passive: false });
     document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
 
-    if (item.chosenDropArea) {
-      item.chosenDropArea.excludeDragItem(item);
-    }
-
     this.emit(this.constructor.EVENTS.DRAG_START, e, item);
   }
 
@@ -247,7 +247,6 @@ class CgDnd extends EventEmitter {
   _onDragItemReset(dragItem) {
     if (dragItem.chosenDropArea) {
       dragItem.chosenDropArea.excludeDragItem(dragItem);
-      dragItem.chosenDropArea = null;
     }
 
     if (this.remainingDragItems.indexOf(dragItem) === -1) {
@@ -349,6 +348,7 @@ class CgDnd extends EventEmitter {
 
   _putDragItemIntoDropArea(dragItem, chosenDropArea) {
     // Drag item was dropped on drop area
+    let sameDropArea = false;
 
     if (this.settings.maxItemsInDropArea === 1 && chosenDropArea.innerDragItemsCount) {
       this.replaceDragItems(dragItem, chosenDropArea.innerDragItems[0]);
@@ -362,13 +362,22 @@ class CgDnd extends EventEmitter {
 
       return;
     }
-    chosenDropArea.includeDragItem(dragItem);
 
-    if (this.settings.snap) {
-      dragItem.translateTo(chosenDropArea.coordinates.default, true);
+    if (dragItem.chosenDropArea && dragItem.chosenDropArea !== chosenDropArea) {
+      dragItem.chosenDropArea.excludeDragItem(dragItem);
+    } else if (dragItem.chosenDropArea) {
+      sameDropArea = true;
     }
 
-    dragItem.chosenDropArea = chosenDropArea;
+    if (sameDropArea) {
+      dragItem.translateTo(dragItem.coordinates.current, true);
+    } else if (this.settings.snap) {
+      // DragItem.translateTo(chosenDropArea.coordinates.default, true);
+      dragItem.translateTo(chosenDropArea.getAlignedCoords(dragItem), true);
+    }
+    dragItem.coordinates.current.update();
+
+    chosenDropArea.includeDragItem(dragItem);
 
     const inRemainingItemsIndex = this.remainingDragItems.indexOf(dragItem);
 
@@ -386,6 +395,8 @@ class CgDnd extends EventEmitter {
     if (this.remainingDragItems[0]) {
       this.remainingDragItems[0].node.focus();
     }
+
+    dragItem.coordinates.droppedIn.update();
   }
 
   /**
@@ -396,10 +407,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _checkIntersection(dragItem, dropArea) {
-    dragItem.updateCurrentCoordinates();
-    dropArea.updateDefaultCoordinates();
-
-    return localUtils.isIntersectRect(dragItem.coordinates.current, dropArea.coordinates.default);
+    return localUtils.isIntersectRect(dragItem.coordinates.current.update(), dropArea.coordinates.default.update());
   }
 
   /**
@@ -426,8 +434,9 @@ class CgDnd extends EventEmitter {
     if (this.settings.alignRemainingDragItems) {
       this.remainingDragItems.forEach((item, index) => {
         item.translateTo(this.initDragItemsPlaces[index], true);
-        item.updateCurrentCoordinates();
-        item.updateCurrentStartCoordinates();
+
+        item.coordinates.current.update();
+        item.coordinates.currentStart.update();
       });
     }
   }
@@ -499,7 +508,7 @@ class CgDnd extends EventEmitter {
             if (typeof settings === 'object') {
               dndElement = settingName === 'dragItems'
                 ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this.emit.bind(this))
-                : new DropArea(settings);
+                : new DropArea(merge({}, { snapAlignParams: this.settings.snapAlignParams }, settings));
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }

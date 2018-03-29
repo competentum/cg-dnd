@@ -25,7 +25,7 @@ class DefaultDndElement {
 
   constructor(settings) {
     this._applySettings(settings);
-    this._getDefaultPosition();
+    this._getDefaultCoordinates();
 
     this.siblings = {};
   }
@@ -139,9 +139,23 @@ class DefaultDndElement {
     return verifiedValue;
   }
 
-  _getDefaultPosition() {
+  _getDefaultCoordinates() {
+    const initCoordinates = localUtils.getElementPosition(this.node);
+
     this.coordinates = {};
-    this.coordinates.default = this.coordinates.currentStart = localUtils.getElementPosition(this.node);
+    this._createCoordinatesObject('default', initCoordinates);
+
+    return initCoordinates;
+  }
+
+  _createCoordinatesObject(coordinatesName, coords) {
+    this.coordinates[coordinatesName] = coords || localUtils.getElementPosition(this.node);
+    this.coordinates[coordinatesName] = merge.recursive(
+      {},
+      this.coordinates[coordinatesName],
+      {
+        update: () => merge.recursive(this.coordinates[coordinatesName], localUtils.getElementPosition(this.node))
+      });
   }
 }
 

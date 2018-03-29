@@ -136,6 +136,10 @@
         handler: '.handler',
         maxItemsInDropArea: 0,
         possibleToReplaceItem: true,
+        snapAlignParams: {
+            horizontalAlign: 'center',
+            verticalAlign: 'top'
+        },
         dragItems: [
             {
                 node: '#drag-item-11',
@@ -179,7 +183,7 @@
                 node: '#drop-area-12',
                 ariaLabel: '',
                 data: null,
-                className: 'drop-area',
+                className: 'drop-area'
             }
         ],
         onCreate: function (dndObj) {

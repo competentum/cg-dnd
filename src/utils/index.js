@@ -50,7 +50,7 @@ const utils = {
    * @return {object} - rect coordinates
    */
   getElementPosition(node) {
-    return node.getBoundingClientRect();
+    return this.translateDOMRectToObject(node.getBoundingClientRect());
   },
 
   calculateCurrentBounds(nodeParams, boundsParams, mouseX, mouseY) {

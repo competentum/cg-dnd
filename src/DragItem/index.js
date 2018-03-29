@@ -140,24 +140,26 @@ class DragItem extends DefaultDndElement {
 
       setTimeout(() => {
         this.node.style.transition = '';
+        this.coordinates.current.update();
+        this.coordinates.droppedIn.update();
       }, props.duration + props.delay);
     }
 
     this.node.style.transform = `translate(${left}px, ${top}px)`;
   }
 
-  updateCurrentCoordinates() {
-    this.coordinates.current = localUtils.getElementPosition(this.node);
-  }
-
-  updateCurrentStartCoordinates() {
-    this.coordinates.currentStart = localUtils.getElementPosition(this.node);
-  }
-
   reset() {
     this.translateTo(this.coordinates.currentStart, true);
 
     this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this);
+  }
+
+  _getDefaultCoordinates() {
+    const initCoords = super._getDefaultCoordinates();
+
+    this._createCoordinatesObject('current', initCoords);
+    this._createCoordinatesObject('currentStart', initCoords);
+    this._createCoordinatesObject('droppedIn', initCoords);
   }
 }
 
