@@ -28,7 +28,6 @@
 </div>
 <div id="second-example">
     <div class="example" id="example-2">
-        <div id="drop-area-11">drop area 1</div>
         <div class="drag-item-container">
             <div id="drag-item-11">drag item 1</div>
             <div id="drag-item-12">drag item 2</div>
@@ -36,7 +35,9 @@
             <div id="drag-item-14">drag item 4</div>
             <div id="drag-item-15">drag item 5</div>
         </div>
-        <div id="drop-area-12">drop area 2</div>
+        <div id="drop-area-11">top</div>
+        <div id="drop-area-12">bottom</div>
+        <div id="drop-area-13">center</div>
     </div>
 </div>
 
@@ -138,7 +139,8 @@
         possibleToReplaceItem: true,
         snapAlignParams: {
             horizontalAlign: 'center',
-            verticalAlign: 'top'
+            verticalAlign: 'top',
+            withDroppedItemCSSMargins: true
         },
         dragItems: [
             {
@@ -177,13 +179,27 @@
                 node: '#drop-area-11',
                 ariaLabel: '',
                 data: null,
-                className: 'drop-area'
+                className: 'drop-area',
             },
             {
                 node: '#drop-area-12',
                 ariaLabel: '',
                 data: null,
-                className: 'drop-area'
+                className: 'drop-area',
+                snapAlignParams: {
+                    verticalAlign: 'bottom',
+                    horizontalAlign: 'right',
+                    withDroppedItemCSSMargins: false
+                }
+            },
+            {
+                node: '#drop-area-13',
+                ariaLabel: '',
+                data: null,
+                className: 'drop-area',
+                snapAlignParams: {
+                    verticalAlign: 'center'
+                }
             }
         ],
         onCreate: function (dndObj) {

@@ -71,6 +71,7 @@ class DragItem extends DefaultDndElement {
   constructor(settings, dndEmitterFunc) {
     super(settings);
 
+    this._getMargins();
     this.emit = dndEmitterFunc;
   }
 
@@ -132,8 +133,10 @@ class DragItem extends DefaultDndElement {
    */
   translateTo(coords, isAnimate, animateParams) {
     const props = merge({}, this.constructor.animationParams, animateParams);
-    const left = (coords.x || coords.left) - this.coordinates.default.left;
-    const top = (coords.y || coords.top) - this.coordinates.default.top;
+    const x = (coords.x || coords.left);
+    const y = (coords.y || coords.top);
+    const left = x - this.coordinates.default.left;
+    const top = y - this.coordinates.default.top;
 
     if (isAnimate) {
       this.node.style.transition = `${props.animatedProperty} ${props.duration}ms ${props.timingFunction} ${props.delay}ms`;
@@ -143,9 +146,22 @@ class DragItem extends DefaultDndElement {
         this.coordinates.current.update();
         this.coordinates.droppedIn.update();
       }, props.duration + props.delay);
+
+      // We update coordinates before animation ends
+
+      this.coordinates.current.update({
+        left: x,
+        top: y,
+        right: x + this.coordinates.current.width,
+        bottom: y + this.coordinates.current.height
+      });
     }
 
     this.node.style.transform = `translate(${left}px, ${top}px)`;
+
+    if (!isAnimate) {
+      this.coordinates.current.update();
+    }
   }
 
   reset() {
@@ -160,6 +176,17 @@ class DragItem extends DefaultDndElement {
     this._createCoordinatesObject('current', initCoords);
     this._createCoordinatesObject('currentStart', initCoords);
     this._createCoordinatesObject('droppedIn', initCoords);
+  }
+
+  _getMargins() {
+    this.cssProperties = getComputedStyle(this.node);
+
+    this.margins = {
+      left: parseFloat(this.cssProperties.marginLeft),
+      top: parseFloat(this.cssProperties.marginTop),
+      right: parseFloat(this.cssProperties.marginRight),
+      bottom: parseFloat(this.cssProperties.marginBottom)
+    };
   }
 }
 

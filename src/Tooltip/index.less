@@ -1,0 +1,23 @@
+@prefix: cg-dnd-tooltip;
+@marker-size: 20px;
+
+.@{prefix} {
+  position: absolute;
+  padding: 5px 5px;
+  border-radius: 25px;
+  background-color: #ff953a;
+  color: #ffffff;
+
+  .@{prefix}-marker {
+    position: absolute;
+    width: @marker-size;
+    height: @marker-size;
+
+    background-color: inherit;
+
+    transform: rotate(45deg);
+    bottom: -2px;
+    left: 5px;
+    z-index: -1;
+  }
+}

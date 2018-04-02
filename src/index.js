@@ -55,6 +55,9 @@ class CgDnd extends EventEmitter {
           delay: 0
         },
         snapAlignParams: {
+          withShift: true,
+          withDroppedItemCSSMargins: false,
+          eachDroppedItemIndents: [0],
           horizontalAlign: 'left',
           verticalAlign: 'top'
         },
@@ -370,7 +373,7 @@ class CgDnd extends EventEmitter {
     }
 
     if (sameDropArea) {
-      dragItem.translateTo(dragItem.coordinates.current, true);
+      dragItem.translateTo(dragItem.coordinates.droppedIn, true);
     } else if (this.settings.snap) {
       // DragItem.translateTo(chosenDropArea.coordinates.default, true);
       dragItem.translateTo(chosenDropArea.getAlignedCoords(dragItem), true);
@@ -508,7 +511,7 @@ class CgDnd extends EventEmitter {
             if (typeof settings === 'object') {
               dndElement = settingName === 'dragItems'
                 ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this.emit.bind(this))
-                : new DropArea(merge({}, { snapAlignParams: this.settings.snapAlignParams }, settings));
+                : new DropArea(merge.recursive(true, { snapAlignParams: this.settings.snapAlignParams }, settings));
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }

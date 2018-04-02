@@ -154,7 +154,7 @@ class DefaultDndElement {
       {},
       this.coordinates[coordinatesName],
       {
-        update: () => merge.recursive(this.coordinates[coordinatesName], localUtils.getElementPosition(this.node))
+        update: (data) => merge.recursive(this.coordinates[coordinatesName], data || localUtils.getElementPosition(this.node))
       });
   }
 }
