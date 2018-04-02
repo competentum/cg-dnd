@@ -6,6 +6,7 @@ import merge from 'merge';
 import localUtils from 'utils';
 import DragItem from 'DragItem';
 import DropArea from 'DropArea';
+import Tooltip from 'Tooltip';
 
 /* For ES-Lint comment
  const DND_CLASS = 'cg-dnd';
@@ -61,6 +62,7 @@ class CgDnd extends EventEmitter {
           horizontalAlign: 'left',
           verticalAlign: 'top'
         },
+        tooltipParams: {},
         onCreate: () => {},
         onDragStart: () => {},
         onDragMove: () => {},
@@ -216,6 +218,8 @@ class CgDnd extends EventEmitter {
     document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
 
     this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+
+    this.tooltip.show(item);
   }
 
   _onMouseMove(e) {
@@ -245,6 +249,8 @@ class CgDnd extends EventEmitter {
     const dragItem = this.currentDragParams.draggedItem;
 
     this.emit(this.constructor.EVENTS.DRAG_STOP, e, dragItem, dragItem.chosenDropArea);
+
+    this.tooltip.hide();
   }
 
   _onDragItemReset(dragItem) {
@@ -479,6 +485,8 @@ class CgDnd extends EventEmitter {
         this.settings[key] = this._checkSetting(key, this.settings[key]);
       }
     }
+
+    this.tooltip = new Tooltip(this.settings.tooltipParams);
 
     // DragItem.mainDnDEmitter = this;
 
