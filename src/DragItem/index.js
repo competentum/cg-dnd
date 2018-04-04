@@ -129,12 +129,13 @@ class DragItem extends DefaultDndElement {
    * @param {object} coords - object of x/left y/top node's coordinates
    * @param {boolean} isAnimate - animate flag
    * @param {object} animateParams - params for css-transition
+   * @param {function} animationEndCallback - callback, which would calls after animation's end
    * @public
    */
-  translateTo(coords, isAnimate, animateParams) {
+  translateTo(coords, isAnimate, animateParams, animationEndCallback = () => {}) {
     const props = merge({}, this.constructor.animationParams, animateParams);
-    const x = (coords.x || coords.left);
-    const y = (coords.y || coords.top);
+    const x = coords.left;
+    const y = coords.top;
     const left = x - this.coordinates.default.left;
     const top = y - this.coordinates.default.top;
 
@@ -145,6 +146,8 @@ class DragItem extends DefaultDndElement {
         this.node.style.transition = '';
         this.coordinates.current.update();
         this.coordinates.droppedIn.update();
+
+        animationEndCallback();
       }, props.duration + props.delay);
 
       // We update coordinates before animation ends
@@ -161,6 +164,7 @@ class DragItem extends DefaultDndElement {
 
     if (!isAnimate) {
       this.coordinates.current.update();
+      animationEndCallback();
     }
   }
 

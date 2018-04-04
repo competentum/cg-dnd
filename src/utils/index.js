@@ -50,7 +50,16 @@ const utils = {
    * @return {object} - rect coordinates
    */
   getElementPosition(node) {
-    return this.translateDOMRectToObject(node.getBoundingClientRect());
+    const isDocument = node === document.documentElement;
+    const BOUNDARY_FAULT = 0.01;
+    const rect = this.translateDOMRectToObject(node.getBoundingClientRect());
+
+    rect.top += pageYOffset + (rect.top === 0 ? BOUNDARY_FAULT : 0);
+    rect.bottom = (!isDocument ? rect.bottom : document.documentElement.clientHeight) + pageYOffset;
+    rect.left += pageXOffset + (rect.left === 0 ? BOUNDARY_FAULT : 0);
+    rect.right += pageXOffset;
+
+    return rect;
   },
 
   calculateCurrentBounds(nodeParams, boundsParams, mouseX, mouseY) {
@@ -137,6 +146,32 @@ const utils = {
     }
 
     return boolElem;
+  },
+
+  findIndex(array, callBack) {
+    if (Array.prototype.findIndex) {
+      return array.findIndex(callBack);
+    }
+
+    for (let i = 0; i < array.length; i++) {
+      if (callBack(array[i])) {
+        return i;
+      }
+    }
+
+    return -1;
+  },
+
+  fillArray(array, value, from = 0, to = array.length) {
+    if (Array.prototype.fill) {
+      return array.fill(value, from, to);
+    }
+
+    for (let i = from; i < to; i++) {
+      array[i] = value;
+    }
+
+    return array;
   }
 };
 

@@ -95,7 +95,7 @@ class DropArea extends DefaultDndElement {
             checkedIndentArray.splice(RIGHT_ARRAY_LENGTH, checkedIndentArray.length - RIGHT_ARRAY_LENGTH);
           }
 
-          const marker = checkedIndentArray.findIndex((item) => item === null);
+          const marker = localUtils.findIndex(checkedIndentArray, (item) => item === null);
 
           if (marker !== -1) {
             const ZERO = 0;
@@ -106,10 +106,10 @@ class DropArea extends DefaultDndElement {
             switch (marker) {
               case ZERO:
               default:
-                verifiedValue = [...checkedIndentArray.fill(0)];
+                verifiedValue = [...localUtils.fillArray(checkedIndentArray, 0)];
                 break;
               case ONE:
-                verifiedValue = [...checkedIndentArray.fill(checkedIndentArray[0])];
+                verifiedValue = [...localUtils.fillArray(checkedIndentArray, checkedIndentArray[0])];
                 break;
               case TWO:
                 verifiedValue = [checkedIndentArray[0], checkedIndentArray[1], checkedIndentArray[0], checkedIndentArray[1]];

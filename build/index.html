@@ -7,7 +7,7 @@
     <script type="text/javascript" src="cg-dnd.js"></script>
 </head>
 <body>
-<div class="content" id="first-example">
+<div class="content example-container" id="first-example">
     <h1>cg-dnd</h1>
     <div class="example" id="example-1">
         <div class="drag-item-container">
@@ -26,7 +26,8 @@
         </div>
     </div>
 </div>
-<div id="second-example">
+
+<div id="second-example" class="example-container">
     <div class="example" id="example-2">
         <div class="drag-item-container">
             <div id="drag-item-11">drag item 1</div>
@@ -39,6 +40,14 @@
         <div id="drop-area-12">bottom</div>
         <div id="drop-area-13">center</div>
     </div>
+</div>
+
+<div id="third-example" class="example-container">
+    <div id="drag-item-3-1">1</div>
+    <div id="drag-item-3-2">2</div>
+    <div id="drag-item-3-3">3</div>
+    <div id="drag-item-3-4">4</div>
+    <div id="drag-item-3-5">5</div>
 </div>
 
 <script>
@@ -212,6 +221,49 @@
     };
 
     var secondDnd = new CgDnd(secondSettings);
+
+    var thirdSettings = {
+        bounds: '#third-example',
+        possibleToReplaceItem: true,
+        dragItems: [
+            {
+                node: '#drag-item-3-1',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-3-2',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item',
+            },
+            {
+                node: '#drag-item-3-3',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-3-4',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-3-5',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            }
+        ],
+        onCreate: function (dndObj) {
+            console.log(dndObj);
+        }
+    };
+
+    var thirdDnd = new CgDnd(thirdSettings);
+
 </script>
 </body>
 </html>
