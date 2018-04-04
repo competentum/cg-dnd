@@ -2,7 +2,7 @@ import localUtils from '../utils';
 import DefaultDndElement from '../DefaultDnDElement';
 
 /**
- * Accessible drag item Component
+ * Accessible drop area Component
  */
 class DropArea extends DefaultDndElement {
   /**
@@ -233,7 +233,7 @@ class DropArea extends DefaultDndElement {
       this.innerDragItems[i].translateTo({
         left: this.innerDragItems[i].coordinates.current.left,
         top: this.innerDragItems[i].coordinates.current.top + shiftY
-      }, true);
+      }, true, {}, () => this.innerDragItems[i].coordinates.droppedIn.update());
     }
 
     if (aligningKind === 'center' && fromIndex) {
@@ -241,7 +241,7 @@ class DropArea extends DefaultDndElement {
         this.innerDragItems[i].translateTo({
           left: this.innerDragItems[i].coordinates.current.left,
           top: this.innerDragItems[i].coordinates.current.top - shiftY
-        }, true);
+        }, true, {}, () => this.innerDragItems[i].coordinates.droppedIn.update());
       }
     }
   }

@@ -187,8 +187,7 @@ class CgDnd extends EventEmitter {
 
     this.isClick = true;
 
-    const draggedNode = item.node;
-    const box = localUtils.getElementPosition(draggedNode);
+    const box = localUtils.getElementPosition(item.node);
 
     item.shiftX = e.pageX - box.left;
     item.shiftY = e.pageY - box.top;
@@ -272,17 +271,20 @@ class CgDnd extends EventEmitter {
 
     switch (e.keyCode) {
       case KEY_CODES.UP_ARROW:
+        e.preventDefault();
         if (item.siblings.prev) {
           item.siblings.prev.node.focus();
         }
         break;
       case KEY_CODES.DOWN_ARROW:
+        e.preventDefault();
         if (item.siblings.next) {
           item.siblings.next.node.focus();
         }
         break;
       case KEY_CODES.ENTER:
       case KEY_CODES.SPACE:
+        e.preventDefault();
         this.isClick = true;
         item.node.click();
         break;
@@ -391,10 +393,8 @@ class CgDnd extends EventEmitter {
     if (sameDropArea) {
       dragItem.translateTo(dragItem.coordinates.droppedIn, true);
     } else if (this.settings.snap) {
-      // DragItem.translateTo(chosenDropArea.coordinates.default, true);
-      dragItem.translateTo(chosenDropArea.getAlignedCoords(dragItem), true);
+      dragItem.translateTo(chosenDropArea.getAlignedCoords(dragItem), true, {}, () => dragItem.coordinates.droppedIn.update());
     }
-    dragItem.coordinates.current.update();
 
     chosenDropArea.includeDragItem(dragItem);
 
@@ -414,8 +414,6 @@ class CgDnd extends EventEmitter {
     if (this.remainingDragItems[0]) {
       this.remainingDragItems[0].node.focus();
     }
-
-    dragItem.coordinates.droppedIn.update();
   }
 
   /**
@@ -459,6 +457,11 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Replace drag items, one/both of which are in drop area
+   * @param {object} dragItem1 - first replaced drag item
+   * @param {object} dragItem2 - second replaced drag item
+   */
   replaceDroppedItems(dragItem1, dragItem2) {
     const firstItemDropArea = dragItem1.chosenDropArea;
     const secondItemDropArea = dragItem2.chosenDropArea;
@@ -478,6 +481,11 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Replace drag items between themselves, when drop areas don't exist
+   * @param {object} dragItem1 - first replaced drag item
+   * @param {object} dragItem2 - second replaced drag item
+   */
   replaceDragItems(dragItem1, dragItem2) {
     const firstItemStartCoordinates = merge.recursive(true, {}, dragItem1.coordinates.currentStart);
     const secondItemStartCoordinates = merge.recursive(true, {}, dragItem2.coordinates.currentStart);
@@ -488,14 +496,11 @@ class CgDnd extends EventEmitter {
     localUtils.replaceArrayItems(this.settings.dragItems, dragItem1, dragItem2);
   }
 
-  _moveArrayItems(array, movedItemIndex, toIndex) {
-    array.splice(toIndex, 0, array.splice(movedItemIndex, 1)[0]);
-
-    array.forEach((item, i) => {
-      item.index = i;
-    });
-  }
-
+  /**
+   * Replace first drag item after second drag item with a shift intermediate drag items, when drop areas don't exist
+   * @param {object} dragItem - first replaced drag item
+   * @param {object} toDragItem - drag item, on which place first drag item would be replaced
+   */
   moveDragItems(dragItem, toDragItem) {
     localUtils.moveArrayItems(this.settings.dragItems, dragItem.index, toDragItem.index);
 

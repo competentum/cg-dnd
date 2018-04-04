@@ -22,7 +22,6 @@ const utils = {
    * @param {string} settingName - name of setting property.
    * @param {string|number|object|boolean} settingValue - wrong value
    * @param {string} validMessage - message, which contains correct value type
-   * @private
    */
   showSettingError(settingName, settingValue, validMessage) {
     const errorValue = typeof settingValue === 'string' ? settingValue : typeof settingValue;
@@ -45,7 +44,8 @@ const utils = {
   },
 
   /**
-   * Get node rect angles coordinates.
+   * Get node rect angles coordinates. Add boundary fault for cases, when drag items left/top-scopes equals 0
+   * (otherwise drag items are clinging to scopes)
    * @param {object} node - html-element
    * @return {object} - rect coordinates
    */
@@ -62,6 +62,14 @@ const utils = {
     return rect;
   },
 
+  /**
+   * Get node's current max-moving rectangle coordinates
+   * @param {object} nodeParams - DOMRect params
+   * @param {object} boundsParams - DOMRect params
+   * @param {number} mouseX - horizontal mouse shift about dragged node
+   * @param {number} mouseY - vertical mouse shift about dragged node
+   * @return {object} - rect coordinates
+   */
   calculateCurrentBounds(nodeParams, boundsParams, mouseX, mouseY) {
     return {
       left: boundsParams.left + mouseX - nodeParams.left,
@@ -71,6 +79,13 @@ const utils = {
     };
   },
 
+  /**
+   * Get node's coordinates in current possible rectangle
+   * @param {number} position - current pageX/pageY position
+   * @param {number} min - min rectangle's limit value
+   * @param {number} max - max rectangle's limit value
+   * @return {number} - valid value
+   */
   applyLimit(position, min, max) {
     return Math.min(Math.max(position, min), max);
   },
@@ -80,7 +95,6 @@ const utils = {
    * @param {object} rect1 - first rect DOMRect coordinates
    * @param {object} rect2 - second rect DOMRect coordinates
    * @return {boolean} - return intersection result (true/false)
-   * @private
    */
   isIntersectRect(rect1, rect2) {
     return !(rect2.left > rect1.right
@@ -106,7 +120,6 @@ const utils = {
    * Checks and fix ID selector string.
    * @param {string} selectorString - checked string.
    * @return {string} - return valid ID selector string
-   * @private
    */
   checkIDSelector(selectorString) {
     if (selectorString.search(/^\./) !== -1) {
@@ -120,7 +133,6 @@ const utils = {
    * Checks and fix class selector string.
    * @param {string} selectorString - checked string.
    * @return {string} - return valid class selector string
-   * @private
    */
   checkClassSelector(selectorString) {
     if (selectorString.search(/^#/) !== -1) {
@@ -134,7 +146,6 @@ const utils = {
    * Checks user setting's boolean values.
    * @param {boolean|string|number} value - checked value.
    * @return {boolean|null} - return boolean value or null
-   * @private
    */
   checkOnBoolean(value) {
     let boolElem = null;
@@ -148,6 +159,12 @@ const utils = {
     return boolElem;
   },
 
+  /**
+   * Get index of array element, which corresponds to the condition in callback
+   * @param {array} array
+   * @param {function} callBack
+   * @return {number} index
+   */
   findIndex(array, callBack) {
     if (Array.prototype.findIndex) {
       return array.findIndex(callBack);
@@ -162,6 +179,14 @@ const utils = {
     return -1;
   },
 
+  /**
+   * Fill array by one value
+   * @param {array} array
+   * @param {number} value
+   * @param {number} from - from index
+   * @param {number} to - to index
+   * @return {array} filled array
+   */
   fillArray(array, value, from = 0, to = array.length) {
     if (Array.prototype.fill) {
       return array.fill(value, from, to);
@@ -174,6 +199,12 @@ const utils = {
     return array;
   },
 
+  /**
+   * Replace two array elements between themselves
+   * @param {array} array
+   * @param {object} item1 - drag item
+   * @param {object} item2 - drag item
+   */
   replaceArrayItems(array, item1, item2) {
     [array[item1.index], array[item2.index]] = [array[item2.index], array[item1.index]];
 
@@ -183,6 +214,12 @@ const utils = {
     item2.index = bufIndex;
   },
 
+  /**
+   * Move array element to new position and shift remaining array elements
+   * @param {array} array
+   * @param {object} movedItemIndex - moved item index in array
+   * @param {object} toIndex - wanted position
+   */
   moveArrayItems(array, movedItemIndex, toIndex) {
     array.splice(toIndex, 0, array.splice(movedItemIndex, 1)[0]);
 

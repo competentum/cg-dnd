@@ -145,7 +145,6 @@ class DragItem extends DefaultDndElement {
       setTimeout(() => {
         this.node.style.transition = '';
         this.coordinates.current.update();
-        this.coordinates.droppedIn.update();
 
         animationEndCallback();
       }, props.duration + props.delay);

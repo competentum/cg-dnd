@@ -148,6 +148,11 @@ class DefaultDndElement {
     return initCoordinates;
   }
 
+  /**
+   * Create element's position object with updating method
+   * @param {string} coordinatesName - coordinates object name
+   * @param {object} coords - existing coordinates object
+   */
   _createCoordinatesObject(coordinatesName, coords) {
     this.coordinates[coordinatesName] = coords || localUtils.getElementPosition(this.node);
     this.coordinates[coordinatesName] = merge.recursive(
