@@ -27,7 +27,7 @@
     </div>
 </div>
 
-<div id="second-example" class="example-container">
+<div id="second-example" class="example-container with-margin-top">
     <div class="example" id="example-2">
         <div class="drag-item-container">
             <div id="drag-item-11">drag item 1</div>
@@ -42,12 +42,20 @@
     </div>
 </div>
 
-<div id="third-example" class="example-container">
+<div id="third-example" class="example-container with-margin-top">
     <div id="drag-item-3-1">1</div>
     <div id="drag-item-3-2">2</div>
     <div id="drag-item-3-3">3</div>
     <div id="drag-item-3-4">4</div>
     <div id="drag-item-3-5">5</div>
+</div>
+
+<div id="fourth-example" class="example-container with-margin-top">
+    <div id="drag-item-4-1">1</div>
+    <div id="drag-item-4-2">2</div>
+    <div id="drag-item-4-3">3</div>
+    <div id="drag-item-4-4">4</div>
+    <div id="drag-item-4-5">5</div>
 </div>
 
 <script>
@@ -58,7 +66,7 @@
         alignRemainingDragItems: true,
         handler: '.handler',
         maxItemsInDropArea: 1,
-        possibleToReplaceItem: true,
+        possibleToReplaceDroppedItem: true,
         tooltipParams: {
             html: 'custom tooltip',
             className: 'custom-tooltip',
@@ -149,7 +157,7 @@
         alignRemainingDragItems: true,
         handler: '.handler',
         maxItemsInDropArea: 0,
-        possibleToReplaceItem: true,
+        possibleToReplaceDroppedItem: true,
         snapAlignParams: {
             horizontalAlign: 'center',
             verticalAlign: 'top',
@@ -263,6 +271,49 @@
     };
 
     var thirdDnd = new CgDnd(thirdSettings);
+
+    var fourthSettings = {
+        bounds: '#fourth-example',
+        possibleToReplaceItem: true,
+        shiftDragItems: true,
+        dragItems: [
+            {
+                node: '#drag-item-4-1',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-4-2',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item',
+            },
+            {
+                node: '#drag-item-4-3',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-4-4',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            },
+            {
+                node: '#drag-item-4-5',
+                data: null,
+                ariaLabel: '',
+                className: 'drag-item'
+            }
+        ],
+        onCreate: function (dndObj) {
+            console.log(dndObj);
+        }
+    };
+
+    var fourthDnd = new CgDnd(fourthSettings);
 
 </script>
 </body>

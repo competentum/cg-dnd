@@ -42,8 +42,7 @@
     outline: 2px dashed #000;
 }
 
-#second-example,
-#third-example {
+.with-margin-top {
     margin-top: 50px;
 }
 
@@ -67,4 +66,7 @@
 #example-2 .drop-area {
     width: 200px;
     height: 400px;
+}
+#fourth-example {
+    max-width: 500px;
 }

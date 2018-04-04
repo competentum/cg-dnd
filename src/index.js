@@ -40,7 +40,8 @@ class CgDnd extends EventEmitter {
         snap: true,
         maxItemsInDropArea: 1,
         alignRemainingDragItems: false,
-        possibleToReplaceItem: false,
+        possibleToReplaceDroppedItem: false,
+        shiftDragItems: false,
         animationParams: {
           animatedProperty: 'transform',
           duration: 500,
@@ -295,7 +296,7 @@ class CgDnd extends EventEmitter {
 
       if (!item.chosenDropArea) {
         this._currentFirstDropArea.node.focus();
-      } else if (this.settings.possibleToReplaceItem) {
+      } else if (this.settings.possibleToReplaceDroppedItem) {
         // Item.reset();
         this._currentFirstDropArea.node.focus();
       }
@@ -355,7 +356,9 @@ class CgDnd extends EventEmitter {
       }
 
       if (chosenDragItem) {
-        this.replaceDragItems(dragItem, chosenDragItem);
+        this.settings.shiftDragItems
+          ? this.moveDragItems(dragItem, chosenDragItem)
+          : this.replaceDragItems(dragItem, chosenDragItem);
       } else {
         dragItem.reset();
       }
@@ -402,7 +405,7 @@ class CgDnd extends EventEmitter {
       this.remainingDragItems.splice(inRemainingItemsIndex, 1);
       this._shiftRemainingDragItems();
 
-      if (!this.settings.possibleToReplaceItem) {
+      if (!this.settings.possibleToReplaceDroppedItem) {
         this._updateSiblings(dragItem);
         dragItem.disable();
       }
@@ -482,16 +485,23 @@ class CgDnd extends EventEmitter {
     dragItem1.translateTo(secondItemStartCoordinates, true, {}, () => dragItem1.coordinates.currentStart.update());
     dragItem2.translateTo(firstItemStartCoordinates, true, {}, () => dragItem2.coordinates.currentStart.update());
 
-    this._replaceArrayItems(this.settings.dragItems, dragItem1, dragItem2);
+    localUtils.replaceArrayItems(this.settings.dragItems, dragItem1, dragItem2);
   }
 
-  _replaceArrayItems(array, item1, item2) {
-    [array[item1.index], array[item2.index]] = [array[item2.index], array[item1.index]];
+  _moveArrayItems(array, movedItemIndex, toIndex) {
+    array.splice(toIndex, 0, array.splice(movedItemIndex, 1)[0]);
 
-    const bufIndex = item1.index;
+    array.forEach((item, i) => {
+      item.index = i;
+    });
+  }
 
-    item1.index = item2.index;
-    item2.index = bufIndex;
+  moveDragItems(dragItem, toDragItem) {
+    localUtils.moveArrayItems(this.settings.dragItems, dragItem.index, toDragItem.index);
+
+    this.settings.dragItems.forEach((item, index) => {
+      item.translateTo(this.initDragItemsPlaces[index], true, {}, () => item.coordinates.currentStart.update());
+    });
   }
 
   /**
@@ -580,7 +590,7 @@ class CgDnd extends EventEmitter {
       case 'snap':
       case 'disabled':
       case 'alignRemainingDragItems':
-      case 'possibleToReplaceItem':
+      case 'possibleToReplaceDroppedItem':
         verifiedValue = localUtils.checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {

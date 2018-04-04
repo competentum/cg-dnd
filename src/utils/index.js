@@ -172,6 +172,23 @@ const utils = {
     }
 
     return array;
+  },
+
+  replaceArrayItems(array, item1, item2) {
+    [array[item1.index], array[item2.index]] = [array[item2.index], array[item1.index]];
+
+    const bufIndex = item1.index;
+
+    item1.index = item2.index;
+    item2.index = bufIndex;
+  },
+
+  moveArrayItems(array, movedItemIndex, toIndex) {
+    array.splice(toIndex, 0, array.splice(movedItemIndex, 1)[0]);
+
+    array.forEach((item, i) => {
+      item.index = i;
+    });
   }
 };
 
