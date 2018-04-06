@@ -49,7 +49,8 @@ class DragItem extends DefaultDndElement {
   static get EVENTS() {
     if (!this._EVENTS) {
       this._EVENTS = {
-        DRAG_ITEM_RESET: 'reset'
+        DRAG_ITEM_RESET: 'reset',
+        ATTEMPT_TO_PUT_DRAG_ITEM: 'attemptToPutDragItem'
       };
     }
 
@@ -73,6 +74,18 @@ class DragItem extends DefaultDndElement {
 
     this._getMargins();
     this.emit = dndEmitterFunc;
+  }
+
+  set correct(value) {
+    this._correct = localUtils.checkOnBoolean(value);
+  }
+
+  get correct() {
+    if (!this._correct) {
+      this._correct = false;
+    }
+
+    return this._correct;
   }
 
   set currentDragStartPosition(coordinatesObj) {
@@ -101,8 +114,14 @@ class DragItem extends DefaultDndElement {
     if (flag && this.onMouseDownHandler) {
       this.handler.removeEventListener('mousedown', this.onMouseDownHandler);
       this.handler.removeEventListener('touchstart', this.onMouseDownHandler, { passive: false });
-      this.onMouseDownHandler = null;
+    } else if (this.onMouseDownHandler) {
+      this.handler.addEventListener('mousedown', this.onMouseDownHandler);
+      this.handler.addEventListener('touchstart', this.onMouseDownHandler, { passive: false });
     }
+  }
+
+  get disabled() {
+    return super.disabled;
   }
 
   _checkSetting(settingName, settingValue) {
@@ -169,8 +188,15 @@ class DragItem extends DefaultDndElement {
 
   reset() {
     this.translateTo(this.coordinates.currentStart, true);
+    if (this.chosenDropArea) {
+      this.chosenDropArea.excludeDragItem(this);
+    }
 
     this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this);
+
+    if (this.disabled) {
+      this.enable();
+    }
   }
 
   _getDefaultCoordinates() {
@@ -190,6 +216,44 @@ class DragItem extends DefaultDndElement {
       right: parseFloat(this.cssProperties.marginRight),
       bottom: parseFloat(this.cssProperties.marginBottom)
     };
+  }
+
+  /**
+   * Try to put drag item to chosen drop area
+   * @param {object} chosenDropArea - DropArea object
+   * @return {boolean} - return "true", if dragItem change his position, otherwise return "false"
+   * @public
+   */
+  putIntoDropArea(chosenDropArea) {
+    if (this.chosenDropArea && this.chosenDropArea === chosenDropArea) {
+      this.translateTo(this.coordinates.droppedIn, true);
+
+      return false;
+    }
+
+    this.translateTo(chosenDropArea.getAlignedCoords(this), true, {}, () => this.coordinates.droppedIn.update());
+    this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea);
+
+    return true;
+  }
+
+  replaceBy(replacedDragItem) {
+    const firstItemDropArea = this.chosenDropArea;
+    const secondItemDropArea = replacedDragItem.chosenDropArea;
+
+    if (firstItemDropArea) {
+      firstItemDropArea.excludeDragItem(this);
+      replacedDragItem.putIntoDropArea(firstItemDropArea);
+    } else {
+      replacedDragItem.reset();
+    }
+
+    if (secondItemDropArea) {
+      secondItemDropArea.excludeDragItem(replacedDragItem);
+      this.putIntoDropArea(secondItemDropArea);
+    } else {
+      this.reset();
+    }
   }
 }
 

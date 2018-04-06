@@ -46,6 +46,13 @@ class DropArea extends DefaultDndElement {
     const checkingSetting = super._checkSetting(settingName, settingValue);
 
     switch (settingName) {
+      case 'maxItemsInDropArea':
+        verifiedValue = +settingValue;
+
+        if (isNaN(verifiedValue) || verifiedValue < 0) {
+          localUtils.showSettingError(settingName, settingValue, 'Please set positive number or 0');
+        }
+        break;
       case 'snapAlignParams':
         if (typeof checkingSetting === 'object') {
           for (const key in checkingSetting) {
@@ -148,7 +155,7 @@ class DropArea extends DefaultDndElement {
     if (existingItemIndex !== -1) {
       this.innerDragItems.splice(existingItemIndex, 1);
       this.innerDragItemsCount--;
-      dragItem.chosenDropArea = null;
+      dragItem.chosenDropArea = dragItem.chosenDropArea === this ? null : dragItem.chosenDropArea;
 
       if (this.snapAlignParams.withShift
           && (existingItemIndex !== this.innerDragItems.length || this.snapAlignParams.verticalAlign === 'center')) {
