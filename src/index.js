@@ -335,15 +335,11 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _checkDragItemPosition(dragItem) {
-    let chosenDropArea;
+    let intersectedItemIndex;
 
     if (this.settings.dropAreas) {
-      for (let i = 0; i < this.settings.dropAreas.length; i++) {
-        if (this._checkIntersection(dragItem, this.settings.dropAreas[i])) {
-          chosenDropArea = this.settings.dropAreas[i];
-          break;
-        }
-      }
+      intersectedItemIndex = localUtils.findIndex(this.settings.dropAreas, (area) => this._checkIntersection(dragItem, area));
+      const chosenDropArea = intersectedItemIndex > -1 ? this.settings.dropAreas[intersectedItemIndex] : null;
 
       if (chosenDropArea) {
         // Drag item was dropped on drop area
@@ -355,14 +351,10 @@ class CgDnd extends EventEmitter {
         dragItem.reset();
       }
     } else {
-      let chosenDragItem;
-
-      for (let i = 0; i < this.settings.dragItems.length; i++) {
-        if (dragItem !== this.settings.dragItems[i] && this._checkIntersection(dragItem, this.settings.dragItems[i])) {
-          chosenDragItem = this.settings.dragItems[i];
-          break;
-        }
-      }
+      intersectedItemIndex = localUtils.findIndex(this.settings.dragItems, (item) => {
+        return dragItem !== item && this._checkIntersection(dragItem, item);
+      });
+      const chosenDragItem = intersectedItemIndex > -1 ? this.settings.dragItems[intersectedItemIndex] : null;
 
       if (chosenDragItem) {
         this.settings.shiftDragItems
