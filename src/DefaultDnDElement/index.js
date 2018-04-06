@@ -58,6 +58,8 @@ class DefaultDndElement {
   }
 
   get disabled() {
+    this._disabled = this._disabled === undefined ? false : this._disabled;
+
     return this._disabled;
   }
 
@@ -65,7 +67,10 @@ class DefaultDndElement {
     this._disabled = localUtils.checkOnBoolean(flag);
 
     this.node.setAttribute('aria-disabled', this._disabled);
-    this.tabIndex = -1;
+
+    if (this._disabled) {
+      this.tabIndex = -1;
+    }
   }
 
   _applySettings(settings) {
@@ -90,6 +95,18 @@ class DefaultDndElement {
 
   disable() {
     this.disabled = true;
+  }
+
+  enable() {
+    this.disabled = false;
+  }
+
+  focus(delay = 0) {
+    if (delay) {
+      setTimeout(() => this.node.focus(), delay);
+    } else {
+      this.node.focus();
+    }
   }
 
   _checkSetting(settingName, settingValue) {
