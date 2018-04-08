@@ -67,6 +67,30 @@
     width: 200px;
     height: 400px;
 }
+
 #fourth-example {
     max-width: 500px;
+}
+
+.standard-btn {
+    background: #ff7c0d;
+    color: #ffffff;
+    border: 2px solid #b13c2f;
+    font-size: 15px;
+    width: 60px;
+    height: 30px;
+    margin-right: 20px;
+}
+
+.standard-btn:hover {
+    background: #ffffff;
+    color: #ff7c0d;
+}
+
+.standard-btn:active {
+    font-size: 10px;
+}
+
+a {
+    display: block;
 }

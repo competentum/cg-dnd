@@ -1,0 +1,56 @@
+#main-container {
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.drag-item,
+.drop-area {
+  width: 80px;
+  text-align: center;
+}
+
+.with-handler .handler {
+  margin: -10px 11px -10px 9px;
+}
+
+.example-container {
+  max-width: 800px;
+  border: 1px solid #c7c7c7;
+}
+
+.dnd-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.buttons-container {
+  padding: 20px 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.example-container:not(:first-child) {
+  margin-top: 20px;
+}
+
+.transparent-drop-area {
+  padding: 20px;
+  border: 2px solid #060977;
+  background: transparent;
+  margin: 5px;
+}
+
+.horizontal {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#third-example .dnd-container {
+  flex-direction: column;
+}
+
+#third-example .dnd-container .drop-area-container {
+  margin-top: 40px;
+}
