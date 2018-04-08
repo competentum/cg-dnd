@@ -109,6 +109,10 @@ class DefaultDndElement {
     }
   }
 
+  select() {
+    this.node.click();
+  }
+
   _checkSetting(settingName, settingValue) {
     let verifiedValue;
 
@@ -156,13 +160,22 @@ class DefaultDndElement {
     return verifiedValue;
   }
 
-  _getDefaultCoordinates() {
-    const initCoordinates = localUtils.getElementPosition(this.node);
+  _getDefaultCoordinates(afterCoordinatesGettingCB) {
 
-    this.coordinates = {};
-    this._createCoordinatesObject('default', initCoordinates);
+    /**
+     * We get coordinates asynchronously, because otherwise getBoundingClientRect-method return wrong values sometimes
+     */
 
-    return initCoordinates;
+    setTimeout(() => {
+      const initCoordinates = localUtils.getElementPosition(this.node);
+
+      this.coordinates = {};
+      this._createCoordinatesObject('default', initCoordinates);
+
+      if (afterCoordinatesGettingCB) {
+        afterCoordinatesGettingCB(initCoordinates);
+      }
+    }, 0);
   }
 
   /**
