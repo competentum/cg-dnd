@@ -169,13 +169,7 @@ class DropArea extends DefaultDndElement {
       return true;
     }
 
-    for (let i = 0; i < dragItem.groups.length; i++) {
-      if (this.accept.includes(dragItem.groups[i])) {
-        return true;
-      }
-    }
-
-    return false;
+    return localUtils.findIndex(dragItem.groups, (item) => this.accept.includes(item)) > -1;
   }
 
   getHorizontalAlignedCoordinates(dragItem) {

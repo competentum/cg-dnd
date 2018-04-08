@@ -128,12 +128,13 @@ class CgDnd extends EventEmitter {
 
     this._applySettings(settings);
 
-    this._setSiblings(this.settings.dragItems);
+    this._initSiblings(this.settings.dragItems);
     this.remainingFirstDragItem = this.settings.dragItems[0];
 
     if (this.settings.dropAreas) {
-      this._setSiblings(this.settings.dropAreas);
+      this._initSiblings(this.settings.dropAreas);
       this.firstAllowedDropArea = this.settings.dropAreas[0];
+      this.firstAllowedDropArea.tabIndex = this.settings.possibleToReplaceDroppedItem ? 0 : -1;
     }
 
     // This._render();
@@ -247,30 +248,18 @@ class CgDnd extends EventEmitter {
     document.removeEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
 
     this._checkDragItemPosition(this.currentDragParams.draggedItem);
-
-    const dragItem = this.currentDragParams.draggedItem;
-
-    this.emit(this.constructor.EVENTS.DRAG_STOP, e, dragItem, dragItem.chosenDropArea);
-
-    // This.tooltip.hide();
   }
 
-  _onDragItemReset(dragItem) {
+  _onDragItemReset(dragItem, chosenDropArea) {
     if (this.remainingDragItems.indexOf(dragItem) === -1) {
       // If dropped dragItem is on dropArea and remaining drag items array includes it, we remove it from remaining drag items array
-      this.remainingDragItems.push(dragItem);
-
-      if (this.remainingDragItems.length > 1) {
-        this.remainingDragItems.sort((elem1, elem2) => elem1.index - elem2.index);
-      }
-
-      this._updateSiblings(dragItem);
-
-      if (this.remainingFirstDragItem !== this.remainingDragItems[0]) {
-        this.remainingFirstDragItem = this.remainingDragItems[0];
-      }
-
+      this._updateSiblings(dragItem, true, chosenDropArea.innerDragItems);
+      this._includeElementToArray(this.remainingDragItems, dragItem);
       this._shiftRemainingDragItems();
+    }
+
+    if (chosenDropArea && this.allowedDropAreas.indexOf(chosenDropArea) === -1) {
+      this._includeElementToArray(this.allowedDropAreas, chosenDropArea);
     }
   }
 
@@ -309,7 +298,9 @@ class CgDnd extends EventEmitter {
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
       this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
         dragItem: item,
-        dropAreas: this.settings.dropAreas
+        dropAreas: this.settings.dropAreas,
+        allowedDropAreas: this.allowedDropAreas,
+        firstAllowedDropArea: this.firstAllowedDropArea
       });
     }
   }
@@ -318,13 +309,10 @@ class CgDnd extends EventEmitter {
     if (this.isClick) {
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
         dropArea: area,
-        currentDraggedItem: this.currentDragParams.draggedItem || null,
+        droppedItems: area.innerDragItems,
+        currentDraggedItem: this.currentDragParams ? this.currentDragParams.draggedItem : null,
         remainingDragItems: this.remainingDragItems
       });
-
-      if (this.currentDragParams.draggedItem) {
-        this.emit(this.constructor.EVENTS.DRAG_STOP, e, this.currentDragParams.draggedItem, area);
-      }
     }
   }
 
@@ -335,11 +323,8 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _checkDragItemPosition(dragItem) {
-    let intersectedItemIndex;
-
     if (this.settings.dropAreas) {
-      intersectedItemIndex = localUtils.findIndex(this.settings.dropAreas, (area) => this._checkIntersection(dragItem, area));
-      const chosenDropArea = intersectedItemIndex > -1 ? this.settings.dropAreas[intersectedItemIndex] : null;
+      const chosenDropArea = this._getIntersectedElement(this.settings.dropAreas, (area) => this._checkIntersection(dragItem, area));
 
       if (chosenDropArea) {
         // Drag item was dropped on drop area
@@ -349,12 +334,11 @@ class CgDnd extends EventEmitter {
         // Drag item wasn't dropped on drop area
 
         dragItem.reset();
+        this._finishDrag(dragItem);
       }
     } else {
-      intersectedItemIndex = localUtils.findIndex(this.settings.dragItems, (item) => {
-        return dragItem !== item && this._checkIntersection(dragItem, item);
-      });
-      const chosenDragItem = intersectedItemIndex > -1 ? this.settings.dragItems[intersectedItemIndex] : null;
+      const chosenDragItem = this._getIntersectedElement(this.settings.dragItems,
+                                                         (item) => dragItem !== item && this._checkIntersection(dragItem, item));
 
       if (chosenDragItem) {
         this.settings.shiftDragItems
@@ -362,6 +346,7 @@ class CgDnd extends EventEmitter {
           : this.replaceDragItems(dragItem, chosenDragItem);
       } else {
         dragItem.reset();
+        this._finishDrag(dragItem);
       }
     }
   }
@@ -375,31 +360,31 @@ class CgDnd extends EventEmitter {
 
     if (this._isNeedToReset(dragItem, dropArea)) {
       dragItem.reset();
+      this._finishDrag(dragItem);
 
       return;
     }
 
     if (dragItem.chosenDropArea) {
+      this._updateSiblings(dragItem, true, dragItem.chosenDropArea.innerDragItems);
       dragItem.chosenDropArea.excludeDragItem(dragItem);
     }
     dropArea.includeDragItem(dragItem);
 
-    const inRemainingItemsIndex = this.remainingDragItems.indexOf(dragItem);
+    this._excludeElementFromArray(this.remainingDragItems, dragItem);
+    this._shiftRemainingDragItems();
 
-    if (inRemainingItemsIndex !== -1) {
-      // If dropped dragItem isn't on dropArea and remaining drag items array doesn't include it, we add it to remaining drag items array
-      this.remainingDragItems.splice(inRemainingItemsIndex, 1);
-      this._shiftRemainingDragItems();
-      this._updateSiblings(dragItem);
-
-      if (!this.settings.possibleToReplaceDroppedItem) {
-        dragItem.disable();
-      }
-
-      if (!this.remainingDragItems.length) {
-        this.remainingFirstDragItem = null;
-      }
+    if (this._isForbiddenDropArea(dropArea)) {
+      this._excludeElementFromArray(this.allowedDropAreas, dropArea);
     }
+
+    this._updateSiblings(dragItem, true, dropArea.innerDragItems);
+
+    if (!this.settings.possibleToReplaceDroppedItem) {
+      dragItem.disable();
+    }
+
+    this._finishDrag(dragItem, dropArea);
   }
 
   _isNeedToReplace(dropArea) {
@@ -408,6 +393,40 @@ class CgDnd extends EventEmitter {
 
   _isNeedToReset(dragItem, dropArea) {
     return dropArea.maxItemsInDropArea && dropArea.innerDragItemsCount === dropArea.maxItemsInDropArea || !dropArea.checkAccept(dragItem);
+  }
+
+  _isForbiddenDropArea(dropArea) {
+    return this.settings.forbidFocusOnFilledDropAreas && dropArea.maxItemsInDropArea === dropArea.innerDragItemsCount;
+  }
+
+  _finishDrag(dragItem, dropArea) {
+    this.emit(this.constructor.EVENTS.DRAG_STOP, null, dragItem, dropArea);
+    this.currentDragParams = null;
+  }
+
+  _getIntersectedElement(checkedElements, checkCB) {
+    const intersectedItemIndex = localUtils.findIndex(checkedElements, checkCB);
+
+    return intersectedItemIndex > -1 ? checkedElements[intersectedItemIndex] : null;
+  }
+
+  _includeElementToArray(array, element) {
+    array.push(element);
+
+    if (array.length > 1) {
+      array.sort((elem1, elem2) => elem1.index - elem2.index);
+    }
+
+    this._updateSiblings(element);
+  }
+
+  _excludeElementFromArray(array, element) {
+    const inArrayElementIndex = array.indexOf(element);
+
+    if (inArrayElementIndex !== -1) {
+      array.splice(inArrayElementIndex, 1);
+      this._updateSiblings(element);
+    }
   }
 
   /**
@@ -423,41 +442,105 @@ class CgDnd extends EventEmitter {
     return localUtils.isIntersectRect(dragItem.coordinates.current.update(), comparedAreaCoords);
   }
 
+  _updateSiblings(element, withoutCB = false, array) {
+    if (withoutCB) {
+      this._updateElementSiblings(element, array);
+    } else if (element instanceof DragItem) {
+      this._updateElementSiblings(element, this.remainingDragItems, this.remainingFirstDragItem, (item) => {
+        this.remainingFirstDragItem = item;
+      });
+    } else {
+      this._updateElementSiblings(element, this.allowedDropAreas, this.firstAllowedDropArea, (area) => {
+        this.firstAllowedDropArea = area;
+      });
+    }
+  }
+
   /**
    * Set new relations of remaining drag items for future keyboard access
-   * @param {object} draggedOutItem - drag item, which set to drop area
+   * @param {object} element - drag item, which set to drop area
+   * @param {array} elementsArray - array with siblings elements
+   * @param {object} firstCurrentElement - first remaining drag item or first allowed drp area
+   * @param {function} setFirstCurrentElementCB - callback-function for setting first element
    */
-  _updateSiblings(draggedOutItem) {
-    if (!draggedOutItem.siblings.next && !draggedOutItem.siblings.prev) {
+  _updateElementSiblings(element, elementsArray, firstCurrentElement, setFirstCurrentElementCB) {
+    if (!element.siblings.next && !element.siblings.prev) {
 
       /**
        * If drag item was returned to remaining drag items from drop area
        */
 
-      const returnedItemIndex = localUtils.findIndex(this.remainingDragItems, (remainingItem) => remainingItem === draggedOutItem);
-      const prevIndex = returnedItemIndex === 0 ? this.remainingDragItems.length - 1 : returnedItemIndex - 1;
-      const nextIndex = returnedItemIndex === this.remainingDragItems.length - 1 ? 0 : returnedItemIndex + 1;
+      const returnedItemIndex = localUtils.findIndex(elementsArray, (remainingItem) => remainingItem === element);
+      const closestElements = this._getClosestArraySiblings(elementsArray, returnedItemIndex);
 
-      this.remainingDragItems[prevIndex].siblings.next = draggedOutItem;
-      draggedOutItem.siblings.prev = this.remainingDragItems[prevIndex];
-
-      this.remainingDragItems[nextIndex].siblings.prev = draggedOutItem;
-      draggedOutItem.siblings.next = this.remainingDragItems[nextIndex];
+      this._includeToSiblings(element, closestElements, elementsArray, firstCurrentElement, setFirstCurrentElementCB);
     } else {
-
       /**
        * If drag item was leaved from remaining drag items to drop area
        */
 
-      draggedOutItem.siblings.prev.siblings.next = draggedOutItem.siblings.next;
-      draggedOutItem.siblings.next.siblings.prev = draggedOutItem.siblings.prev;
+      this._excludeFromSiblings(element, firstCurrentElement, setFirstCurrentElementCB);
+    }
+  }
 
-      if (this.remainingFirstDragItem === draggedOutItem && draggedOutItem.siblings.next !== draggedOutItem) {
-        this.remainingFirstDragItem = draggedOutItem.siblings.next;
+  _getClosestArraySiblings(elementsArray, elementIndex) {
+    const arrayBegin = 0;
+    const arrayEnd = elementsArray.length - 1;
+    const prevIndex = elementIndex === arrayBegin ? arrayEnd : elementIndex - 1;
+    const nextIndex = elementIndex === arrayEnd ? arrayBegin : elementIndex + 1;
+
+    return {
+      prevElement: elementsArray[prevIndex],
+      nextElement: elementsArray[nextIndex]
+    };
+  }
+
+  _includeToSiblings(element, inArraySiblings, elementsArray, firstCurrentElement, setFirstCurrentElementCB) {
+    const { prevElement, nextElement } = inArraySiblings;
+
+    prevElement.siblings.next = element;
+    element.siblings.prev = prevElement;
+
+    nextElement.siblings.prev = element;
+    element.siblings.next = nextElement;
+
+    if (firstCurrentElement && firstCurrentElement !== elementsArray[0]) {
+      setFirstCurrentElementCB(elementsArray[0]);
+    }
+  }
+
+  _excludeFromSiblings(excludedElement, currentFirstElement, setFirstCurrentElementCB) {
+    excludedElement.siblings.prev.siblings.next = excludedElement.siblings.next;
+    excludedElement.siblings.next.siblings.prev = excludedElement.siblings.prev;
+
+    if (currentFirstElement === excludedElement && excludedElement.siblings.next !== excludedElement) {
+      setFirstCurrentElementCB(excludedElement.siblings.next);
+    }
+
+    excludedElement.siblings.next = excludedElement.siblings.prev = null;
+  }
+
+  /**
+   * Set drag-handlers for each drag item, if Element was got, otherwise set drag-item as drag-handler
+   * @param {array} dndElements - array of DragItem/DropArea objects
+   * @private
+   */
+  _initSiblings(dndElements) {
+    const dndElementsLength = dndElements.length;
+
+    dndElements[0].siblings.prev = dndElements[dndElementsLength - 1];
+    dndElements[dndElementsLength - 1].siblings.next = dndElements[0];
+
+    dndElements.forEach((item, index) => {
+      if (!item.siblings.next) {
+        item.siblings.next = dndElements[index + 1];
+      }
+      if (!item.siblings.prev) {
+        item.siblings.prev = dndElements[index - 1];
       }
 
-      draggedOutItem.siblings.next = draggedOutItem.siblings.prev = null;
-    }
+      item.index = index;
+    });
   }
 
   /**
@@ -486,6 +569,7 @@ class CgDnd extends EventEmitter {
     dragItem2.translateTo(firstItemStartCoordinates, true, {}, () => dragItem2.coordinates.currentStart.update());
 
     localUtils.replaceArrayItems(this.settings.dragItems, dragItem1, dragItem2);
+    this._finishDrag(this.settings.dragItems, dragItem1, dragItem2);
   }
 
   /**
@@ -499,6 +583,7 @@ class CgDnd extends EventEmitter {
     this.settings.dragItems.forEach((item, index) => {
       item.translateTo(this.initDragItemsPlaces[index], true, {}, () => item.coordinates.currentStart.update());
     });
+    this._finishDrag(this.settings.dragItems, dragItem, toDragItem);
   }
 
   /**
@@ -526,10 +611,13 @@ class CgDnd extends EventEmitter {
     // DragItem.mainDnDEmitter = this;
 
     this.remainingDragItems = [...this.settings.dragItems];
+    this.allowedDropAreas = this.settings.dropAreas ? [...this.settings.dropAreas] : null;
     this.initDragItemsPlaces = [];
-    this.settings.dragItems.forEach((item, index) => {
-      this.initDragItemsPlaces[index] = merge({}, {}, item.coordinates.default);
-    });
+    setTimeout(() => {
+      this.settings.dragItems.forEach((item, index) => {
+        this.initDragItemsPlaces[index] = merge({}, {}, item.coordinates.default);
+      });
+    }, 0);
   }
 
   /**
@@ -651,29 +739,6 @@ class CgDnd extends EventEmitter {
     }
 
     return verifiedValue;
-  }
-
-  /**
-   * Set drag-handlers for each drag item, if Element was got, otherwise set drag-item as drag-handler
-   * @param {array} dndElements - array of DragItem/DropArea objects
-   * @private
-   */
-  _setSiblings(dndElements) {
-    const dndElementsLength = dndElements.length;
-
-    dndElements[0].siblings.prev = dndElements[dndElementsLength - 1];
-    dndElements[dndElementsLength - 1].siblings.next = dndElements[0];
-
-    dndElements.forEach((item, index) => {
-      if (!item.siblings.next) {
-        item.siblings.next = dndElements[index + 1];
-      }
-      if (!item.siblings.prev) {
-        item.siblings.prev = dndElements[index - 1];
-      }
-
-      item.index = index;
-    });
   }
 
   reset() {

@@ -1,6 +1,5 @@
 import merge from 'merge';
 import localUtils from '../utils';
-import EventEmitter from 'events';
 import DefaultDndElement from '../DefaultDnDElement';
 
 /**
@@ -55,18 +54,6 @@ class DragItem extends DefaultDndElement {
     }
 
     return this._EVENTS;
-  }
-
-  static set mainDnDEmitter(emitter) {
-    this._dndEmitter = emitter;
-  }
-
-  static get mainDnDEmitter() {
-    if (!this._dndEmitter) {
-      this._dndEmitter = new EventEmitter();
-    }
-
-    return this._dndEmitter;
   }
 
   constructor(settings, dndEmitterFunc) {
@@ -188,23 +175,25 @@ class DragItem extends DefaultDndElement {
 
   reset() {
     this.translateTo(this.coordinates.currentStart, true);
+    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea);
+
     if (this.chosenDropArea) {
       this.chosenDropArea.excludeDragItem(this);
     }
 
-    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this);
-
     if (this.disabled) {
       this.enable();
     }
+
+    this.correct = false;
   }
 
   _getDefaultCoordinates() {
-    const initCoords = super._getDefaultCoordinates();
-
-    this._createCoordinatesObject('current', initCoords);
-    this._createCoordinatesObject('currentStart', initCoords);
-    this._createCoordinatesObject('droppedIn', initCoords);
+    super._getDefaultCoordinates((initCoordinates) => {
+      this._createCoordinatesObject('current', initCoordinates);
+      this._createCoordinatesObject('currentStart', initCoordinates);
+      this._createCoordinatesObject('droppedIn', initCoordinates);
+    });
   }
 
   _getMargins() {
