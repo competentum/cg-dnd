@@ -253,9 +253,11 @@ class CgDnd extends EventEmitter {
   _onDragItemReset(dragItem, chosenDropArea) {
     if (this.remainingDragItems.indexOf(dragItem) === -1) {
       // If dropped dragItem is on dropArea and remaining drag items array includes it, we remove it from remaining drag items array
-      this._updateSiblings(dragItem, true, chosenDropArea.innerDragItems);
-      this._includeElementToArray(this.remainingDragItems, dragItem);
-      this._shiftRemainingDragItems();
+      if (chosenDropArea) {
+        this._removeFromDropArea(dragItem, chosenDropArea);
+      }
+
+      this._insertToRemainingDragItems(dragItem);
     }
 
     if (chosenDropArea && this.allowedDropAreas.indexOf(chosenDropArea) === -1) {
@@ -351,7 +353,13 @@ class CgDnd extends EventEmitter {
     }
   }
 
-  _onDragItemDroppedOnDropArea(dragItem, dropArea) {
+  _onDragItemDroppedOnDropArea(dragItem, dropArea, isSameDropArea) {
+    if (isSameDropArea) {
+      this._finishDrag(dragItem, dropArea);
+
+      return;
+    }
+
     if (this._isNeedToReplace(dropArea)) {
       dropArea.innerDragItems[0].replaceBy(dragItem);
 
@@ -365,26 +373,46 @@ class CgDnd extends EventEmitter {
       return;
     }
 
-    if (dragItem.chosenDropArea) {
-      this._updateSiblings(dragItem, true, dragItem.chosenDropArea.innerDragItems);
-      dragItem.chosenDropArea.excludeDragItem(dragItem);
-    }
-    dropArea.includeDragItem(dragItem);
+    const previousDropArea = dragItem.chosenDropArea;
 
-    this._excludeElementFromArray(this.remainingDragItems, dragItem);
-    this._shiftRemainingDragItems();
+    if (previousDropArea) {
+      this._removeFromDropArea(dragItem, previousDropArea);
+    } else {
+      this._removeFromRemainingDragItems(dragItem);
+    }
+
+    this._insertToDropArea(dragItem, dropArea);
 
     if (this._isForbiddenDropArea(dropArea)) {
       this._excludeElementFromArray(this.allowedDropAreas, dropArea);
     }
-
-    this._updateSiblings(dragItem, true, dropArea.innerDragItems);
 
     if (!this.settings.possibleToReplaceDroppedItem) {
       dragItem.disable();
     }
 
     this._finishDrag(dragItem, dropArea);
+  }
+
+  _insertToDropArea(dragItem, dropArea) {
+    dropArea.includeDragItem(dragItem);
+    dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
+  }
+
+  _removeFromDropArea(dragItem, dropArea) {
+    dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
+    dropArea.excludeDragItem(dragItem);
+    this._removeSiblings(dragItem);
+  }
+
+  _removeFromRemainingDragItems(dragItem) {
+    this._excludeElementFromArray(this.remainingDragItems, dragItem);
+    this._shiftRemainingDragItems();
+  }
+
+  _insertToRemainingDragItems(dragItem) {
+    this._includeElementToArray(this.remainingDragItems, dragItem);
+    this._shiftRemainingDragItems();
   }
 
   _isNeedToReplace(dropArea) {
@@ -517,7 +545,11 @@ class CgDnd extends EventEmitter {
       setFirstCurrentElementCB(excludedElement.siblings.next);
     }
 
-    excludedElement.siblings.next = excludedElement.siblings.prev = null;
+    this._removeSiblings(excludedElement);
+  }
+
+  _removeSiblings(dragItem) {
+    dragItem.siblings.next = dragItem.siblings.prev = null;
   }
 
   /**
@@ -595,7 +627,7 @@ class CgDnd extends EventEmitter {
     /**
      * @type DndSettings
      */
-    this.settings = merge.recursive({}, this.constructor.DEFAULT_SETTINGS, settings);
+    this.settings = merge.recursive(true, {}, this.constructor.DEFAULT_SETTINGS, settings);
 
     for (const key in this.settings) {
       if (this.settings.hasOwnProperty(key)) {
@@ -624,7 +656,6 @@ class CgDnd extends EventEmitter {
    * Checks and fix user settings
    * @param {string} settingName - checked property.
    * @param {string|number|object|boolean} settingValue - checked property value
-   * @param {Element} elemNode - HTML-Element for setting HTML-attributes and HTML-classes
    * @return {string|number|object|boolean} - return verified value
    * @private
    */
@@ -643,11 +674,11 @@ class CgDnd extends EventEmitter {
               dndElement = settingName === 'dragItems'
                 ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this.emit.bind(this))
                 : new DropArea(merge.recursive(
-                  true, {
-                    snapAlignParams: this.settings.snapAlignParams,
-                    maxItemsInDropArea: this.settings.maxItemsInDropArea
-                  },
-                  settings));
+                true, {
+                  snapAlignParams: this.settings.snapAlignParams,
+                  maxItemsInDropArea: this.settings.maxItemsInDropArea
+                },
+                settings));
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
@@ -742,21 +773,11 @@ class CgDnd extends EventEmitter {
   }
 
   reset() {
-    this.settings.dragItems.forEach((item) => {
-      item.reset();
-    });
-
-    this._shiftRemainingDragItems();
+    this.settings.dropAreas.forEach((area) => area.resetInnerDragItems());
   }
 
   resetIncorrectItems() {
-    this.settings.dragItems.forEach((item) => {
-      if (!item.correct) {
-        item.reset();
-      }
-    });
-
-    this._shiftRemainingDragItems();
+    this.settings.dropAreas.forEach((area) => area.resetIncorrectDragItems());
   }
 
   /**

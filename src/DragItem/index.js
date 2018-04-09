@@ -158,11 +158,11 @@ class DragItem extends DefaultDndElement {
       // We update coordinates before animation ends
 
       this.coordinates.current.update({
-        left: x,
-        top: y,
-        right: x + this.coordinates.current.width,
-        bottom: y + this.coordinates.current.height
-      });
+                                        left: x,
+                                        top: y,
+                                        right: x + this.coordinates.current.width,
+                                        bottom: y + this.coordinates.current.height
+                                      });
     }
 
     this.node.style.transform = `translate(${left}px, ${top}px)`;
@@ -173,9 +173,9 @@ class DragItem extends DefaultDndElement {
     }
   }
 
-  reset() {
+  reset(from) {
     this.translateTo(this.coordinates.currentStart, true);
-    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea);
+    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || from);
 
     if (this.chosenDropArea) {
       this.chosenDropArea.excludeDragItem(this);
@@ -216,6 +216,7 @@ class DragItem extends DefaultDndElement {
   putIntoDropArea(chosenDropArea) {
     if (this.chosenDropArea && this.chosenDropArea === chosenDropArea) {
       this.translateTo(this.coordinates.droppedIn, true);
+      this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, true);
 
       return false;
     }
@@ -234,14 +235,14 @@ class DragItem extends DefaultDndElement {
       firstItemDropArea.excludeDragItem(this);
       replacedDragItem.putIntoDropArea(firstItemDropArea);
     } else {
-      replacedDragItem.reset();
+      replacedDragItem.reset(secondItemDropArea);
     }
 
     if (secondItemDropArea) {
       secondItemDropArea.excludeDragItem(replacedDragItem);
       this.putIntoDropArea(secondItemDropArea);
     } else {
-      this.reset();
+      this.reset(firstItemDropArea);
     }
   }
 }

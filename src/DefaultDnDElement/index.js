@@ -113,6 +113,10 @@ class DefaultDndElement {
     this.node.click();
   }
 
+  addClass(className) {
+    this._checkSetting('className', className);
+  }
+
   _checkSetting(settingName, settingValue) {
     let verifiedValue;
 
@@ -161,7 +165,6 @@ class DefaultDndElement {
   }
 
   _getDefaultCoordinates(afterCoordinatesGettingCB) {
-
     /**
      * We get coordinates asynchronously, because otherwise getBoundingClientRect-method return wrong values sometimes
      */

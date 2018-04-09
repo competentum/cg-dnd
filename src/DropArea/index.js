@@ -263,6 +263,28 @@ class DropArea extends DefaultDndElement {
       left: this.snapAlignParams.eachDroppedItemIndents[3] + itemMargins.left
     };
   }
+
+  resetInnerDragItems() {
+    if (this.innerDragItems.length) {
+      while (this.innerDragItems.length) {
+        this.innerDragItems[0].reset();
+      }
+    }
+  }
+
+  resetIncorrectDragItems() {
+    if (this.innerDragItems.length) {
+      const incorrectItems = [];
+
+      this.innerDragItems.forEach((dragItem) => {
+        if (!dragItem.correct) {
+          incorrectItems.push(dragItem);
+        }
+      });
+
+      incorrectItems.forEach((item) => item.reset());
+    }
+  }
 }
 
 export default DropArea;
