@@ -4,7 +4,7 @@
       resetButton = exampleContainer.querySelector('.reset-btn');
 
   var settings = {
-    bounds: '#second-example',
+    bounds: '#first-example',
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
     handler: '.handler',
@@ -18,47 +18,47 @@
     dragItems: [
       {
         node: '#drag-item-1',
-        data: null,
+        data: 'first',
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       },
       {
         node: '#drag-item-2',
-        data: null,
+        data: 'second',
         ariaLabel: '',
-        className: 'drag-item',
+        className: 'custom-class',
       },
       {
         node: '#drag-item-3',
-        data: null,
+        data: 'third',
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       },
       {
         node: '#drag-item-4',
-        data: null,
+        data: 'third',
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       },
       {
         node: '#drag-item-5',
-        data: null,
+        data: 'third',
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       }
     ],
     dropAreas: [
       {
         node: '#drop-area-1',
         ariaLabel: '',
-        data: null,
-        className: 'drop-area',
+        data: 'first',
+        className: 'custom-drop-area-class',
       },
       {
         node: '#drop-area-2',
         ariaLabel: '',
-        data: null,
-        className: 'drop-area',
+        data: 'second',
+        className: 'custom-drop-area-class',
         snapAlignParams: {
           verticalAlign: 'bottom'
         }
@@ -66,8 +66,8 @@
       {
         node: '#drop-area-3',
         ariaLabel: '',
-        data: null,
-        className: 'drop-area',
+        data: 'third',
+        className: 'custom-drop-area-class',
         snapAlignParams: {
           verticalAlign: 'center'
         }
@@ -77,10 +77,10 @@
     },
     onDragMove: function (e, item) {
     },
-    onDragStop: function (e, dragItem, dropArea) {
+    onDragStop: function (e, params) {
       console.log('stop')
-      if (dragItem && dropArea) {
-        dragItem.correct = dragItem.data === dropArea.data;
+      if (params.dragItem && params.dropArea) {
+        params.dragItem.correct = params.dragItem.data === params.dropArea.data;
       }
     },
     onCreate: function (dndObj) {

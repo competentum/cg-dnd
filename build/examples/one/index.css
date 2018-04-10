@@ -5,34 +5,17 @@
   margin: auto;
 }
 
-.drag-item,
-.drop-area {
-  width: 80px;
-  text-align: center;
+.with-handler {
+  display: flex;
 }
 
 .with-handler .handler {
+  display: flex;
+  align-items: center;
+  background-color: red;
+  position: relative;
   margin: -10px 11px -10px 9px;
-}
-
-.example-container {
-  max-width: 800px;
-  border: 1px solid #c7c7c7;
-}
-
-.dnd-container {
-  display: flex;
-  justify-content: space-between;
-}
-
-.buttons-container {
-  padding: 20px 10px;
-  display: flex;
-  justify-content: center;
-}
-
-.example-container:not(:first-child) {
-  margin-top: 20px;
+  cursor: pointer;
 }
 
 .transparent-drop-area {

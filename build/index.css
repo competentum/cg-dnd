@@ -1,7 +1,32 @@
+#main-container {
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+}
+
 .example {
     display: flex;
     justify-content: space-between;
-    max-width: 800px;
+}
+
+.example-container {
+    border: 1px solid #c7c7c7;
+}
+
+.dnd-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.buttons-container {
+    padding: 20px 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.example-container:not(:first-child) {
+    margin-top: 20px;
 }
 
 .drag-item,
@@ -9,6 +34,8 @@
     padding: 10px 5px;
     margin: 15px 5px;
     user-select: none;
+    width: 80px;
+    text-align: center;
 }
 
 .drag-item {
@@ -17,21 +44,9 @@
     text-align: center;
 }
 
-.with-handler {
-    display: flex;
-}
-
-.with-handler .handler {
-    display: flex;
-    align-items: center;
-    background-color: red;
-    position: relative;
-    margin: -10px -5px -10px 5px;
-    cursor: pointer;
-}
-
 .drop-area {
-    background-color: #5bf197;
+    outline: 1px solid #060977;
+    background: transparent;
 }
 
 .example-container {
@@ -40,36 +55,6 @@
 
 *:focus {
     outline: 2px dashed #000;
-}
-
-.with-margin-top {
-    margin-top: 50px;
-}
-
-#example-2 {
-    display: flex;
-    justify-content: space-between;
-    flex-direction: row;
-    max-width: 1000px;
-}
-
-#example-2 .drag-item-container {
-    width: 95px;
-}
-
-#example-2 .drop-area-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-}
-
-#example-2 .drop-area {
-    width: 200px;
-    height: 400px;
-}
-
-#fourth-example {
-    max-width: 500px;
 }
 
 .standard-btn {
@@ -93,4 +78,8 @@
 
 a {
     display: block;
+}
+
+.correct-item {
+    background-color: #26ba13;
 }

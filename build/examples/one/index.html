@@ -12,18 +12,18 @@
         <h1>no replacing, all focused</h1>
         <div class="dnd-container">
             <div class="drag-item-container">
-                <div id="drag-item-1">drag item 1</div>
-                <div id="drag-item-2">drag item 2</div>
-                <div id="drag-item-3" class="with-handler">item<div class="handler">handler</div></div>
-                <div id="drag-item-4">drag item 4</div>
-                <div id="drag-item-5">drag item 5</div>
+                <div id="drag-item-1" class="drag-item">drag item 1</div>
+                <div id="drag-item-2" class="drag-item">drag item 2</div>
+                <div id="drag-item-3" class="drag-item with-handler">item<div class="handler">handler</div></div>
+                <div id="drag-item-4" class="drag-item">drag item 4</div>
+                <div id="drag-item-5" class="drag-item">drag item 5</div>
             </div>
             <div class="drop-area-container">
-                <div id="drop-area-1">drop area 1</div>
-                <div id="drop-area-2">drop area 2</div>
-                <div id="drop-area-3">drop area 3</div>
-                <div id="drop-area-4">drop area 4</div>
-                <div id="drop-area-5">drop area 5</div>
+                <div id="drop-area-1" class="drop-area">drop area 1</div>
+                <div id="drop-area-2" class="drop-area">drop area 2</div>
+                <div id="drop-area-3" class="drop-area">drop area 3</div>
+                <div id="drop-area-4" class="drop-area">drop area 4</div>
+                <div id="drop-area-5" class="drop-area">drop area 5</div>
             </div>
         </div>
         <div class="buttons-container">
@@ -36,18 +36,18 @@
         <h1>no replacing, filled areas wouldn't be focused</h1>
         <div class="example">
             <div class="drag-item-container">
-                <div id="drag-item-2-1">drag item 1</div>
-                <div id="drag-item-2-2">drag item 2</div>
-                <div id="drag-item-2-3">drag item 3</div>
-                <div id="drag-item-2-4">drag item 4</div>
-                <div id="drag-item-2-5">drag item 5</div>
+                <div id="drag-item-2-1" class="drag-item">drag item 1</div>
+                <div id="drag-item-2-2" class="drag-item">drag item 2</div>
+                <div id="drag-item-2-3" class="drag-item">drag item 3</div>
+                <div id="drag-item-2-4" class="drag-item">drag item 4</div>
+                <div id="drag-item-2-5" class="drag-item">drag item 5</div>
             </div>
             <div class="drop-area-container">
-                <div id="drop-area-2-1">drop area 1</div>
-                <div id="drop-area-2-2">drop area 2</div>
-                <div id="drop-area-2-3">drop area 3</div>
-                <div id="drop-area-2-4">drop area 4</div>
-                <div id="drop-area-2-5">drop area 5</div>
+                <div id="drop-area-2-1" class="drop-area">drop area 1</div>
+                <div id="drop-area-2-2" class="drop-area">drop area 2</div>
+                <div id="drop-area-2-3" class="drop-area">drop area 3</div>
+                <div id="drop-area-2-4" class="drop-area">drop area 4</div>
+                <div id="drop-area-2-5" class="drop-area">drop area 5</div>
             </div>
         </div>
         <div class="buttons-container">
@@ -60,23 +60,43 @@
         <h1>with replacing, all focused</h1>
         <div class="dnd-container">
             <div class="drag-item-container horizontal">
-                <div id="drag-item-3-1">drag item 1</div>
-                <div id="drag-item-3-2">drag item 2</div>
-                <div id="drag-item-3-3">drag item 3</div>
-                <div id="drag-item-3-4">drag item 4</div>
-                <div id="drag-item-3-5">drag item 5</div>
+                <div id="drag-item-3-1" class="drag-item">drag item 1</div>
+                <div id="drag-item-3-2" class="drag-item">drag item 2</div>
+                <div id="drag-item-3-3" class="drag-item">drag item 3</div>
+                <div id="drag-item-3-4" class="drag-item">drag item 4</div>
+                <div id="drag-item-3-5" class="drag-item">drag item 5</div>
             </div>
             <div class="drop-area-container horizontal">
-                <div id="drop-area-3-1">drop area 1</div>
-                <div id="drop-area-3-2">drop area 2</div>
-                <div id="drop-area-3-3">drop area 3</div>
-                <div id="drop-area-3-4">drop area 4</div>
-                <div id="drop-area-3-5">drop area 5</div>
+                <div id="drop-area-3-1" class="drop-area">drop area 1</div>
+                <div id="drop-area-3-2" class="drop-area">drop area 2</div>
+                <div id="drop-area-3-3" class="drop-area">drop area 3</div>
+                <div id="drop-area-3-4" class="drop-area">drop area 4</div>
+                <div id="drop-area-3-5" class="drop-area">drop area 5</div>
             </div>
         </div>
         <div class="buttons-container">
             <button class="check-btn standard-btn">check</button>
             <button class="reset-btn standard-btn">reset</button>
+        </div>
+    </div>
+
+    <div class="content example-container" id="fourth-example">
+        <h1>no replacing, filled areas wouldn't be focused</h1>
+        <div class="example">
+            <div class="drag-item-container">
+                <div id="drag-item-4-1" class="drag-item">drag item 1</div>
+                <div id="drag-item-4-2" class="drag-item">drag item 2</div>
+                <div id="drag-item-4-3" class="drag-item">drag item 3</div>
+                <div id="drag-item-4-4" class="drag-item">drag item 4</div>
+                <div id="drag-item-4-5" class="drag-item">drag item 5</div>
+            </div>
+            <div class="drop-area-container">
+                <div id="drop-area-4-1" class="drop-area">drop area 1</div>
+                <div id="drop-area-4-2" class="drop-area">drop area 2</div>
+                <div id="drop-area-4-3" class="drop-area">drop area 3</div>
+                <div id="drop-area-4-4" class="drop-area">drop area 4</div>
+                <div id="drop-area-4-5" class="drop-area">drop area 5</div>
+            </div>
         </div>
     </div>
 </div>
@@ -85,5 +105,6 @@
 <script type="text/javascript" src="example-1.js"></script>
 <script type="text/javascript" src="example-1-2.js"></script>
 <script type="text/javascript" src="example-1-3.js"></script>
+<script type="text/javascript" src="example-1-4.js"></script>
 </body>
 </html>

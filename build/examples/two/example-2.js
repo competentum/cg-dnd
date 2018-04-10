@@ -1,83 +1,87 @@
 (function () {
-  var exampleContainer = document.getElementById('first-example'),
+  var exampleContainer = document.getElementById('second-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn');
 
   var settings = {
-    bounds: '#first-example',
+    bounds: '#second-example',
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
     handler: '.handler',
-    maxItemsInDropArea: 1,
-    tooltipParams: {
-      html: 'custom tooltip',
-      className: 'custom-tooltip',
+    snapAlignParams: {
+      horizontalAlign: 'center',
+      verticalAlign: 'top',
+      withDroppedItemCSSMargins: true
     },
     dragItems: [
       {
-        node: '#drag-item-1',
-        data: 1,
-        ariaLabel: '',
-        className: 'custom-class',
-        groups: ['www', 'something']
-      },
-      {
-        node: '#drag-item-2',
-        data: 2,
-        ariaLabel: '',
-        className: 'custom-class',
-        groups: 'something'
-      },
-      {
-        node: '#drag-item-3',
-        data: 3,
+        node: '#drag-item-2-1',
+        data: 'first',
         ariaLabel: '',
         className: 'custom-class'
       },
       {
-        node: '#drag-item-4',
-        data: 4,
+        node: '#drag-item-2-2',
+        data: 'second',
+        ariaLabel: '',
+        className: 'custom-class',
+      },
+      {
+        node: '#drag-item-2-3',
+        data: 'third',
         ariaLabel: '',
         className: 'custom-class'
       },
       {
-        node: '#drag-item-5',
-        data: 5,
+        node: '#drag-item-2-4',
+        data: 'third',
+        ariaLabel: '',
+        className: 'custom-class'
+      },
+      {
+        node: '#drag-item-2-5',
+        data: 'third',
         ariaLabel: '',
         className: 'custom-class'
       }
     ],
     dropAreas: [
       {
-        node: '#drop-area-1',
+        node: '#drop-area-2-1',
         ariaLabel: '',
-        data: 2,
-        className: 'custom-drop-area-class'
-      },
-      {
-        node: '#drop-area-2',
-        ariaLabel: '',
-        data: 4,
+        data: 'first',
         className: 'custom-drop-area-class',
-        //  accept: 'something'
+        maxItemsInDropArea: 2,
+        snapAlignParams: {
+          withShift: false,
+          horizontalAlign: 'left',
+          verticalAlign: 'top',
+          withDroppedItemCSSMargins: true
+        },
       },
       {
-        node: '#drop-area-3',
+        node: '#drop-area-2-2',
         ariaLabel: '',
-        data: 1,
-        className: 'custom-drop-area-class'
+        data: 'second',
+        className: 'custom-drop-area-class',
+        maxItemsInDropArea: 2,
+        snapAlignParams: {
+          verticalAlign: 'bottom',
+          horizontalAlign: 'right',
+          eachDroppedItemIndents: [40, 10],
+        }
       },
       {
-        node: '#drop-area-4',
+        node: '#drop-area-2-3',
         ariaLabel: '',
-        data: 5,
-        className: 'custom-drop-area-class'
-      },
-      {
-        node: '#drop-area-5',
-        ariaLabel: '',
-        data: 3,
-        className: 'custom-drop-area-class'
+        data: 'third',
+        className: 'custom-drop-area-class',
+        maxItemsInDropArea: 4,
+        snapAlignParams: {
+          verticalAlign: 'center',
+          horizontalAlign: 'center',
+          withDroppedItemCSSMargins: false
+        }
       }
     ],
     onDragStart: function (e, item) {
@@ -85,8 +89,9 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      if (params.dragItem && params.dropArea && params.dragItem.data === params.dropArea.data) {
-        params.dragItem.correct = true;
+      console.log('stop')
+      if (params.dragItem && params.dropArea) {
+        params.dragItem.correct = params.dragItem.data === params.dropArea.data;
       }
     },
     onCreate: function (dndObj) {
@@ -104,6 +109,8 @@
         } else {
           checkButton.focus();
         }
+      } else if (params.droppedItems.length) {
+        params.droppedItems[0].focus();
       }
     }
   };

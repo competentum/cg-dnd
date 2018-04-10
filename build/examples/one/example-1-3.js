@@ -22,33 +22,33 @@
         node: '#drag-item-3-1',
         data: 1,
         ariaLabel: '',
-        className: 'drag-item',
+        className: 'custom-class',
         groups: ['www', 'something']
       },
       {
         node: '#drag-item-3-2',
         data: 2,
         ariaLabel: '',
-        className: 'drag-item',
+        className: 'custom-class',
         groups: 'something'
       },
       {
         node: '#drag-item-3-3',
         data: 3,
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       },
       {
         node: '#drag-item-3-4',
         data: 4,
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       },
       {
         node: '#drag-item-3-5',
         data: 5,
         ariaLabel: '',
-        className: 'drag-item'
+        className: 'custom-class'
       }
     ],
     dropAreas: [
@@ -88,10 +88,9 @@
     },
     onDragMove: function (e, item) {
     },
-    onDragStop: function (e, dragItem, dropArea) {
-      console.log('stop')
-      if (dragItem && dropArea) {
-        dragItem.correct = dragItem.data === dropArea.data;
+    onDragStop: function (e, params) {
+      if (params.dragItem && params.dropArea) {
+        params.dragItem.correct = params.dragItem.data === params.dropArea.data;
       }
     },
     onCreate: function (dndObj) {
