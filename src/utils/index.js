@@ -206,7 +206,10 @@ const utils = {
    * @param {object} item2 - drag item
    */
   replaceArrayItems(array, item1, item2) {
-    [array[item1.index], array[item2.index]] = [array[item2.index], array[item1.index]];
+    const item1Index = array.indexOf(item1);
+    const item2Index = array.indexOf(item2);
+
+    [array[item1Index], array[item2Index]] = [array[item2Index], array[item1Index]];
 
     const bufIndex = item1.index;
 
@@ -221,10 +224,11 @@ const utils = {
    * @param {object} toIndex - wanted position
    */
   moveArrayItems(array, movedItemIndex, toIndex) {
-    array.splice(toIndex, 0, array.splice(movedItemIndex, 1)[0]);
+    const remainingIndexes = array.map((item) => item.index);
 
+    array.splice(toIndex, 0, array.splice(movedItemIndex, 1)[0]);
     array.forEach((item, i) => {
-      item.index = i;
+      item.index = remainingIndexes[i];
     });
   }
 };

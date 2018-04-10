@@ -264,10 +264,10 @@ class DropArea extends DefaultDndElement {
     };
   }
 
-  resetInnerDragItems() {
+  resetInnerDragItems(params) {
     if (this.innerDragItems.length) {
       while (this.innerDragItems.length) {
-        this.innerDragItems[0].reset();
+        this.innerDragItems[0].reset(params);
       }
     }
   }

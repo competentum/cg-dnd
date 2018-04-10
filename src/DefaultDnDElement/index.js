@@ -164,21 +164,13 @@ class DefaultDndElement {
     return verifiedValue;
   }
 
-  _getDefaultCoordinates(afterCoordinatesGettingCB) {
-    /**
-     * We get coordinates asynchronously, because otherwise getBoundingClientRect-method return wrong values sometimes
-     */
+  _getDefaultCoordinates() {
+    const initCoordinates = localUtils.getElementPosition(this.node);
 
-    setTimeout(() => {
-      const initCoordinates = localUtils.getElementPosition(this.node);
+    this.coordinates = {};
+    this._createCoordinatesObject('default', initCoordinates);
 
-      this.coordinates = {};
-      this._createCoordinatesObject('default', initCoordinates);
-
-      if (afterCoordinatesGettingCB) {
-        afterCoordinatesGettingCB(initCoordinates);
-      }
-    }, 0);
+    return initCoordinates;
   }
 
   /**

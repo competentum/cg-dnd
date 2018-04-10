@@ -1,5 +1,6 @@
 import merge from 'merge';
 import localUtils from '../utils';
+import cgUtils from 'cg-component-utils';
 import DefaultDndElement from '../DefaultDnDElement';
 
 /**
@@ -158,11 +159,11 @@ class DragItem extends DefaultDndElement {
       // We update coordinates before animation ends
 
       this.coordinates.current.update({
-                                        left: x,
-                                        top: y,
-                                        right: x + this.coordinates.current.width,
-                                        bottom: y + this.coordinates.current.height
-                                      });
+        left: x,
+        top: y,
+        right: x + this.coordinates.current.width,
+        bottom: y + this.coordinates.current.height
+      });
     }
 
     this.node.style.transform = `translate(${left}px, ${top}px)`;
@@ -173,9 +174,9 @@ class DragItem extends DefaultDndElement {
     }
   }
 
-  reset(from) {
-    this.translateTo(this.coordinates.currentStart, true);
-    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || from);
+  reset(params = {}) {
+    this.translateTo(params.coordinates || this.coordinates.currentStart, true, {}, () => this.coordinates.currentStart.update());
+    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || params.from);
 
     if (this.chosenDropArea) {
       this.chosenDropArea.excludeDragItem(this);
@@ -185,15 +186,19 @@ class DragItem extends DefaultDndElement {
       this.enable();
     }
 
+    if (params.removedClassName) {
+      cgUtils.removeClass(this.node, params.removedClassName);
+    }
+
     this.correct = false;
   }
 
   _getDefaultCoordinates() {
-    super._getDefaultCoordinates((initCoordinates) => {
-      this._createCoordinatesObject('current', initCoordinates);
-      this._createCoordinatesObject('currentStart', initCoordinates);
-      this._createCoordinatesObject('droppedIn', initCoordinates);
-    });
+    const initCoordinates = super._getDefaultCoordinates();
+
+    this._createCoordinatesObject('current', initCoordinates);
+    this._createCoordinatesObject('currentStart', initCoordinates);
+    this._createCoordinatesObject('droppedIn', initCoordinates);
   }
 
   _getMargins() {
@@ -235,12 +240,12 @@ class DragItem extends DefaultDndElement {
       firstItemDropArea.excludeDragItem(this);
       replacedDragItem.putIntoDropArea(firstItemDropArea);
     } else {
-      replacedDragItem.reset(secondItemDropArea);
+      replacedDragItem.reset({ from: secondItemDropArea });
     }
 
     if (secondItemDropArea) {
       secondItemDropArea.excludeDragItem(replacedDragItem);
-      this.putIntoDropArea(secondItemDropArea);
+      this.putIntoDropArea({ from: secondItemDropArea });
     } else {
       this.reset(firstItemDropArea);
     }
