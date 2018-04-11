@@ -124,6 +124,35 @@ class DragItem extends DefaultDndElement {
           localUtils.showSettingError(settingName, sheckingSetting, 'Please set class selector or empty string.');
         }
         break;
+      case 'animationParams':
+        if (typeof settingValue === 'object') {
+          for (const key in settingValue) {
+            if (settingValue.hasOwnProperty(key)) {
+              settingValue[key] = this._checkSetting(key, settingValue[key]);
+            }
+          }
+
+          verifiedValue = settingValue;
+        } else {
+          localUtils.showSettingError(settingName, settingValue, 'Please set object of css animataion settings.');
+        }
+        break;
+      case 'delay':
+      case 'duration':
+        verifiedValue = +settingValue;
+
+        if (!verifiedValue && verifiedValue !== 0 || isNaN(verifiedValue)) {
+          localUtils.showSettingError(settingName, settingValue, `Please set number for animation ${settingName} value in ms`);
+        }
+        break;
+      case 'animatedProperty':
+      case 'timingFunction':
+        if (typeof settingValue === 'string' && settingValue.length) {
+          verifiedValue = settingValue;
+        } else {
+          localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
+        }
+        break;
       default:
         verifiedValue = sheckingSetting;
     }
@@ -140,21 +169,21 @@ class DragItem extends DefaultDndElement {
    * @public
    */
   translateTo(coords, isAnimate, animateParams, animationEndCallback = () => {}) {
-    const props = merge({}, this.constructor.animationParams, animateParams);
+    const animProps = merge({}, this.animationParams, animateParams);
     const x = coords.left;
     const y = coords.top;
     const left = x - this.coordinates.default.left;
     const top = y - this.coordinates.default.top;
 
     if (isAnimate) {
-      this.node.style.transition = `${props.animatedProperty} ${props.duration}ms ${props.timingFunction} ${props.delay}ms`;
+      this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
 
       setTimeout(() => {
         this.node.style.transition = '';
         this.coordinates.current.update();
 
         animationEndCallback();
-      }, props.duration + props.delay);
+      }, animProps.duration + animProps.delay);
 
       // We update coordinates before animation ends
 

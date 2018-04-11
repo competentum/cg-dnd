@@ -10,10 +10,9 @@ import Tooltip from 'Tooltip';
 
 /* For ES-Lint comment
  const DND_CLASS = 'cg-dnd';
-
  const CLASS = {
- DND: DND_CLASS,
- DRAG: `${DND_CLASS}-drag-item`
+   DND: DND_CLASS,
+   DRAG: `${DND_CLASS}-drag-item`
  };
 
  const KEY_CODE = {
@@ -39,7 +38,7 @@ class CgDnd extends EventEmitter {
         handler: '',
         snap: true,
         maxItemsInDropArea: 1,
-        container: document,
+        container: document.body,
         alignRemainingDragItems: false,
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
@@ -72,6 +71,26 @@ class CgDnd extends EventEmitter {
     }
 
     return this._DEFAULT_SETTINGS;
+  }
+
+  static get DND_CLASS() {
+    return 'cg-dnd';
+  }
+
+  static get CSS_CLASS() {
+    return {
+      DND: this.DND_CLASS,
+      DRAG: `${this.DND_CLASS}-drag-item`,
+      HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-visually-hidden`
+    };
+  }
+
+  static get CSS_ID() {
+    return {
+      HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-aria-descriptions-container-${this.AT_PAGE_DND_COUNTER}`,
+      DRAG_ITEMS_KEYBOARD_DESC: `${this.DND_CLASS}-drag-items-keyboard-description-${this.AT_PAGE_DND_COUNTER}`,
+      DROP_AREAS_KEYBOARD_DESC: `${this.DND_CLASS}-drop-areas-keyboard-description-${this.AT_PAGE_DND_COUNTER}`
+    };
   }
 
   /**
@@ -124,6 +143,25 @@ class CgDnd extends EventEmitter {
     return this._EVENTS_HANDLER_RELATIONS;
   }
 
+  static get ARIA_DESCRIPTIONS_IDS() {
+    return {
+      forDragItems: this.CSS_ID.DRAG_ITEMS_KEYBOARD_DESC,
+      forDropAreas: this.CSS_ID.DROP_AREAS_KEYBOARD_DESC
+    };
+  }
+
+  static get AT_PAGE_DND_COUNTER() {
+    if (!this._pageDndCounter) {
+      this._pageDndCounter = 0;
+    }
+
+    return this._pageDndCounter;
+  }
+
+  static set AT_PAGE_DND_COUNTER(number) {
+    this._pageDndCounter = number;
+  }
+
   /**
    * @param {DndSettings} settings - Dnd's settings, all undefined settings will be taken from {@link CgDnd.DEFAULT_SETTINGS}
    * @constructor
@@ -132,13 +170,14 @@ class CgDnd extends EventEmitter {
     super();
 
     this._applySettings(settings);
+    this._createHiddenDescriptionBlock();
 
-    this._initSiblings(this.settings.dragItems);
-    this.remainingFirstDragItem = this.settings.dragItems[0];
+    this._initSiblings(this.dragItems);
+    this.remainingFirstDragItem = this.dragItems[0];
 
-    if (this.settings.dropAreas) {
-      this._initSiblings(this.settings.dropAreas);
-      this.firstAllowedDropArea = this.settings.dropAreas[0];
+    if (this.dropAreas) {
+      this._initSiblings(this.dropAreas);
+      this.firstAllowedDropArea = this.dropAreas[0];
       this.firstAllowedDropArea.tabIndex = this.settings.possibleToReplaceDroppedItem ? 0 : -1;
     }
 
@@ -181,7 +220,7 @@ class CgDnd extends EventEmitter {
   _addListeners() {
     this.deviceEvents = localUtils.getDeviceEvents();
 
-    this.settings.dragItems.forEach((item) => {
+    this.dragItems.forEach((item) => {
       item.onMouseDownHandler = this._onMouseDown.bind(this, item);
 
       item.handler.addEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler, { passive: false });
@@ -189,8 +228,8 @@ class CgDnd extends EventEmitter {
       item.node.addEventListener('click', this._onDragItemClick.bind(this, item));
     });
 
-    if (this.settings.dropAreas) {
-      this.settings.dropAreas.forEach((area) => {
+    if (this.dropAreas) {
+      this.dropAreas.forEach((area) => {
         area.node.addEventListener('keydown', this._onKeyDown.bind(this, area));
         area.node.addEventListener('click', this._onDropAreaClick.bind(this, area));
       });
@@ -306,7 +345,7 @@ class CgDnd extends EventEmitter {
       this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
         dragItem: item,
         currentDraggedItem: this.currentDragParams.draggedItem,
-        dropAreas: this.settings.dropAreas,
+        dropAreas: this.dropAreas,
         allowedDropAreas: this.allowedDropAreas,
         firstAllowedDropArea: this.firstAllowedDropArea
       });
@@ -331,8 +370,8 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _checkDragItemPosition(dragItem) {
-    if (this.settings.dropAreas) {
-      const chosenDropArea = this._getIntersectedElement(this.settings.dropAreas, (area) => this._checkIntersection(dragItem, area));
+    if (this.dropAreas) {
+      const chosenDropArea = this._getIntersectedElement(this.dropAreas, (area) => this._checkIntersection(dragItem, area));
 
       if (chosenDropArea) {
         // Drag item was dropped on drop area
@@ -345,7 +384,7 @@ class CgDnd extends EventEmitter {
         this._finishDrag({ dragItem });
       }
     } else {
-      const chosenDragItem = this._getIntersectedElement(this.settings.dragItems,
+      const chosenDragItem = this._getIntersectedElement(this.dragItems,
                                                          (item) => dragItem !== item && this._checkIntersection(dragItem, item));
 
       if (chosenDragItem && !chosenDragItem.disabled) {
@@ -425,7 +464,7 @@ class CgDnd extends EventEmitter {
   _insertToRemainingDragItems(dragItem) {
     this._includeElementToArray(this.remainingDragItems, dragItem);
 
-    if (this.settings.dropAreas) {
+    if (this.dropAreas) {
       this._shiftRemainingDragItems();
     }
   }
@@ -644,7 +683,7 @@ class CgDnd extends EventEmitter {
     this._replaceSiblings(this.remainingDragItems);
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
-      dragItems: this.settings.dragItems,
+      dragItems: this.dragItems,
       dragItem1,
       dragItem2
     });
@@ -667,7 +706,7 @@ class CgDnd extends EventEmitter {
 
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
-      dragItems: this.settings.dragItems,
+      dragItems: this.dragItems,
       dragItem1: dragItem,
       dragItem2: toDragItem
     });
@@ -682,7 +721,14 @@ class CgDnd extends EventEmitter {
     /**
      * @type DndSettings
      */
+    const elementsSettingNames = ['dragItems', 'dropAreas', 'container'];
+
     this.settings = merge.recursive(true, {}, this.constructor.DEFAULT_SETTINGS, settings);
+
+    elementsSettingNames.forEach((item) => {
+      this[item] = this.settings.hasOwnProperty(item) ? this._checkSetting(item, this.settings[item]) : null;
+      delete this.settings[item];
+    });
 
     for (const key in this.settings) {
       if (this.settings.hasOwnProperty(key)) {
@@ -694,10 +740,10 @@ class CgDnd extends EventEmitter {
       this.tooltip = new Tooltip(this.settings.tooltipParams);
     }
 
-    this.remainingDragItems = [...this.settings.dragItems];
-    this.allowedDropAreas = this.settings.dropAreas ? [...this.settings.dropAreas] : null;
+    this.remainingDragItems = [...this.dragItems];
+    this.allowedDropAreas = this.dropAreas ? [...this.dropAreas] : null;
     this.initDragItemsPlaces = [];
-    this.settings.dragItems.forEach((item, index) => {
+    this.dragItems.forEach((item, index) => {
       this.initDragItemsPlaces[index] = merge({}, {}, item.coordinates.default);
     });
   }
@@ -722,13 +768,17 @@ class CgDnd extends EventEmitter {
 
             if (typeof settings === 'object') {
               dndElement = settingName === 'dragItems'
-                ? new DragItem(merge({}, { handler: this.settings.handler }, settings), this.emit.bind(this))
+                ? new DragItem(merge.recursive(
+                        true, {
+                          handler: this.settings.handler,
+                          animationParams: this.settings.animationParams
+                        }, settings), this.emit.bind(this))
                 : new DropArea(merge.recursive(
-                true, {
-                  snapAlignParams: this.settings.snapAlignParams,
-                  maxItemsInDropArea: this.settings.maxItemsInDropArea
-                },
-                settings));
+                        true, {
+                          snapAlignParams: this.settings.snapAlignParams,
+                          maxItemsInDropArea: this.settings.maxItemsInDropArea
+                        },
+                        settings));
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
@@ -785,7 +835,14 @@ class CgDnd extends EventEmitter {
           localUtils.showSettingError(settingName, settingValue, 'Please set function as event handler.');
         }
         break;
-      case 'animationParams':
+      case 'container':
+        verifiedValue = localUtils.getElement(settingValue);
+
+        if (!verifiedValue) {
+          localUtils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
+        }
+        break;
+      case 'keyboardAriaDescription':
         if (typeof settingValue === 'object') {
           for (const key in settingValue) {
             if (settingValue.hasOwnProperty(key)) {
@@ -794,34 +851,19 @@ class CgDnd extends EventEmitter {
           }
 
           verifiedValue = settingValue;
-          DragItem.animationParams = verifiedValue;
         } else {
           localUtils.showSettingError(settingName, settingValue, 'Please set object of css animataion settings.');
         }
         break;
-      case 'delay':
-      case 'duration':
-        verifiedValue = +settingValue;
+      case 'forDragItems':
+      case 'forDropAreas':
+        verifiedValue = typeof settingValue === 'string' ? settingValue : '';
 
-        if (!verifiedValue && verifiedValue !== 0 || isNaN(verifiedValue)) {
-          localUtils.showSettingError(settingName, settingValue, `Please set number for animation ${settingName} value in ms`);
-        }
-        break;
-      case 'animatedProperty':
-      case 'timingFunction':
-        if (typeof settingValue === 'string' && settingValue.length) {
-          verifiedValue = settingValue;
-        } else {
-          localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
-        }
-        break;
-      case 'container':
-        verifiedValue = localUtils.getElement(settingValue);
-
-        if (!verifiedValue) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
-        }
-
+        localUtils.createHTML({
+          html: verifiedValue,
+          container: this.hiddenDescContainer,
+          attrs: { id: this.constructor.ARIA_DESCRIPTIONS_IDS[settingName] }
+        });
         break;
       default:
         verifiedValue = settingValue;
@@ -840,17 +882,32 @@ class CgDnd extends EventEmitter {
     return this.settings[name];
   }
 
+  _createHiddenDescriptionBlock() {
+    this.constructor.AT_PAGE_DND_COUNTER++;
+
+    this.hiddenDescContainer = localUtils.createHTML({
+      html: '',
+      container: this.settings.container,
+      attrs: {
+        'aria-hidden': true,
+        role: 'presentation',
+        class: this.constructor.CSS_CLASS.HIDDEN_DESC_CONTAINER,
+        id: this.constructor.CSS_ID.HIDDEN_DESC_CONTAINER
+      }
+    });
+  }
+
   reset(params = {}) {
-    if (this.settings.dropAreas) {
-      this.settings.dropAreas.forEach((area) => area.resetInnerDragItems({ removedClassName: params.removedClassName }));
+    if (this.dropAreas) {
+      this.dropAreas.forEach((area) => area.resetInnerDragItems({ removedClassName: params.removedClassName }));
     } else {
       this._resetOnlyDragItemsCase(params);
     }
   }
 
   resetIncorrectItems() {
-    if (this.settings.dropAreas) {
-      this.settings.dropAreas.forEach((area) => area.resetIncorrectDragItems());
+    if (this.dropAreas) {
+      this.dropAreas.forEach((area) => area.resetIncorrectDragItems());
     }
   }
 
@@ -859,14 +916,14 @@ class CgDnd extends EventEmitter {
    * @param {object} params
    */
   _resetOnlyDragItemsCase(params = {}) {
-    this.settings.dragItems.forEach((item) => item.reset({
+    this.dragItems.forEach((item) => item.reset({
       coordinates: item.coordinates.default,
       removedClassName: params.removedClassName
     }));
-    this._resetAllSiblings(this.settings.dragItems);
-    this._initSiblings(this.settings.dragItems);
-    this.remainingFirstDragItem = this.settings.dragItems[0];
-    this.remainingDragItems = [...this.settings.dragItems];
+    this._resetAllSiblings(this.dragItems);
+    this._initSiblings(this.dragItems);
+    this.remainingFirstDragItem = this.dragItems[0];
+    this.remainingDragItems = [...this.dragItems];
   }
 
   disableFocusOnCorrectItems() {

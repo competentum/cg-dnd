@@ -239,20 +239,22 @@ const utils = {
   },
 
   createHTML(params = {}) {
-    const element = cgUtils.createHTML(params.html);
+    const element = cgUtils.createHTML(params.html || '<div></div>');
 
     params.className && cgUtils.addClass(element, params.className);
 
     if (params.attrs) {
       for (const key in params.attrs) {
         if (params.attrs.hasOwnProperty(key)) {
-          element.setAttribute(key, params.attr[key]);
+          element.setAttribute(key, params.attrs[key]);
         }
       }
     }
 
     if (params.container) {
-      this.getElement(params.container).appendChild(element);
+      const el = this.getElement(params.container)
+
+      el.appendChild(element);
     }
 
     return element;
