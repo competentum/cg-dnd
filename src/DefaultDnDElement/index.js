@@ -23,6 +23,14 @@ class DefaultDndElement {
     return this._DEFAULT_SETTINGS;
   }
 
+  static get ARIA_ATTRIBUTES() {
+    return {
+      ariaLabel: 'aria-label',
+      ariaDescribedBy: 'aria-describedby',
+      ariaLabelledBy: 'aria-labelledby'
+    };
+  }
+
   constructor(settings) {
     this._applySettings(settings);
     this._getDefaultCoordinates();
@@ -138,10 +146,12 @@ class DefaultDndElement {
         }
         break;
       case 'ariaLabel':
+      case 'ariaDescribedBy':
+      case 'ariaLabelledBy':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue;
           if (verifiedValue.length) {
-            this.node.setAttribute('aria-label', verifiedValue);
+            this.node.setAttribute(this.constructor.ARIA_ATTRIBUTES[settingName], verifiedValue);
           }
         } else {
           localUtils.showSettingError(settingName, settingValue, 'Please set string.');
@@ -186,6 +196,16 @@ class DefaultDndElement {
       {
         update: (data) => merge.recursive(this.coordinates[coordinatesName], data || localUtils.getElementPosition(this.node))
       });
+  }
+
+  setSetting(name, value) {
+    const checkedValue = typeof value === 'object' ? merge.recursive(true, {}, this[name], value) : value;
+
+    this[name] = this._checkSetting(name, checkedValue);
+  }
+
+  getSetting(name) {
+    return this[name];
   }
 }
 

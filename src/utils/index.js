@@ -1,3 +1,5 @@
+import cgUtils from 'cg-component-utils';
+
 const utils = {
   IS_TOUCH: !!navigator.userAgent.match(/Android|webOS|webOS|iPad|iPod|BlackBerry|Windows Phone/i),
 
@@ -30,6 +32,10 @@ const utils = {
   },
 
   getElement(element, container = document) {
+    if (element instanceof Element || element === document) {
+      return element;
+    }
+
     const elementContainer = container !== document && !(container instanceof Element) ? document.querySelector(container) : container;
 
     if (!elementContainer) {
@@ -40,7 +46,7 @@ const utils = {
       return null;
     }
 
-    return element instanceof Element ? element : elementContainer.querySelector(element);
+    return elementContainer.querySelector(element);
   },
 
   /**
@@ -230,6 +236,26 @@ const utils = {
     array.forEach((item, i) => {
       item.index = remainingIndexes[i];
     });
+  },
+
+  createHTML(params = {}) {
+    const element = cgUtils.createHTML(params.html);
+
+    params.className && cgUtils.addClass(element, params.className);
+
+    if (params.attrs) {
+      for (const key in params.attrs) {
+        if (params.attrs.hasOwnProperty(key)) {
+          element.setAttribute(key, params.attr[key]);
+        }
+      }
+    }
+
+    if (params.container) {
+      this.getElement(params.container).appendChild(element);
+    }
+
+    return element;
   }
 };
 

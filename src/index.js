@@ -39,10 +39,15 @@ class CgDnd extends EventEmitter {
         handler: '',
         snap: true,
         maxItemsInDropArea: 1,
+        container: document,
         alignRemainingDragItems: false,
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
+        keyboardAriaDescription: {
+          forDragItems: '',
+          forDropAreas: ''
+        },
         animationParams: {
           animatedProperty: 'transform',
           duration: 500,
@@ -810,11 +815,29 @@ class CgDnd extends EventEmitter {
           localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
         }
         break;
+      case 'container':
+        verifiedValue = localUtils.getElement(settingValue);
+
+        if (!verifiedValue) {
+          localUtils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
+        }
+
+        break;
       default:
         verifiedValue = settingValue;
     }
 
     return verifiedValue;
+  }
+
+  setSetting(name, value) {
+    const checkedValue = typeof value === 'object' ? merge.recursive(true, {}, this.settings[name], value) : value;
+
+    this.settings[name] = this._checkSetting(name, checkedValue);
+  }
+
+  getSetting(name) {
+    return this.settings[name];
   }
 
   reset(params = {}) {
