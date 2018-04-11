@@ -9,6 +9,7 @@
     alignRemainingDragItems: true,
     handler: '.handler',
     maxItemsInDropArea: 1,
+    container: '#first-example',
     tooltipParams: {
       html: 'custom tooltip',
       className: 'custom-tooltip',
@@ -17,7 +18,8 @@
       {
         node: '#drag-item-1',
         data: 1,
-        ariaLabel: '',
+        ariaLabel: 'aa',
+        ariaDescribedBy: 'xm',
         className: 'custom-class',
         groups: ['www', 'something']
       },

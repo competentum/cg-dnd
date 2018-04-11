@@ -54,7 +54,7 @@
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
-      dndObj.settings.dragItems.forEach(function (item) {
+      dndObj.dragItems.forEach(function (item) {
         item.correct = item.index === item.data;
       });
     },
@@ -69,7 +69,7 @@
   var correctItems = [];
 
   checkButton.addEventListener('click', function () {
-    dnd.settings.dragItems.forEach((item) => {
+    dnd.dragItems.forEach((item) => {
       item.correct = item.index === item.data;
 
       if (item.correct) {
