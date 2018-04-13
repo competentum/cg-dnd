@@ -43,10 +43,6 @@ class CgDnd extends EventEmitter {
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
-        keyboardAriaDescription: {
-          forDragItems: '',
-          forDropAreas: ''
-        },
         animationParams: {
           animatedProperty: 'transform',
           duration: 500,
@@ -143,13 +139,6 @@ class CgDnd extends EventEmitter {
     return this._EVENTS_HANDLER_RELATIONS;
   }
 
-  static get ARIA_DESCRIPTIONS_IDS() {
-    return {
-      forDragItems: this.CSS_ID.DRAG_ITEMS_KEYBOARD_DESC,
-      forDropAreas: this.CSS_ID.DROP_AREAS_KEYBOARD_DESC
-    };
-  }
-
   static get AT_PAGE_DND_COUNTER() {
     if (!this._pageDndCounter) {
       this._pageDndCounter = 0;
@@ -170,7 +159,6 @@ class CgDnd extends EventEmitter {
     super();
 
     this._applySettings(settings);
-    this._createHiddenDescriptionBlock();
 
     this._initSiblings(this.dragItems);
     this.remainingFirstDragItem = this.dragItems[0];
@@ -243,6 +231,10 @@ class CgDnd extends EventEmitter {
     e.preventDefault();
 
     this.isClick = true;
+
+    if (item.node.style.transition) {
+      this.breakTransition(item);
+    }
 
     const box = localUtils.getElementPosition(item.node);
     const pageX = e.pageX || e.touches[0].pageX;
@@ -445,7 +437,10 @@ class CgDnd extends EventEmitter {
 
     if (this._isNeedToReset(dragItem, dropArea)) {
       dragItem.reset();
-      this._finishDrag({ dragItem });
+      this._finishDrag({
+        dragItem,
+        remainingDragItems: this.remainingDragItems
+      });
 
       return;
     }
@@ -462,6 +457,8 @@ class CgDnd extends EventEmitter {
 
     if (this._isForbiddenDropArea(dropArea)) {
       this._excludeElementFromArray(this.allowedDropAreas, dropArea);
+      dropArea.ariaDropEffect = '';
+      dropArea.ariaHidden = true;
     }
 
     if (!this.settings.possibleToReplaceDroppedItem) {
@@ -470,7 +467,8 @@ class CgDnd extends EventEmitter {
 
     this._finishDrag({
       dragItem,
-      dropArea
+      dropArea,
+      remainingDragItems: this.remainingDragItems
     });
   }
 
@@ -512,6 +510,18 @@ class CgDnd extends EventEmitter {
 
   _finishDrag(params = {}) {
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);
+
+    if (this.currentDragParams) {
+      this.currentDragParams.draggedItem.ariaGrabbed = false;
+    }
+
+    if (this.allowedDropAreas) {
+      this.allowedDropAreas.forEach((area) => {
+        area.ariaDropEffect = '';
+        area.ariaHidden = true;
+      });
+    }
+
     this.currentDragParams = null;
   }
 
@@ -758,6 +768,10 @@ class CgDnd extends EventEmitter {
       this[item] = this.settings.hasOwnProperty(item) ? this._checkSetting(item, this.settings[item]) : null;
       delete this.settings[item];
     });
+    this._createHiddenDescriptionBlock();
+
+    this.setHiddenAriaContainerFor(this.dragItems);
+    this.dropAreas && this.setHiddenAriaContainerFor(this.dropAreas);
 
     for (const key in this.settings) {
       if (this.settings.hasOwnProperty(key)) {
@@ -774,6 +788,12 @@ class CgDnd extends EventEmitter {
     this.initDragItemsPlaces = [];
     this.dragItems.forEach((item, index) => {
       this.initDragItemsPlaces[index] = merge({}, {}, item.coordinates.default);
+    });
+  }
+
+  setHiddenAriaContainerFor(dndElem) {
+    dndElem.forEach((item) => {
+      item.initOwnAriaDescElement(this.hiddenDescContainer);
     });
   }
 
@@ -870,29 +890,8 @@ class CgDnd extends EventEmitter {
         if (!verifiedValue) {
           localUtils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
         }
-        break;
-      case 'keyboardAriaDescription':
-        if (typeof settingValue === 'object') {
-          for (const key in settingValue) {
-            if (settingValue.hasOwnProperty(key)) {
-              settingValue[key] = this._checkSetting(key, settingValue[key]);
-            }
-          }
 
-          verifiedValue = settingValue;
-        } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set object of css animataion settings.');
-        }
-        break;
-      case 'forDragItems':
-      case 'forDropAreas':
-        verifiedValue = typeof settingValue === 'string' ? settingValue : '';
-
-        localUtils.createHTML({
-          html: verifiedValue,
-          container: this.hiddenDescContainer,
-          attrs: { id: this.constructor.ARIA_DESCRIPTIONS_IDS[settingName] }
-        });
+        verifiedValue.setAttribute('role', 'application');
         break;
       default:
         verifiedValue = settingValue;
@@ -916,10 +915,9 @@ class CgDnd extends EventEmitter {
 
     this.hiddenDescContainer = localUtils.createHTML({
       html: '',
-      container: this.settings.container,
+      container: this.container,
       attrs: {
         'aria-hidden': true,
-        role: 'presentation',
         class: this.constructor.CSS_CLASS.HIDDEN_DESC_CONTAINER,
         id: this.constructor.CSS_ID.HIDDEN_DESC_CONTAINER
       }
@@ -966,6 +964,12 @@ class CgDnd extends EventEmitter {
     } else {
       this.remainingFirstDragItem = null;
     }
+  }
+
+  breakTransition(item) {
+    const event = new Event('transitionend');
+
+    item.node.dispatchEvent(event);
   }
 
   /**

@@ -16,7 +16,7 @@ class DefaultDndElement {
         node: '',
         data: null,
         ariaLabel: '',
-        className: '',
+        className: ''
       };
     }
 
@@ -31,11 +31,58 @@ class DefaultDndElement {
     };
   }
 
+  static get DND_ELEM_KIND() {
+    return 'drag-item';
+  }
+
+  static get ID_UNIQUE_COUNTER() {
+    if (!this._idUniqueCounter) {
+      this._idUniqueCounter = 0;
+    }
+
+    return this._idUniqueCounter;
+  }
+
+  static set ID_UNIQUE_COUNTER(number) {
+    this._idUniqueCounter = number;
+  }
+
+  static get ARIA_DESC_IDS() {
+    return {
+      KEYBOARD_ACCESS_DEC: `${this.DND_ELEM_KIND}-keyboard-description-${this.ID_UNIQUE_COUNTER}`,
+      CURRENT_STATE_DESC: `${this.DND_ELEM_KIND}-current-state-description-${this.ID_UNIQUE_COUNTER}`
+    };
+  }
+
   constructor(settings) {
     this._applySettings(settings);
     this._getDefaultCoordinates();
 
     this.siblings = {};
+  }
+
+  set keyboardDescElement(node) {
+    this._keyboardDescElement = localUtils.getElement(node);
+  }
+
+  get keyboardDescElement() {
+    return this._keyboardDescElement;
+  }
+
+  set currentStateDescElement(node) {
+    this._currentStateDescElement = localUtils.getElement(node);
+  }
+
+  get currentStateDescElement() {
+    return this._currentStateDescElement;
+  }
+
+  set currentAriaState(text) {
+    this.currentStateDescElement.innerHTML = text;
+  }
+
+  get currentAriaState() {
+    return this.currentStateDescElement.innerHTML;
   }
 
   set nextSibling(node) {
@@ -79,6 +126,27 @@ class DefaultDndElement {
     if (this._disabled) {
       this.tabIndex = -1;
     }
+  }
+
+  get ariaHidden() {
+    if (!this._ariaHidden) {
+      this._ariaHidden = 'false';
+    }
+
+    return this._ariaHidden;
+  }
+
+  set ariaHidden(flag) {
+    this._ariaHidden = flag;
+    this.node.setAttribute('aria-hidden', flag);
+  }
+
+  set hiddenDescContainer(node) {
+    this._hiddenDescContainer = node;
+  }
+
+  get hiddenDescContainer() {
+    return this._hiddenDescContainer;
   }
 
   _applySettings(settings) {
@@ -206,6 +274,35 @@ class DefaultDndElement {
 
   getSetting(name) {
     return this[name];
+  }
+
+  addToExistingAttribute(attrName, attrValue, toBegin = false) {
+    const existingAttrValue = this.getSetting(attrName) || '';
+
+    this.setSetting(attrName, toBegin ? `${attrValue} ${existingAttrValue}` : `${existingAttrValue} ${attrValue}`);
+  }
+
+  initOwnAriaDescElement(commonAriaHiddenContainer) {
+    this.hiddenDescContainer = commonAriaHiddenContainer;
+    this.createOwnDescElements();
+  }
+
+  createOwnDescElements() {
+    this.constructor.ID_UNIQUE_COUNTER++;
+
+    this.keyboardDescElement = localUtils.createHTML({
+      html: '',
+      container: this.hiddenDescContainer,
+      attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC }
+    });
+    this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC, true);
+
+    this.currentStateDescElement = localUtils.createHTML({
+      html: '',
+      container: this.hiddenDescContainer,
+      attrs: { id: this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC }
+    });
+    this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC, true);
   }
 }
 

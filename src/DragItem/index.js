@@ -19,7 +19,9 @@ class DragItem extends DefaultDndElement {
         ariaLabel: '',
         className: '',
         groups: [],
-        handler: ''
+        handler: '',
+        _ariaGrabbed: false,
+        _ariaHidden: false
       };
     }
 
@@ -57,6 +59,10 @@ class DragItem extends DefaultDndElement {
     return this._EVENTS;
   }
 
+  static get DND_ELEM_KIND() {
+    return 'drag-item';
+  }
+
   constructor(settings, dndEmitterFunc) {
     super(settings);
 
@@ -86,16 +92,6 @@ class DragItem extends DefaultDndElement {
     return this._group;
   }
 
-  set isFirstItem(value) {
-    this.tabIndex = value ? 0 : -1;
-
-    this._isFirstItem = value;
-  }
-
-  get isFirstItem() {
-    return this._isFirstItem;
-  }
-
   set disabled(flag) {
     super.disabled = flag;
 
@@ -110,6 +106,18 @@ class DragItem extends DefaultDndElement {
 
   get disabled() {
     return super.disabled;
+  }
+
+  get ariaGrabbed() {
+    if (!this._ariaGrabbed) {
+      this._ariaGrabbed = false;
+    }
+
+    return this._ariaGrabbed;
+  }
+
+  set ariaGrabbed(value) {
+    this._ariaGrabbed = this.setSetting('_ariaGrabbed', value);
   }
 
   _checkSetting(settingName, settingValue) {
@@ -152,6 +160,15 @@ class DragItem extends DefaultDndElement {
         } else {
           localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
         }
+        break;
+      case '_ariaGrabbed':
+        verifiedValue = localUtils.checkOnBoolean(settingValue);
+
+        if (verifiedValue === null) {
+          localUtils.showSettingError(settingName, settingValue, 'Please set true or false.');
+        }
+
+        this.node.setAttribute('aria-grabbed', settingValue);
         break;
       default:
         verifiedValue = sheckingSetting;
@@ -274,9 +291,9 @@ class DragItem extends DefaultDndElement {
 
     if (secondItemDropArea) {
       secondItemDropArea.excludeDragItem(replacedDragItem);
-      this.putIntoDropArea({ from: secondItemDropArea });
+      this.putIntoDropArea(secondItemDropArea);
     } else {
-      this.reset(firstItemDropArea);
+      this.reset({ from: firstItemDropArea });
     }
   }
 }

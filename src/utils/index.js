@@ -239,7 +239,7 @@ const utils = {
   },
 
   createHTML(params = {}) {
-    const element = cgUtils.createHTML(params.html || '<div></div>');
+    const element = cgUtils.createHTML(params.html.match(/^<.*?>.*<\/.*?>$/) ? params.html : `<div>${params.html}</div>`);
 
     params.className && cgUtils.addClass(element, params.className);
 
@@ -252,7 +252,7 @@ const utils = {
     }
 
     if (params.container) {
-      const el = this.getElement(params.container)
+      const el = this.getElement(params.container);
 
       el.appendChild(element);
     }

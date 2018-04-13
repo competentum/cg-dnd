@@ -18,7 +18,8 @@ class DropArea extends DefaultDndElement {
         className: '',
         accept: [],
         innerDragItems: [],
-        innerDragItemsCount: 0
+        innerDragItemsCount: 0,
+        _ariaHidden: true
       };
     }
 
@@ -41,11 +42,41 @@ class DropArea extends DefaultDndElement {
     return this._dropAreasHorizontallAlignKinds;
   }
 
+  static get DND_ELEM_KIND() {
+    return 'drop-area';
+  }
+
+  get ariaDropEffect() {
+    if (!this._ariaDropEffect) {
+      this._ariaDropEffect = 'none';
+    }
+
+    return this._ariaDropEffect;
+  }
+
+  set ariaDropEffect(value) {
+    if (value) {
+      this._ariaDropEffect = this.setSetting('_ariaDropEffect', value);
+    } else {
+      this.node.removeAttribute('aria-dropeffect');
+    }
+  }
+
+  constructor(settings) {
+    super(settings);
+
+    this.ariaHidden = true;
+  }
+
   _checkSetting(settingName, settingValue) {
     let verifiedValue;
     const checkingSetting = super._checkSetting(settingName, settingValue);
 
     switch (settingName) {
+      case '_ariaDropEffect':
+        verifiedValue = typeof settingValue === 'string' ? settingValue : '';
+        this.node.setAttribute('aria-dropeffect', settingValue);
+        break;
       case 'maxItemsInDropArea':
         verifiedValue = +settingValue;
 
@@ -185,7 +216,9 @@ class DropArea extends DefaultDndElement {
   getVerticalAlignedCoordinates(dragItem) {
     const itemIndents = this._getDragItemIndents(dragItem);
     const innerDragItemsLength = this.innerDragItems.length;
-    const lastDragItemCoordinates = innerDragItemsLength ? this.innerDragItems[innerDragItemsLength - 1].coordinates.current : null;
+    const lastDragItemCoordinates = innerDragItemsLength && this.maxItemsInDropArea !== 1
+      ? this.innerDragItems[innerDragItemsLength - 1].coordinates.current
+      : null;
 
     if (lastDragItemCoordinates && this.snapAlignParams.withShift) {
       return {
@@ -231,10 +264,12 @@ class DropArea extends DefaultDndElement {
     }
 
     for (let i = fromIndex; i < this.innerDragItems.length; i++) {
-      this.innerDragItems[i].translateTo({
-        left: this.innerDragItems[i].coordinates.current.left,
-        top: this.innerDragItems[i].coordinates.current.top + shiftY
-      }, true, {}, () => this.innerDragItems[i].coordinates.droppedIn.update());
+      const innerDragItem = this.innerDragItems[i];
+
+      innerDragItem.translateTo({
+        left: innerDragItem.coordinates.current.left,
+        top: innerDragItem.coordinates.current.top + shiftY
+      }, true, {}, () => innerDragItem.coordinates.droppedIn.update());
     }
 
     if (aligningKind === 'center' && fromIndex) {
@@ -283,6 +318,20 @@ class DropArea extends DefaultDndElement {
       });
 
       incorrectItems.forEach((item) => item.reset());
+    }
+  }
+
+  changeCurrentAriaState(userCB) {
+    this.currentAriaState = userCB({
+      area: this,
+      innerDragItems: this.innerDragItems,
+      innerDragItemsCount: this.innerDragItemsCount
+    });
+  }
+
+  allowKeyboardAccess(flag) {
+    if (flag) {
+      this.tabIndex = 0;
     }
   }
 }
