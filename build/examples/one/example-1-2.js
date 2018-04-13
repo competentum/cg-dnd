@@ -7,6 +7,7 @@
     bounds: '#second-example',
     maxItemsInDropArea: 1,
     forbidFocusOnFilledDropAreas: true,
+    container: '#second-example',
     animationParams: {
       duration: 2000
     },
@@ -85,6 +86,12 @@
       if (params.dragItem && params.dropArea && params.dragItem.data === params.dropArea.data) {
         params.dragItem.correct = true;
       }
+
+      if (params.remainingDragItems[0]) {
+        params.remainingDragItems[0].focus();
+      } else {
+        checkButton.focus();
+      }
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
@@ -95,12 +102,6 @@
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
         params.currentDraggedItem.putIntoDropArea(params.dropArea);
-
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        } else {
-          checkButton.focus();
-        }
       }
     }
   };

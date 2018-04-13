@@ -3,6 +3,7 @@
     bounds: '#fourth-example',
     alignRemainingDragItems: true,
     forbidFocusOnFilledDropAreas: true,
+    container: '#fourth-example',
     maxItemsInDropArea: 1,
     dragItems: [
       {
@@ -76,7 +77,7 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      console.log('stop')
+      console.log('STOP')
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
@@ -84,6 +85,10 @@
           params.dragItem.addClass('correct-item');
         } else {
           params.dragItem.reset();
+        }
+
+        if (params.remainingDragItems[0]) {
+          params.remainingDragItems[0].focus();
         }
       }
     },
@@ -95,11 +100,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea(params.dropArea);
-
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        }
+        params.currentDraggedItem.putIntoDropArea(params.dropArea, true);
       }
     }
   };

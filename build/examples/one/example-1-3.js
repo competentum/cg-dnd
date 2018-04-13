@@ -7,6 +7,7 @@
     bounds: '#third-example',
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
+    container: '#third-example',
     handler: '.handler',
     maxItemsInDropArea: 1,
     tooltipParams: {
@@ -92,6 +93,12 @@
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
       }
+
+      if (params.remainingDragItems[0]) {
+        params.remainingDragItems[0].focus();
+      } else {
+        checkButton.focus();
+      }
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
@@ -102,12 +109,6 @@
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
         params.currentDraggedItem.putIntoDropArea(params.dropArea);
-
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        } else {
-          checkButton.focus();
-        }
       } else if (params.droppedItems.length) {
           params.droppedItems[0].focus();
       }

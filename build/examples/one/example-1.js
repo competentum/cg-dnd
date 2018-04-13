@@ -10,6 +10,10 @@
     handler: '.handler',
     maxItemsInDropArea: 1,
     container: '#first-example',
+    ariaDescriptions: {
+      keyboardAccessForDragItems: 'use arrow keys to select item. Press space to choose drag item.',
+      keyboardAccessForDropAreas: 'use arrow keys to select area. Press space to drop item into drop area'
+    },
     tooltipParams: {
       html: 'custom tooltip',
       className: 'custom-tooltip',
@@ -18,66 +22,65 @@
       {
         node: '#drag-item-1',
         data: 1,
-        ariaLabel: 'aa',
-        ariaDescribedBy: 'xm',
+        ariaLabel: 'drag item 1',
         className: 'custom-class',
         groups: ['www', 'something']
       },
       {
         node: '#drag-item-2',
         data: 2,
-        ariaLabel: '',
+        ariaLabel: 'drag item 2',
         className: 'custom-class',
         groups: 'something'
       },
       {
         node: '#drag-item-3',
         data: 3,
-        ariaLabel: '',
+        ariaLabel: 'drag item 3',
         className: 'custom-class'
       },
       {
         node: '#drag-item-4',
         data: 4,
-        ariaLabel: '',
+        ariaLabel: 'drag item 4',
         className: 'custom-class'
       },
       {
         node: '#drag-item-5',
         data: 5,
-        ariaLabel: '',
+        ariaLabel: 'drag item 5',
         className: 'custom-class'
       }
     ],
     dropAreas: [
       {
         node: '#drop-area-1',
-        ariaLabel: '',
+        ariaLabel: 'drop area 1',
         data: 2,
         className: 'custom-drop-area-class'
       },
       {
         node: '#drop-area-2',
-        ariaLabel: '',
+        ariaLabel: 'drop area 2',
         data: 4,
         className: 'custom-drop-area-class',
         //  accept: 'something'
       },
       {
         node: '#drop-area-3',
-        ariaLabel: '',
+        ariaLabel: 'drop area 3',
         data: 1,
         className: 'custom-drop-area-class'
       },
       {
         node: '#drop-area-4',
-        ariaLabel: '',
+        ariaLabel: 'drop area 4',
         data: 5,
         className: 'custom-drop-area-class'
       },
       {
         node: '#drop-area-5',
-        ariaLabel: '',
+        ariaLabel: 'drop area 5',
         data: 3,
         className: 'custom-drop-area-class'
       }
@@ -90,22 +93,36 @@
       if (params.dragItem && params.dropArea && params.dragItem.data === params.dropArea.data) {
         params.dragItem.correct = true;
       }
-    },
-    onCreate: function (dndObj) {
-      console.log(dndObj);
-    },
-    onDragItemSelect: function (e, params) {
-      params.dropAreas[0].focus();
-    },
-    onDropAreaSelect: function (e, params) {
-      if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea(params.dropArea);
 
+      if (params.dropArea) {
+        params.dropArea.changeCurrentAriaState(function (params) {
+          if (params.innerDragItemsCount) {
+            return 'drop area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel');
+          }
+        });
+      }
+
+      setTimeout(function () {
         if (params.remainingDragItems[0]) {
           params.remainingDragItems[0].focus();
         } else {
           checkButton.focus();
         }
+      }, 0);
+    },
+    onCreate: function (dndObj) {
+      console.log(dndObj);
+    },
+    onDragItemSelect: function (e, params) {
+      setTimeout(function () {
+        params.dropAreas[0].focus();
+      }, 0);
+    },
+    onDropAreaSelect: function (e, params) {
+      if (params.currentDraggedItem) {
+        params.currentDraggedItem.putIntoDropArea(params.dropArea, true);
+
+
       }
     }
   };
