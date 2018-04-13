@@ -245,9 +245,11 @@ class CgDnd extends EventEmitter {
     this.isClick = true;
 
     const box = localUtils.getElementPosition(item.node);
+    const pageX = e.pageX || e.touches[0].pageX;
+    const pageY = e.pageY || e.touches[0].pageY;
 
-    item.shiftX = e.pageX - box.left;
-    item.shiftY = e.pageY - box.top;
+    item.shiftX = pageX - box.left;
+    item.shiftY = pageY - box.top;
 
     const boundsParams = this.settings.bounds instanceof Element
       ? localUtils.getElementPosition(this.settings.bounds)
@@ -255,7 +257,11 @@ class CgDnd extends EventEmitter {
 
     this.currentDragParams = {
       draggedItem: item,
-      currentBounds: localUtils.calculateCurrentBounds(box, boundsParams, e.pageX, e.pageY)
+      currentBounds: localUtils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
+      initPosition: {
+        x: pageX,
+        y: pageY
+      }
     };
 
     this.onMouseMoveHandler = this._onMouseMove.bind(this);
@@ -271,27 +277,38 @@ class CgDnd extends EventEmitter {
 
   _onMouseMove(e) {
     e.preventDefault();
+    const pageX = e.pageX || e.touches[0].pageX;
+    const pageY = e.pageY || e.touches[0].pageY;
 
-    this.isClick = false;
+    if (e.movementX !== undefined && e.movementY !== undefined) {
+      this.isClick = !e.movementX && !e.movementY;
+    } else {
+      this.isClick = pageX === this.currentDragParams.initPosition.x && pageY === this.currentDragParams.initPosition.y;
+    }
 
-    const x = localUtils.applyLimit(e.pageX, this.currentDragParams.currentBounds.left, this.currentDragParams.currentBounds.right);
-    const y = localUtils.applyLimit(e.pageY, this.currentDragParams.currentBounds.top, this.currentDragParams.currentBounds.bottom);
+    if (!this.isClick) {
+      const x = localUtils.applyLimit(pageX, this.currentDragParams.currentBounds.left, this.currentDragParams.currentBounds.right);
+      const y = localUtils.applyLimit(pageY, this.currentDragParams.currentBounds.top, this.currentDragParams.currentBounds.bottom);
 
-    this.currentDragParams.draggedItem.translateTo({
-      left: x - this.currentDragParams.draggedItem.shiftX,
-      top: y - this.currentDragParams.draggedItem.shiftY
-    });
+      this.currentDragParams.draggedItem.translateTo({
+        left: x - this.currentDragParams.draggedItem.shiftX,
+        top: y - this.currentDragParams.draggedItem.shiftY
+      });
 
-    this.emit(this.constructor.EVENTS.DRAG_MOVE, e, this.currentDragParams.draggedItem);
+      this.emit(this.constructor.EVENTS.DRAG_MOVE, e, this.currentDragParams.draggedItem);
+    }
   }
 
   _onMouseUp(e) {
+    if (this.isClick) {
+      this.currentDragParams.draggedItem.node.click();
+    } else {
+      this._checkDragItemPosition(this.currentDragParams.draggedItem);
+    }
     e.preventDefault();
 
     document.removeEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler, { passive: false });
     document.removeEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
-
-    this._checkDragItemPosition(this.currentDragParams.draggedItem);
   }
 
   _onDragItemReset(dragItem, chosenDropArea) {
@@ -340,6 +357,14 @@ class CgDnd extends EventEmitter {
   _onDragItemClick(item, e) {
     if (this.isClick) {
       this.currentDragParams = { draggedItem: this.currentDragParams ? this.currentDragParams.draggedItem : item };
+      this.currentDragParams.draggedItem.ariaGrabbed = true;
+
+      if (this.dropAreas) {
+        this.allowedDropAreas.forEach((area) => {
+          area.ariaDropEffect = 'move';
+          area.ariaHidden = false;
+        });
+      }
 
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
       this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
@@ -381,7 +406,10 @@ class CgDnd extends EventEmitter {
         // Drag item wasn't dropped on drop area
 
         dragItem.reset();
-        this._finishDrag({ dragItem });
+        this._finishDrag({
+          dragItem,
+          remainingDragItems: this.remainingDragItems
+        });
       }
     } else {
       const chosenDragItem = this._getIntersectedElement(this.dragItems,
@@ -402,7 +430,8 @@ class CgDnd extends EventEmitter {
     if (isSameDropArea) {
       this._finishDrag({
         dragItem,
-        dropArea
+        dropArea,
+        remainingDragItems: this.remainingDragItems
       });
 
       return;
