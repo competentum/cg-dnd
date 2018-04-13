@@ -195,12 +195,19 @@ class DragItem extends DefaultDndElement {
     if (isAnimate) {
       this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
 
-      setTimeout(() => {
+      /**
+       * Transitionend event handler for disabling animation, when it was finished
+       */
+      const transitionListener = () => {
         this.node.style.transition = '';
         this.coordinates.current.update();
 
+
+        this.node.removeEventListener('transitionend', transitionListener);
         animationEndCallback();
-      }, animProps.duration + animProps.delay);
+      };
+
+      this.node.addEventListener('transitionend', transitionListener);
 
       // We update coordinates before animation ends
 
@@ -261,10 +268,13 @@ class DragItem extends DefaultDndElement {
   /**
    * Try to put drag item to chosen drop area
    * @param {object} chosenDropArea - DropArea object
+   * @param {boolean} callCheckAfterAnimationEnd - if "true", checking would been execute after animation end,
+   * else it would been execute in this function end
+   * @param {function} afterAnimationCB - callback function, which would been execute after animation end
    * @return {boolean} - return "true", if dragItem change his position, otherwise return "false"
    * @public
    */
-  putIntoDropArea(chosenDropArea) {
+  putIntoDropArea(chosenDropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}) {
     if (this.chosenDropArea && this.chosenDropArea === chosenDropArea) {
       this.translateTo(this.coordinates.droppedIn, true);
       this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, true);
@@ -272,8 +282,14 @@ class DragItem extends DefaultDndElement {
       return false;
     }
 
-    this.translateTo(chosenDropArea.getAlignedCoords(this), true, {}, () => this.coordinates.droppedIn.update());
-    this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea);
+    this.translateTo(chosenDropArea.getAlignedCoords(this), true, {}, () => {
+      this.coordinates.droppedIn.update();
+
+      callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, false);
+
+      afterAnimationCB(this, chosenDropArea);
+    });
+    !callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, false);
 
     return true;
   }
