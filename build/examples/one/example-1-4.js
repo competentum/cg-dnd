@@ -4,7 +4,6 @@
     alignRemainingDragItems: true,
     forbidFocusOnFilledDropAreas: true,
     container: '#fourth-example',
-    maxItemsInDropArea: 1,
     dragItems: [
       {
         node: '#drag-item-4-1',

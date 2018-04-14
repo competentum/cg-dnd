@@ -267,7 +267,7 @@ class DefaultDndElement {
   }
 
   setSetting(name, value) {
-    const checkedValue = typeof value === 'object' ? merge.recursive(true, {}, this[name], value) : value;
+    const checkedValue = typeof value === 'object' ? merge.recursive(true, {}, this[name] || {}, value) : value;
 
     this[name] = this._checkSetting(name, checkedValue);
   }

@@ -117,6 +117,7 @@ class DropArea extends DefaultDndElement {
         break;
       case 'withShift':
       case 'withDroppedItemCSSMargins':
+      case 'snap':
         verifiedValue = localUtils.checkOnBoolean(checkingSetting);
 
         if (verifiedValue === null) {
@@ -240,6 +241,15 @@ class DropArea extends DefaultDndElement {
   }
 
   getAlignedCoords(dragItem) {
+    const coords = dragItem.coordinates;
+
+    if (!this.snap && coords.current.left !== coords.currentStart.left && coords.current.top !== coords.currentStart.top) {
+      return {
+        left: dragItem.coordinates.current.left,
+        top: dragItem.coordinates.current.top
+      };
+    }
+
     return {
       left: this.getHorizontalAlignedCoordinates(dragItem)[this.snapAlignParams.horizontalAlign](),
       top: this.getVerticalAlignedCoordinates(dragItem)[this.snapAlignParams.verticalAlign]()

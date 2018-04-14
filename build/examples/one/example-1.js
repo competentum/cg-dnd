@@ -7,9 +7,10 @@
     bounds: '#first-example',
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
-    handler: '.handler',
-    maxItemsInDropArea: 1,
     container: '#first-example',
+    commonDragItemsSettings: {
+      handler: '.handler',
+    },
     ariaDescriptions: {
       keyboardAccessForDragItems: 'use arrow keys to select item. Press space to choose drag item.',
       keyboardAccessForDropAreas: 'use arrow keys to select area. Press space to drop item into drop area'

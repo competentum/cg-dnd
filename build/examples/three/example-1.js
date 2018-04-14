@@ -6,8 +6,6 @@
   var settings = {
     bounds: '#dnd-1',
     alignRemainingDragItems: true,
-    handler: '.handler',
-    maxItemsInDropArea: 1,
     tooltipParams: {
       html: 'custom tooltip',
       className: 'custom-tooltip',

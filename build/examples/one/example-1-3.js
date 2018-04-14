@@ -8,15 +8,16 @@
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
     container: '#third-example',
-    handler: '.handler',
-    maxItemsInDropArea: 1,
+    commonDropAreasSettings: {
+      maxItemsInDropArea: 1,
+      snapAlignParams: {
+        horizontalAlign: 'center',
+        verticalAlign: 'center'
+      }
+    },
     tooltipParams: {
       html: 'custom tooltip',
       className: 'custom-tooltip',
-    },
-    snapAlignParams: {
-      horizontalAlign: 'center',
-      verticalAlign: 'center'
     },
     dragItems: [
       {

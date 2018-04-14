@@ -7,11 +7,12 @@
     bounds: '#second-example',
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
-    handler: '.handler',
-    snapAlignParams: {
-      horizontalAlign: 'center',
-      verticalAlign: 'top',
-      withDroppedItemCSSMargins: true
+    commonDropAreasSettings: {
+      snapAlignParams: {
+        horizontalAlign: 'center',
+        verticalAlign: 'top',
+        withDroppedItemCSSMargins: true
+      }
     },
     dragItems: [
       {
@@ -82,6 +83,14 @@
           horizontalAlign: 'center',
           withDroppedItemCSSMargins: false
         }
+      },
+      {
+        node: '#drop-area-2-4',
+        ariaLabel: '',
+        data: 'fourth',
+        className: 'custom-drop-area-class',
+        maxItemsInDropArea: 0,
+        snap: false
       }
     ],
     onDragStart: function (e, item) {

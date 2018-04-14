@@ -2,7 +2,6 @@ import './common.less';
 
 import EventEmitter from 'events';
 import merge from 'merge';
-// Import cgUtils from 'cg-component-utils';
 import localUtils from 'utils';
 import DragItem from 'DragItem';
 import DropArea from 'DropArea';
@@ -35,26 +34,30 @@ class CgDnd extends EventEmitter {
         disabled: false,
         bounds: '',
         helper: 'original',
-        handler: '',
-        snap: true,
-        maxItemsInDropArea: 1,
         container: document.body,
         alignRemainingDragItems: false,
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
-        animationParams: {
-          animatedProperty: 'transform',
-          duration: 500,
-          timingFunction: 'ease',
-          delay: 0
+        commonDragItemsSettings: {
+          handler: '',
+          animationParams: {
+            animatedProperty: 'transform',
+            duration: 500,
+            timingFunction: 'ease',
+            delay: 0
+          },
         },
-        snapAlignParams: {
-          withShift: true,
-          withDroppedItemCSSMargins: false,
-          eachDroppedItemIndents: [0],
-          horizontalAlign: 'left',
-          verticalAlign: 'top'
+        commonDropAreasSettings: {
+          snap: true,
+          maxItemsInDropArea: 1,
+          snapAlignParams: {
+            withShift: true,
+            withDroppedItemCSSMargins: false,
+            eachDroppedItemIndents: [0],
+            horizontalAlign: 'left',
+            verticalAlign: 'top'
+          }
         },
         tooltipParams: {},
         onCreate: () => {},
@@ -77,7 +80,8 @@ class CgDnd extends EventEmitter {
     return {
       DND: this.DND_CLASS,
       DRAG: `${this.DND_CLASS}-drag-item`,
-      HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-visually-hidden`
+      HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-visually-hidden`,
+      CURRENT_DRAGGED_ITEM: `${this.DND_CLASS}-current-dragged-item`
     };
   }
 
@@ -817,17 +821,8 @@ class CgDnd extends EventEmitter {
 
             if (typeof settings === 'object') {
               dndElement = settingName === 'dragItems'
-                ? new DragItem(merge.recursive(
-                        true, {
-                          handler: this.settings.handler,
-                          animationParams: this.settings.animationParams
-                        }, settings), this.emit.bind(this))
-                : new DropArea(merge.recursive(
-                        true, {
-                          snapAlignParams: this.settings.snapAlignParams,
-                          maxItemsInDropArea: this.settings.maxItemsInDropArea
-                        },
-                        settings));
+                ? new DragItem(merge.recursive(true, {}, this.settings.commonDragItemsSettings, settings), this.emit.bind(this))
+                : new DropArea(merge.recursive(true, {}, this.settings.commonDropAreasSettings, settings));
             } else {
               localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
@@ -901,6 +896,21 @@ class CgDnd extends EventEmitter {
   }
 
   setSetting(name, value) {
+    switch (name) {
+      case 'commonDragItemsSettings':
+        this._setSettingForEachDnDElement(this.dragItems, value);
+        break;
+      case 'commonDropAreasSettings':
+        this._setSettingForEachDnDElement(this.dropAreas, value);
+        break;
+      default:
+        if (this.settings.hasOwnProperty(name)) {
+          this._setOwnSetting(this, name, value);
+        } else {
+          localUtils.showSettingError(name, value, 'this setting is not supported.');
+        }
+    }
+
     const checkedValue = typeof value === 'object' ? merge.recursive(true, {}, this.settings[name], value) : value;
 
     this.settings[name] = this._checkSetting(name, checkedValue);
@@ -908,6 +918,26 @@ class CgDnd extends EventEmitter {
 
   getSetting(name) {
     return this.settings[name];
+  }
+
+  _setSettingForEachDnDElement(elementsArray, params) {
+    if (typeof params === 'object') {
+      elementsArray.forEach((elem) => {
+        for (const key in params) {
+          if (params.hasOwnProperty(key)) {
+            elem.setSetting(key, params[key]);
+          }
+        }
+      });
+    } else {
+      throw new Error('you should set object of common settings for drag/drop elements');
+    }
+  }
+
+  _setOwnSetting(obj, name, value) {
+    const currentSetting = obj.getSetting(name);
+
+    obj.setSetting(name, typeof currentSetting === 'object' ? merge.recursive(true, {}, currentSetting, value) : value);
   }
 
   _createHiddenDescriptionBlock() {

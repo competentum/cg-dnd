@@ -7,13 +7,14 @@
     bounds: '#first-example',
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
-    handler: '.handler',
-    maxItemsInDropArea: 0,
     possibleToReplaceDroppedItem: true,
-    snapAlignParams: {
-      horizontalAlign: 'center',
-      verticalAlign: 'top',
-      withDroppedItemCSSMargins: true
+    commonDropAreasSettings: {
+      maxItemsInDropArea: 0,
+      snapAlignParams: {
+        horizontalAlign: 'center',
+        verticalAlign: 'top',
+        withDroppedItemCSSMargins: true
+      },
     },
     dragItems: [
       {

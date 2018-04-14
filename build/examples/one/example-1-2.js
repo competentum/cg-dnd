@@ -5,12 +5,8 @@
 
   var settings = {
     bounds: '#second-example',
-    maxItemsInDropArea: 1,
     forbidFocusOnFilledDropAreas: true,
     container: '#second-example',
-    animationParams: {
-      duration: 2000
-    },
     dragItems: [
       {
         node: '#drag-item-2-1',

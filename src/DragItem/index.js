@@ -28,26 +28,6 @@ class DragItem extends DefaultDndElement {
     return this._DEFAULT_SETTINGS;
   }
 
-  static get animationParams() {
-    if (!this._animationParams) {
-      this._animationParams = {
-        animatedProperty: 'transform',
-        duration: 500,
-        timingFunction: 'ease',
-        delay: 0
-      };
-    }
-
-    return this._animationParams;
-  }
-
-  static set animationParams(settings) {
-    if (typeof settings === 'object') {
-      this._animationParams = this._animationParams || {};
-      this._animationParams = merge({}, this._animationParams, settings);
-    }
-  }
-
   static get EVENTS() {
     if (!this._EVENTS) {
       this._EVENTS = {
@@ -61,6 +41,16 @@ class DragItem extends DefaultDndElement {
 
   static get DND_ELEM_KIND() {
     return 'drag-item';
+  }
+
+  static get DND_CLASS() {
+    return 'cg-dnd';
+  }
+
+  static get CSS_CLASS() {
+    return {
+      CURRENT_DRAGGED_ITEM: `${this.DND_CLASS}-current-dragged-item`
+    };
   }
 
   constructor(settings, dndEmitterFunc) {
@@ -192,6 +182,8 @@ class DragItem extends DefaultDndElement {
     const left = x - this.coordinates.default.left;
     const top = y - this.coordinates.default.top;
 
+    cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
+
     if (isAnimate) {
       this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
 
@@ -205,6 +197,7 @@ class DragItem extends DefaultDndElement {
 
         this.node.removeEventListener('transitionend', transitionListener);
         animationEndCallback();
+        cgUtils.removeClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
       };
 
       this.node.addEventListener('transitionend', transitionListener);
