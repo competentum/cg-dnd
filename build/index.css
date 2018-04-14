@@ -83,3 +83,7 @@ a {
 .correct-item {
     background-color: #26ba13;
 }
+
+.disabled {
+    opacity: 0.5;
+}

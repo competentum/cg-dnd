@@ -82,22 +82,6 @@ class DragItem extends DefaultDndElement {
     return this._group;
   }
 
-  set disabled(flag) {
-    super.disabled = flag;
-
-    if (flag && this.onMouseDownHandler) {
-      this.handler.removeEventListener('mousedown', this.onMouseDownHandler);
-      this.handler.removeEventListener('touchstart', this.onMouseDownHandler, { passive: false });
-    } else if (this.onMouseDownHandler) {
-      this.handler.addEventListener('mousedown', this.onMouseDownHandler);
-      this.handler.addEventListener('touchstart', this.onMouseDownHandler, { passive: false });
-    }
-  }
-
-  get disabled() {
-    return super.disabled;
-  }
-
   get ariaGrabbed() {
     if (!this._ariaGrabbed) {
       this._ariaGrabbed = false;

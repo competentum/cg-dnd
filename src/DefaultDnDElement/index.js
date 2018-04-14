@@ -85,6 +85,14 @@ class DefaultDndElement {
     return this.currentStateDescElement.innerHTML;
   }
 
+  set currentKeyboardDesc(text) {
+    this.keyboardDescElement.innerHTML = text;
+  }
+
+  get currentkeyboardDesc() {
+    return this.keyboardDescElement.innerHTML;
+  }
+
   set nextSibling(node) {
     this.siblings.next = node || null;
   }
@@ -122,9 +130,16 @@ class DefaultDndElement {
     this._disabled = localUtils.checkOnBoolean(flag);
 
     this.node.setAttribute('aria-disabled', this._disabled);
+    this.ariaHidden = this._disabled;
+
+    if (this.disabledClassName && !cgUtils.hasClass(this.node, this.disabledClassName)) {
+      cgUtils.addClass(this.node, this.disabledClassName);
+    }
 
     if (this._disabled) {
       this.tabIndex = -1;
+    } else if (this.disabledClassName && cgUtils.hasClass(this.node, this.disabledClassName)) {
+      cgUtils.removeClass(this.node, this.disabledClassName);
     }
   }
 
@@ -138,7 +153,12 @@ class DefaultDndElement {
 
   set ariaHidden(flag) {
     this._ariaHidden = flag;
-    this.node.setAttribute('aria-hidden', flag);
+
+    if (!flag) {
+      this.node.removeAttribute('aria-hidden');
+    } else {
+      this.node.setAttribute('aria-hidden', flag);
+    }
   }
 
   set hiddenDescContainer(node) {
@@ -193,6 +213,10 @@ class DefaultDndElement {
     this._checkSetting('className', className);
   }
 
+  changeCurrentKeyboardDesc(userCB) {
+    this.currentKeyboardDesc = userCB(this);
+  }
+
   _checkSetting(settingName, settingValue) {
     let verifiedValue;
 
@@ -206,9 +230,10 @@ class DefaultDndElement {
 
         break;
       case 'className':
+      case 'disabledClassName':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
-          cgUtils.addClass(this.node, verifiedValue);
+          settingName === 'className' && cgUtils.addClass(this.node, verifiedValue);
         } else {
           localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }

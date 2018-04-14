@@ -96,6 +96,9 @@
       }
 
       if (params.dropArea) {
+        params.dropArea.changeCurrentKeyboardDesc(function (area) {
+          return 'press keys';
+        });
         params.dropArea.changeCurrentAriaState(function (params) {
           if (params.innerDragItemsCount) {
             return 'drop area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel');

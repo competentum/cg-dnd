@@ -1,9 +1,12 @@
 (function () {
   var exampleContainer = document.getElementById('third-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
-      resetButton = exampleContainer.querySelector('.reset-btn');
+      resetButton = exampleContainer.querySelector('.reset-btn'),
+      disableSwitcher = exampleContainer.querySelector('#disable-switcher');
 
   var settings = {
+    disabled: true,
+    disabledClassName: 'disabled',
     bounds: '#third-example',
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
@@ -125,4 +128,12 @@
   resetButton.addEventListener('click', function () {
     dnd.reset();
   });
+
+  disableSwitcher.addEventListener('change', function () {
+    if (this.checked) {
+      dnd.disable();
+    } else {
+      dnd.enable();
+    }
+  })
 })();

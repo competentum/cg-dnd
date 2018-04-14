@@ -32,6 +32,7 @@ class CgDnd extends EventEmitter {
     if (!this._DEFAULT_SETTINGS) {
       this._DEFAULT_SETTINGS = {
         disabled: false,
+        disabledClassName: '',
         bounds: '',
         helper: 'original',
         container: document.body,
@@ -173,6 +174,10 @@ class CgDnd extends EventEmitter {
       this.firstAllowedDropArea.tabIndex = this.settings.possibleToReplaceDroppedItem ? 0 : -1;
     }
 
+    if (this.settings.disabled) {
+      this.disable();
+    }
+
     // This._render();
 
     this._addListeners();
@@ -232,43 +237,45 @@ class CgDnd extends EventEmitter {
   }
 
   _onMouseDown(item, e) {
-    e.preventDefault();
+    if (!item.disabled) {
+      e.preventDefault();
 
-    this.isClick = true;
+      this.isClick = true;
 
-    if (item.node.style.transition) {
-      this.breakTransition(item);
-    }
-
-    const box = localUtils.getElementPosition(item.node);
-    const pageX = e.pageX || e.touches[0].pageX;
-    const pageY = e.pageY || e.touches[0].pageY;
-
-    item.shiftX = pageX - box.left;
-    item.shiftY = pageY - box.top;
-
-    const boundsParams = this.settings.bounds instanceof Element
-      ? localUtils.getElementPosition(this.settings.bounds)
-      : this.settings.bounds;
-
-    this.currentDragParams = {
-      draggedItem: item,
-      currentBounds: localUtils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
-      initPosition: {
-        x: pageX,
-        y: pageY
+      if (item.node.style.transition) {
+        this.breakTransition(item);
       }
-    };
 
-    this.onMouseMoveHandler = this._onMouseMove.bind(this);
-    this.onMouseUpHandler = this._onMouseUp.bind(this);
+      const box = localUtils.getElementPosition(item.node);
+      const pageX = e.pageX || e.touches[0].pageX;
+      const pageY = e.pageY || e.touches[0].pageY;
 
-    document.addEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler, { passive: false });
-    document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
+      item.shiftX = pageX - box.left;
+      item.shiftY = pageY - box.top;
 
-    this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+      const boundsParams = this.settings.bounds instanceof Element
+        ? localUtils.getElementPosition(this.settings.bounds)
+        : this.settings.bounds;
 
-    // This.tooltip.show(item);
+      this.currentDragParams = {
+        draggedItem: item,
+        currentBounds: localUtils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
+        initPosition: {
+          x: pageX,
+          y: pageY
+        }
+      };
+
+      this.onMouseMoveHandler = this._onMouseMove.bind(this);
+      this.onMouseUpHandler = this._onMouseUp.bind(this);
+
+      document.addEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler, { passive: false });
+      document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
+
+      this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+
+      // This.tooltip.show(item);
+    }
   }
 
   _onMouseMove(e) {
@@ -351,7 +358,7 @@ class CgDnd extends EventEmitter {
   }
 
   _onDragItemClick(item, e) {
-    if (this.isClick) {
+    if (this.isClick && !item.disabled) {
       this.currentDragParams = { draggedItem: this.currentDragParams ? this.currentDragParams.draggedItem : item };
       this.currentDragParams.draggedItem.ariaGrabbed = true;
 
@@ -374,7 +381,7 @@ class CgDnd extends EventEmitter {
   }
 
   _onDropAreaClick(area, e) {
-    if (this.isClick) {
+    if (this.isClick && !area.disabled) {
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
         dropArea: area,
         droppedItems: area.innerDragItems,
@@ -767,6 +774,8 @@ class CgDnd extends EventEmitter {
     const elementsSettingNames = ['dragItems', 'dropAreas', 'container'];
 
     this.settings = merge.recursive(true, {}, this.constructor.DEFAULT_SETTINGS, settings);
+    this.settings.commonDragItemsSettings.disabledClassName = this.settings.commonDropAreasSettings.disabledClassName
+      = this.settings.disabledClassName;
 
     elementsSettingNames.forEach((item) => {
       this[item] = this.settings.hasOwnProperty(item) ? this._checkSetting(item, this.settings[item]) : null;
@@ -888,6 +897,13 @@ class CgDnd extends EventEmitter {
 
         verifiedValue.setAttribute('role', 'application');
         break;
+      case 'disabledClassName':
+        if (typeof settingValue === 'string') {
+          verifiedValue = settingValue.replace(/^\./, '');
+        } else {
+          localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
+        }
+        break;
       default:
         verifiedValue = settingValue;
     }
@@ -966,6 +982,18 @@ class CgDnd extends EventEmitter {
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => area.resetIncorrectDragItems());
     }
+  }
+
+  disable() {
+    this.dragItems.forEach((item) => item.disable());
+    this.dropAreas.forEach((area) => area.disable());
+  }
+
+  enable() {
+    this.dragItems.forEach((item) => item.enable());
+    this.dropAreas.forEach((area) => area.enable());
+
+    this.remainingFirstDragItem.tabIndex = 0;
   }
 
   /**
