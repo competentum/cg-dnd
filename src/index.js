@@ -171,7 +171,6 @@ class CgDnd extends EventEmitter {
     if (this.dropAreas) {
       this._initSiblings(this.dropAreas);
       this.firstAllowedDropArea = this.dropAreas[0];
-      this.firstAllowedDropArea.tabIndex = this.settings.possibleToReplaceDroppedItem ? 0 : -1;
     }
 
     if (this.settings.disabled) {
@@ -486,6 +485,10 @@ class CgDnd extends EventEmitter {
   _insertToDropArea(dragItem, dropArea) {
     dropArea.includeDragItem(dragItem);
     dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
+
+    if (this._isSomethingToReplaceInDropArea()) {
+      this.firstAllowedDropArea.tabIndex = 0;
+    }
   }
 
   _removeFromDropArea(dragItem, dropArea) {
@@ -519,6 +522,14 @@ class CgDnd extends EventEmitter {
     return this.settings.forbidFocusOnFilledDropAreas && dropArea.maxItemsInDropArea === dropArea.innerDragItemsCount;
   }
 
+  _isSomethingToReplaceInDropArea() {
+    return this.settings.possibleToReplaceDroppedItem && this._dropAreasHaveDragItems() && this.firstAllowedDropArea.tabIndex === -1;
+  }
+
+  _isNothingToReplaceInDropAreas() {
+    return this.settings.possibleToReplaceDroppedItem && !this._dropAreasHaveDragItems() && this.firstAllowedDropArea.tabIndex === 0;
+  }
+
   _finishDrag(params = {}) {
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);
 
@@ -531,6 +542,10 @@ class CgDnd extends EventEmitter {
         area.ariaDropEffect = '';
         area.ariaHidden = true;
       });
+
+      if (this._isNothingToReplaceInDropAreas()) {
+        this.firstAllowedDropArea.tabIndex = -1;
+      }
     }
 
     this.currentDragParams = null;
@@ -973,6 +988,7 @@ class CgDnd extends EventEmitter {
   reset(params = {}) {
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => area.resetInnerDragItems({ removedClassName: params.removedClassName }));
+      this.firstAllowedDropArea.tabIndex = -1;
     } else {
       this._resetOnlyDragItemsCase(params);
     }
@@ -981,6 +997,10 @@ class CgDnd extends EventEmitter {
   resetIncorrectItems() {
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => area.resetIncorrectDragItems());
+
+      if (this._isNothingToReplaceInDropAreas()) {
+        this.firstAllowedDropArea.tabIndex = -1;
+      }
     }
   }
 
@@ -1017,7 +1037,10 @@ class CgDnd extends EventEmitter {
     this.remainingDragItems.forEach((item) => item.correct && toRemoveFromRemainingItems.push(item));
 
     if (toRemoveFromRemainingItems.length) {
-      toRemoveFromRemainingItems.forEach((item) => this._excludeElementFromArray(this.remainingDragItems, item));
+      toRemoveFromRemainingItems.forEach((item) => {
+        this._excludeElementFromArray(this.remainingDragItems, item);
+        item.disable();
+      });
       this.remainingFirstDragItem = this.remainingDragItems.length ? this.remainingDragItems[0] : null;
     } else {
       this.remainingFirstDragItem = null;
@@ -1028,6 +1051,10 @@ class CgDnd extends EventEmitter {
     const event = new Event('transitionend');
 
     item.node.dispatchEvent(event);
+  }
+
+  _dropAreasHaveDragItems() {
+    return localUtils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
   }
 
   /**
