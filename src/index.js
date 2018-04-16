@@ -239,7 +239,7 @@ class CgDnd extends EventEmitter {
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => {
         area.onKeyDownHandler = this._onKeyDown.bind(this, area);
-        area.onClickHandler = this._onDragItemClick.bind(this, area);
+        area.onClickHandler = this._onDropAreaClick.bind(this, area);
 
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, area.onKeyDownHandler);
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, area.onClickHandler);
@@ -830,7 +830,7 @@ class CgDnd extends EventEmitter {
     this.allowedDropAreas = this.dropAreas ? [...this.dropAreas] : null;
     this.initDragItemsPlaces = [];
     this.dragItems.forEach((item, index) => {
-      this.initDragItemsPlaces[index] = merge({}, {}, item.coordinates.default);
+      this.initDragItemsPlaces[index] = merge.recursive(true, {}, item.coordinates.default);
     });
   }
 
