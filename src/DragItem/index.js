@@ -148,10 +148,8 @@ class DragItem extends DefaultDndElement {
    */
   translateTo(coords, isAnimate, animateParams, animationEndCallback = () => {}) {
     const animProps = merge({}, this.animationParams, animateParams);
-    const x = coords.left;
-    const y = coords.top;
-    const left = x - this.coordinates.default.left;
-    const top = y - this.coordinates.default.top;
+    const left = coords.left - this.coordinates.default.left;
+    const top = coords.top - this.coordinates.default.top;
 
     cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
 
@@ -161,22 +159,25 @@ class DragItem extends DefaultDndElement {
       /**
        * Transitionend event handler for disabling animation, when it was finished
        */
-      const transitionListener = () => {
+      const transitionEndListener = () => {
         this.node.style.transition = '';
         this.coordinates.current.update();
-
-
-        this.node.removeEventListener('transitionend', transitionListener);
+        this.node.removeEventListener('transitionend', transitionEndListener);
         animationEndCallback();
         cgUtils.removeClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
       };
 
-      this.node.addEventListener('transitionend', transitionListener);
-    }
+      this.node.addEventListener('transitionend', transitionEndListener);
+      this.node.style.transform = `translate(${left}px, ${top}px)`;
 
-    this.node.style.transform = `translate(${left}px, ${top}px)`;
-
-    if (!isAnimate) {
+      if (!animProps.duration) {
+        /**
+         * Transitionend event doesn't called, if duration = 0. So we call this handler manually
+         */
+        transitionEndListener();
+      }
+    } else {
+      this.node.style.transform = `translate(${left}px, ${top}px)`;
       this.coordinates.current.update();
       animationEndCallback();
     }
@@ -244,6 +245,7 @@ class DragItem extends DefaultDndElement {
 
       afterAnimationCB(this, chosenDropArea);
     });
+
     !callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, false);
 
     return true;
