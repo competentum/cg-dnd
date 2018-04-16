@@ -444,12 +444,14 @@ class CgDnd extends EventEmitter {
   }
 
   _onDragItemDroppedOnDropArea(dragItem, dropArea, isSameDropArea) {
+    const forUserArgs = {
+      dragItem,
+      dropArea,
+      remainingDragItems: this.remainingDragItems
+    };
+
     if (isSameDropArea) {
-      this._finishDrag({
-        dragItem,
-        dropArea,
-        remainingDragItems: this.remainingDragItems
-      });
+      this._finishDrag(forUserArgs);
 
       return;
     }
@@ -462,10 +464,7 @@ class CgDnd extends EventEmitter {
 
     if (this._isNeedToReset(dragItem, dropArea)) {
       dragItem.reset();
-      this._finishDrag({
-        dragItem,
-        remainingDragItems: this.remainingDragItems
-      });
+      this._finishDrag(forUserArgs);
 
       return;
     }
@@ -490,11 +489,7 @@ class CgDnd extends EventEmitter {
       dragItem.disable();
     }
 
-    this._finishDrag({
-      dragItem,
-      dropArea,
-      remainingDragItems: this.remainingDragItems
-    });
+    this._finishDrag(forUserArgs);
   }
 
   _insertToDropArea(dragItem, dropArea) {
@@ -666,7 +661,7 @@ class CgDnd extends EventEmitter {
     nextElement.siblings.prev = element;
     element.siblings.next = nextElement;
 
-    if (firstCurrentElement && firstCurrentElement !== elementsArray[0]) {
+    if (firstCurrentElement !== undefined && firstCurrentElement !== elementsArray[0]) {
       setFirstCurrentElementCB(elementsArray[0]);
     }
   }
@@ -675,8 +670,10 @@ class CgDnd extends EventEmitter {
     excludedElement.siblings.prev.siblings.next = excludedElement.siblings.next;
     excludedElement.siblings.next.siblings.prev = excludedElement.siblings.prev;
 
-    if (currentFirstElement === excludedElement && excludedElement.siblings.next !== excludedElement) {
-      setFirstCurrentElementCB(excludedElement.siblings.next);
+    if (currentFirstElement === excludedElement) {
+      const newFirstElement = excludedElement.siblings.next !== excludedElement ? excludedElement.siblings.next : null;
+
+      setFirstCurrentElementCB(newFirstElement);
     }
 
     this._resetSiblings(excludedElement);
