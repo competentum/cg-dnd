@@ -56,7 +56,7 @@ class DropArea extends DefaultDndElement {
 
   set ariaDropEffect(value) {
     if (value) {
-      this._ariaDropEffect = this.setSetting('_ariaDropEffect', value);
+      this.node.setAttribute('aria-dropeffect', value);
     } else {
       this.node.removeAttribute('aria-dropeffect');
     }
@@ -73,10 +73,6 @@ class DropArea extends DefaultDndElement {
     const checkingSetting = super._checkSetting(settingName, settingValue);
 
     switch (settingName) {
-      case '_ariaDropEffect':
-        verifiedValue = typeof settingValue === 'string' ? settingValue : '';
-        this.node.setAttribute('aria-dropeffect', settingValue);
-        break;
       case 'maxItemsInDropArea':
         verifiedValue = +settingValue;
 
@@ -172,9 +168,7 @@ class DropArea extends DefaultDndElement {
   }
 
   includeDragItem(dragItem) {
-    const existingItemIndex = this.innerDragItems.indexOf(dragItem);
-
-    if (existingItemIndex === -1) {
+    if (this.innerDragItems.indexOf(dragItem) === -1) {
       this.innerDragItems.push(dragItem);
       this.innerDragItemsCount++;
       dragItem.chosenDropArea = this;
@@ -189,11 +183,14 @@ class DropArea extends DefaultDndElement {
       this.innerDragItemsCount--;
       dragItem.chosenDropArea = dragItem.chosenDropArea === this ? null : dragItem.chosenDropArea;
 
-      if (this.snapAlignParams.withShift
-          && (existingItemIndex !== this.innerDragItems.length || this.snapAlignParams.verticalAlign === 'center')) {
+      if (this._isNeedForShift(existingItemIndex, this.innerDragItems.length)) {
         this.shiftRemainingDroppedItems(existingItemIndex, dragItem, this.snapAlignParams.verticalAlign);
       }
     }
+  }
+
+  _isNeedForShift(excludedItemIndex, updatedLength) {
+    return this.snapAlignParams.withShift && (excludedItemIndex !== updatedLength || this.snapAlignParams.verticalAlign === 'center');
   }
 
   checkAccept(dragItem) {
@@ -204,9 +201,7 @@ class DropArea extends DefaultDndElement {
     return localUtils.findIndex(dragItem.groups, (item) => this.accept.includes(item)) > -1;
   }
 
-  getHorizontalAlignedCoordinates(dragItem) {
-    const itemIndents = this._getDragItemIndents(dragItem);
-
+  _getHorizontalAlignedCoordinates(dragItem, itemIndents) {
     return {
       left: () => this.coordinates.default.left + itemIndents.left,
       center: () => this.coordinates.default.left + (this.coordinates.default.width - dragItem.coordinates.default.width) / 2,
@@ -214,8 +209,7 @@ class DropArea extends DefaultDndElement {
     };
   }
 
-  getVerticalAlignedCoordinates(dragItem) {
-    const itemIndents = this._getDragItemIndents(dragItem);
+  _getVerticalAlignedCoordinates(dragItem, itemIndents) {
     const innerDragItemsLength = this.innerDragItems.length;
     const lastDragItemCoordinates = innerDragItemsLength && this.maxItemsInDropArea !== 1
       ? this.innerDragItems[innerDragItemsLength - 1].coordinates.current
@@ -241,19 +235,25 @@ class DropArea extends DefaultDndElement {
   }
 
   getAlignedCoords(dragItem) {
-    const coords = dragItem.coordinates;
-
-    if (!this.snap && coords.current.left !== coords.currentStart.left && coords.current.top !== coords.currentStart.top) {
+    if (!this.snap && this._isVisuallyMoved(dragItem)) {
       return {
         left: dragItem.coordinates.current.left,
         top: dragItem.coordinates.current.top
       };
     }
 
+    const dragItemIndents = this._getDragItemIndents(dragItem);
+
     return {
-      left: this.getHorizontalAlignedCoordinates(dragItem)[this.snapAlignParams.horizontalAlign](),
-      top: this.getVerticalAlignedCoordinates(dragItem)[this.snapAlignParams.verticalAlign]()
+      left: this._getHorizontalAlignedCoordinates(dragItem, dragItemIndents)[this.snapAlignParams.horizontalAlign](),
+      top: this._getVerticalAlignedCoordinates(dragItem, dragItemIndents)[this.snapAlignParams.verticalAlign]()
     };
+  }
+
+  _isVisuallyMoved(dragItem) {
+    const coords = dragItem.coordinates;
+
+    return coords.current.left !== coords.currentStart.left && coords.current.top !== coords.currentStart.top;
   }
 
   shiftRemainingDroppedItems(fromIndex, draggedOutItem, aligningKind = 'top') {
@@ -274,24 +274,28 @@ class DropArea extends DefaultDndElement {
     }
 
     for (let i = fromIndex; i < this.innerDragItems.length; i++) {
-      const innerDragItem = this.innerDragItems[i];
+      const droppedItem = this.innerDragItems[i];
 
-      innerDragItem.translateTo({
-        left: innerDragItem.coordinates.current.left,
-        top: innerDragItem.coordinates.current.top + shiftY
-      }, true, {}, () => innerDragItem.coordinates.droppedIn.update());
+      droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, shiftY), true, {}, () => droppedItem.coordinates.droppedIn.update());
     }
 
     if (aligningKind === 'center' && fromIndex) {
       for (let i = 0; i < fromIndex; i++) {
-        this.innerDragItems[i].translateTo({
-          left: this.innerDragItems[i].coordinates.current.left,
-          top: this.innerDragItems[i].coordinates.current.top - shiftY
-        }, true, {}, () => this.innerDragItems[i].coordinates.droppedIn.update());
+        const droppedItem = this.innerDragItems[i];
+
+        droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, -shiftY), true, {},
+                                () => droppedItem.coordinates.droppedIn.update());
       }
     }
 
     return shiftY;
+  }
+
+  _getShiftedCoordinates(droppedItem, yShift) {
+    return {
+      left: droppedItem.coordinates.current.left,
+      top: droppedItem.coordinates.current.top + yShift
+    };
   }
 
   _getDragItemIndents(dragItem) {

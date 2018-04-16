@@ -114,27 +114,37 @@ class DefaultDndElement {
   }
 
   set currentAriaState(text) {
-    this.currentStateDescElement.innerHTML = text;
+    this._currentAriaState = text;
+    this.currentStateDescElement.innerHTML = this._currentAriaState;
   }
 
   get currentAriaState() {
-    return this.currentStateDescElement.innerHTML;
+    if (!this._currentAriaState) {
+      this._currentAriaState = this.currentStateDescElement.innerHTML;
+    }
+
+    return this._currentAriaState;
   }
 
   set currentKeyboardDesc(text) {
-    this.keyboardDescElement.innerHTML = text;
+    this._currentKeyboardDesc = text;
+    this.keyboardDescElement.innerHTML = this._currentKeyboardDesc;
   }
 
   get currentKeyboardDesc() {
-    return this.keyboardDescElement.innerHTML;
+    if (!this._currentKeyboardDesc) {
+      this._currentKeyboardDesc = this.keyboardDescElement.innerHTML;
+    }
+
+    return this._currentKeyboardDesc;
   }
 
-  set nextSibling(node) {
-    this.siblings.next = node || null;
+  set nextSibling(dndElem) {
+    this.siblings.next = dndElem || null;
   }
 
-  set prevSibling(node) {
-    this.siblings.prev = node || null;
+  set prevSibling(dndElem) {
+    this.siblings.prev = dndElem || null;
   }
 
   get nextSibling() {
@@ -169,13 +179,13 @@ class DefaultDndElement {
     this.ariaHidden = this._disabled;
 
     if (this.disabledClassName && !cgUtils.hasClass(this.node, this.disabledClassName)) {
-      cgUtils.addClass(this.node, this.disabledClassName);
+      this.addClass(this.disabledClassName);
     }
 
     if (this._disabled) {
       this.tabIndex = -1;
     } else if (this.disabledClassName && cgUtils.hasClass(this.node, this.disabledClassName)) {
-      cgUtils.removeClass(this.node, this.disabledClassName);
+      this.removeClass(this.disabledClassName);
     }
   }
 
@@ -246,7 +256,19 @@ class DefaultDndElement {
   }
 
   addClass(className) {
-    this._checkSetting('className', className);
+    const rightClassName = className.replace(/^\./, '');
+
+    if (!cgUtils.hasClass(this.node, rightClassName)) {
+      cgUtils.addClass(this.node, rightClassName);
+    }
+  }
+
+  removeClass(className) {
+    const rightClassName = className.replace(/^\./, '');
+
+    if (cgUtils.hasClass(this.node, rightClassName)) {
+      cgUtils.removeClass(this.node, rightClassName);
+    }
   }
 
   changeCurrentKeyboardDesc(userCB) {
@@ -269,7 +291,7 @@ class DefaultDndElement {
       case 'disabledClassName':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
-          settingName === 'className' && cgUtils.addClass(this.node, verifiedValue);
+          settingName === 'className' && this.addClass(verifiedValue);
         } else {
           localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }

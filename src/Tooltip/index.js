@@ -38,6 +38,55 @@ class Tooltip {
     this._render();
   }
 
+  set html(htmlString) {
+    this._html = htmlString;
+
+    if (this.messageContainer) {
+      this.messageContainer.innerHTML = this._html;
+    }
+  }
+
+  get html() {
+    if (!this._html) {
+      this._html = '';
+    }
+
+    return this._html;
+  }
+
+  set node(htmlString) {
+    if (this._node) {
+      document.body.removeChild(this._node);
+    }
+
+    this._node = cgUtils.createHTML(htmlString);
+    document.body.appendChild(this._node);
+  }
+
+  get node() {
+    if (!this._node) {
+      this._node = '';
+    }
+
+    return this._node;
+  }
+
+  set messageContainer(htmlString) {
+    if (this.node && this._messageContainer) {
+      this.node.removeChild(this._messageContainer);
+    }
+    this._messageContainer = cgUtils.createHTML(htmlString);
+    this.node.appendChild(this._messageContainer);
+  }
+
+  get messageContainer() {
+    if (!this._messageContainer) {
+      this._messageContainer = '';
+    }
+
+    return this._messageContainer;
+  }
+
   _applySettings(settings) {
     const correctDeepMergedObj = merge.recursive(true, this.constructor.DEFAULT_SETTINGS, settings);
 
@@ -84,24 +133,23 @@ class Tooltip {
   }
 
   _render() {
-    this.node = cgUtils.createHTML(`<div class="${this.constructor.DEFAULT_TOOLTIP_CLASS}">${this.html}
-        <div class="${this.constructor.TOOLTIP_MARKER_CLASS}"></div></div>`);
+    this.node = `<div aria-hidden="true" role="presentation" class="${this.constructor.DEFAULT_TOOLTIP_CLASS}
+        ${this.className}"><div class="${this.constructor.TOOLTIP_MARKER_CLASS}"></div></div>`;
 
-    if (this.className) {
-      cgUtils.addClass(this.node, this.className);
-    }
-
-    this.node.setAttribute('aria-hidden', true);
-    this.node.setAttribute('role', 'presentation');
-
-    document.body.appendChild(this.node);
+    this.messageContainer = `<div class="${this.constructor.DEFAULT_TOOLTIP_CLASS}-message-container">${this.html}</div>`;
 
     this.hide();
   }
 
-  show(dragItem) {
-    this.node.style.left = `${dragItem.coordinates.current.left + this.marginLeft}px`;
-    this.node.style.top = `${dragItem.coordinates.current.top - this.marginBottom}px`;
+  show(elem, message) {
+    const coordinates = elem.coordinates.current || elem.coordinates.default;
+
+    this.node.style.left = `${coordinates.left + this.marginLeft}px`;
+    this.node.style.top = `${coordinates.top - this.marginBottom}px`;
+
+    if (message) {
+      this.html = message;
+    }
 
     this.node.style.display = 'block';
   }

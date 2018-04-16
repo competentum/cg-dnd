@@ -287,13 +287,12 @@ class CgDnd extends EventEmitter {
       document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
 
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
-
-      // This.tooltip.show(item);
     }
   }
 
   _onMouseMove(e) {
     e.preventDefault();
+
     const pageX = e.pageX || e.touches[0].pageX;
     const pageY = e.pageY || e.touches[0].pageY;
 
@@ -330,7 +329,9 @@ class CgDnd extends EventEmitter {
 
   _onDragItemReset(dragItem, chosenDropArea) {
     if (this.remainingDragItems.indexOf(dragItem) === -1) {
-      // If dropped dragItem is on dropArea and remaining drag items array includes it, we remove it from remaining drag items array
+      /**
+       * If dropArea includes reseted drag item, we exclude it from dropArea
+       */
       if (chosenDropArea) {
         this._removeFromDropArea(dragItem, chosenDropArea);
       }
@@ -433,12 +434,7 @@ class CgDnd extends EventEmitter {
                                                          (item) => dragItem !== item && this._checkIntersection(dragItem, item));
 
       if (chosenDragItem && !chosenDragItem.disabled) {
-        this.settings.shiftDragItems
-          ? this.moveDragItems(dragItem, chosenDragItem)
-          : this.replaceDragItems(dragItem, chosenDragItem);
-      } else {
-        dragItem.reset();
-        this._finishDrag({ dragItem });
+        this.shuffleDragItems(dragItem, chosenDragItem);
       }
     }
   }
@@ -479,7 +475,7 @@ class CgDnd extends EventEmitter {
 
     this._insertToDropArea(dragItem, dropArea);
 
-    if (this._isForbiddenDropArea(dropArea)) {
+    if (this._isDropAreaBecomesForbidden(dropArea)) {
       this._excludeElementFromArray(this.allowedDropAreas, dropArea);
       dropArea.ariaDropEffect = '';
       dropArea.ariaHidden = true;
@@ -496,7 +492,7 @@ class CgDnd extends EventEmitter {
     dropArea.includeDragItem(dragItem);
     dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
 
-    if (this._isSomethingToReplaceInDropArea()) {
+    if (this.isSomethingToReplaceInDropAreas()) {
       this.firstAllowedDropArea.tabIndex = 0;
     }
   }
@@ -528,16 +524,20 @@ class CgDnd extends EventEmitter {
     return dropArea.maxItemsInDropArea && dropArea.innerDragItemsCount === dropArea.maxItemsInDropArea || !dropArea.checkAccept(dragItem);
   }
 
-  _isForbiddenDropArea(dropArea) {
+  _isDropAreaBecomesForbidden(dropArea) {
     return this.settings.forbidFocusOnFilledDropAreas && dropArea.maxItemsInDropArea === dropArea.innerDragItemsCount;
   }
 
-  _isSomethingToReplaceInDropArea() {
+  isSomethingToReplaceInDropAreas() {
     return this.settings.possibleToReplaceDroppedItem && this._dropAreasHaveDragItems() && this.firstAllowedDropArea.tabIndex === -1;
   }
 
   _isNothingToReplaceInDropAreas() {
     return this.settings.possibleToReplaceDroppedItem && !this._dropAreasHaveDragItems() && this.firstAllowedDropArea.tabIndex === 0;
+  }
+
+  _dropAreasHaveDragItems() {
+    return localUtils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
   }
 
   _finishDrag(params = {}) {
@@ -561,12 +561,6 @@ class CgDnd extends EventEmitter {
     this.currentDragParams = null;
   }
 
-  _getIntersectedElement(checkedElements, checkCB) {
-    const intersectedItemIndex = localUtils.findIndex(checkedElements, checkCB);
-
-    return intersectedItemIndex > -1 ? checkedElements[intersectedItemIndex] : null;
-  }
-
   _includeElementToArray(array, element) {
     array.push(element);
 
@@ -584,6 +578,12 @@ class CgDnd extends EventEmitter {
       array.splice(inArrayElementIndex, 1);
       this._updateSiblings(element);
     }
+  }
+
+  _getIntersectedElement(checkedElements, checkCB) {
+    const intersectedItemIndex = localUtils.findIndex(checkedElements, checkCB);
+
+    return intersectedItemIndex > -1 ? checkedElements[intersectedItemIndex] : null;
   }
 
   /**
@@ -946,17 +946,12 @@ class CgDnd extends EventEmitter {
       case 'commonDropAreasSettings':
         this._setSettingForEachDnDElement(this.dropAreas, value);
         break;
-      default:
-        if (this.settings.hasOwnProperty(name)) {
-          this._setOwnSetting(this, name, value);
-        } else {
-          localUtils.showSettingError(name, value, 'this setting is not supported.');
-        }
+      default: {
+        const currentSetting = this.getSetting(name);
+
+        this.setSetting(name, typeof currentSetting === 'object' ? merge.recursive(true, {}, currentSetting, value) : value);
+      }
     }
-
-    const checkedValue = typeof value === 'object' ? merge.recursive(true, {}, this.settings[name], value) : value;
-
-    this.settings[name] = this._checkSetting(name, checkedValue);
   }
 
   getSetting(name) {
@@ -975,12 +970,6 @@ class CgDnd extends EventEmitter {
     } else {
       throw new Error('you should set object of common settings for drag/drop elements');
     }
-  }
-
-  _setOwnSetting(obj, name, value) {
-    const currentSetting = obj.getSetting(name);
-
-    obj.setSetting(name, typeof currentSetting === 'object' ? merge.recursive(true, {}, currentSetting, value) : value);
   }
 
   _createHiddenDescriptionBlock() {
@@ -1061,6 +1050,7 @@ class CgDnd extends EventEmitter {
       coordinates: item.coordinates.default,
       removedClassName: params.removedClassName
     }));
+
     this._resetAllSiblings(this.dragItems);
     this._initSiblings(this.dragItems);
     this.remainingFirstDragItem = this.dragItems[0];
@@ -1087,10 +1077,6 @@ class CgDnd extends EventEmitter {
     const event = new Event('transitionend');
 
     item.node.dispatchEvent(event);
-  }
-
-  _dropAreasHaveDragItems() {
-    return localUtils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
   }
 }
 
