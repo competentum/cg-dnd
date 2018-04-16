@@ -61,6 +61,42 @@ class DefaultDndElement {
     this.siblings = {};
   }
 
+  set onKeyDownHandler(handler) {
+    this._onKeyDownHandler = typeof handler === 'function' ? handler : () => {};
+  }
+
+  get onKeyDownHandler() {
+    if (!this._onKeyDownHandler) {
+      this._onKeyDownHandler = () => {};
+    }
+
+    return this._onKeyDownHandler;
+  }
+
+  set onClickHandler(handler) {
+    this._onClickHandler = typeof handler === 'function' ? handler : () => {};
+  }
+
+  get onClickHandler() {
+    if (!this._onClickHandler) {
+      this._onClickHandler = () => {};
+    }
+
+    return this._onClickHandler;
+  }
+
+  set onMouseDownHandler(handler) {
+    this._onMouseDownHandler = typeof handler === 'function' ? handler : () => {};
+  }
+
+  get onMouseDownHandler() {
+    if (!this._onMouseDownHandler) {
+      this._onMouseDownHandler = () => {};
+    }
+
+    return this._onMouseDownHandler;
+  }
+
   set keyboardDescElement(node) {
     this._keyboardDescElement = localUtils.getElement(node);
   }

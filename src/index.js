@@ -107,13 +107,23 @@ class CgDnd extends EventEmitter {
         DRAG_START: 'drag_start',
         DRAG_MOVE: 'drag_move',
         DRAG_STOP: 'drag_stop',
-        KEY_DOWN: 'keydown',
         DRAG_ITEM_SELECT: 'dragItemSelect',
         DROP_AREA_SELECT: 'dropAreaSelect'
       };
     }
 
     return this._EVENTS;
+  }
+
+  static get STANDARD_EVENTS() {
+    if (!this._STANDARD_EVENTS) {
+      this._STANDARD_EVENTS = {
+        KEYDOWN: 'keydown',
+        CLICK: 'click'
+      };
+    }
+
+    return this._STANDARD_EVENTS;
   }
 
   static get KEY_CODES() {
@@ -218,16 +228,21 @@ class CgDnd extends EventEmitter {
 
     this.dragItems.forEach((item) => {
       item.onMouseDownHandler = this._onMouseDown.bind(this, item);
+      item.onKeyDownHandler = this._onKeyDown.bind(this, item);
+      item.onClickHandler = this._onDragItemClick.bind(this, item);
 
-      item.handler.addEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler, { passive: false });
-      item.node.addEventListener('keydown', this._onKeyDown.bind(this, item));
-      item.node.addEventListener('click', this._onDragItemClick.bind(this, item));
+      item.handler.addEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler);
+      item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, item.onKeyDownHandler);
+      item.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, item.onClickHandler);
     });
 
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => {
-        area.node.addEventListener('keydown', this._onKeyDown.bind(this, area));
-        area.node.addEventListener('click', this._onDropAreaClick.bind(this, area));
+        area.onKeyDownHandler = this._onKeyDown.bind(this, area);
+        area.onClickHandler = this._onDragItemClick.bind(this, area);
+
+        area.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, area.onKeyDownHandler);
+        area.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, area.onClickHandler);
       });
     }
 
@@ -268,8 +283,8 @@ class CgDnd extends EventEmitter {
       this.onMouseMoveHandler = this._onMouseMove.bind(this);
       this.onMouseUpHandler = this._onMouseUp.bind(this);
 
-      document.addEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler, { passive: false });
-      document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
+      document.addEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler);
+      document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
 
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
 
@@ -309,8 +324,8 @@ class CgDnd extends EventEmitter {
     }
     e.preventDefault();
 
-    document.removeEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler, { passive: false });
-    document.removeEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler, { passive: false });
+    document.removeEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler);
+    document.removeEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
   }
 
   _onDragItemReset(dragItem, chosenDropArea) {
@@ -329,30 +344,30 @@ class CgDnd extends EventEmitter {
   }
 
   _onKeyDown(item, e) {
-    // E.preventDefault();
+    if (!item.disabled) {
+      const KEY_CODES = this.constructor.KEY_CODES;
 
-    const KEY_CODES = this.constructor.KEY_CODES;
-
-    switch (e.keyCode) {
-      case KEY_CODES.UP_ARROW:
-        e.preventDefault();
-        if (item.siblings.prev) {
-          item.siblings.prev.focus();
-        }
-        break;
-      case KEY_CODES.DOWN_ARROW:
-        e.preventDefault();
-        if (item.siblings.next) {
-          item.siblings.next.focus();
-        }
-        break;
-      case KEY_CODES.ENTER:
-      case KEY_CODES.SPACE:
-        e.preventDefault();
-        this.isClick = true;
-        item.node.click();
-        break;
-      default:
+      switch (e.keyCode) {
+        case KEY_CODES.UP_ARROW:
+          e.preventDefault();
+          if (item.siblings.prev) {
+            item.siblings.prev.focus();
+          }
+          break;
+        case KEY_CODES.DOWN_ARROW:
+          e.preventDefault();
+          if (item.siblings.next) {
+            item.siblings.next.focus();
+          }
+          break;
+        case KEY_CODES.ENTER:
+        case KEY_CODES.SPACE:
+          e.preventDefault();
+          this.isClick = true;
+          item.node.click();
+          break;
+        default:
+      }
     }
   }
 
@@ -1016,6 +1031,30 @@ class CgDnd extends EventEmitter {
     this.remainingFirstDragItem.tabIndex = 0;
   }
 
+  destroy() {
+    this._removeEventsHandlers(this.constructor.EVENTS);
+    this._removeEventsHandlers(DragItem.EVENTS);
+
+    this.dragItems.forEach((item) => item.handler.removeEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler));
+    this._removeStandardEventsHandlers(this.dragItems);
+    this.dropAreas && this._removeStandardEventsHandlers(this.dropAreas);
+  }
+
+  _removeEventsHandlers(eventsObj) {
+    for (const key in eventsObj) {
+      if (eventsObj.hasOwnProperty(key)) {
+        this.removeAllListeners(eventsObj[key]);
+      }
+    }
+  }
+
+  _removeStandardEventsHandlers(elems) {
+    elems.forEach((elem) => {
+      elem.node.removeEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, elem.onKeyDownHandler);
+      elem.node.removeEventListener(this.constructor.STANDARD_EVENTS.CLICK, elem.onClickHandler);
+    });
+  }
+
   /**
    * Reset dragItems, when drop areas do not exist
    * @param {object} params
@@ -1056,32 +1095,6 @@ class CgDnd extends EventEmitter {
   _dropAreasHaveDragItems() {
     return localUtils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
   }
-
-  /**
-   * Create DOM elements
-   * @private
-   */
-  /* For ES-Lint comment
-   _render() {
-
-   } */
-
-  /**
-   * Disable drag
-   * @param {boolean} [disabled = true]
-   */
-  /* For ES-Lint comment
-   disable(disabled = true) {
-
-   }
-
-   reset() {
-
-   }
-
-   destroy() {
-
-   } */
 }
 
 export default CgDnd;

@@ -72,12 +72,6 @@ class DragItem extends DefaultDndElement {
     return this._correct;
   }
 
-  set currentDragStartPosition(coordinatesObj) {
-    if (typeof coordinatesObj === 'object') {
-      // Const currentPos = merge({}, this.coordinates.currentStart)
-    }
-  }
-
   get group() {
     return this._group;
   }
@@ -91,7 +85,9 @@ class DragItem extends DefaultDndElement {
   }
 
   set ariaGrabbed(value) {
-    this._ariaGrabbed = this.setSetting('_ariaGrabbed', value);
+    this._ariaGrabbed = value;
+
+    this.node.setAttribute('aria-grabbed', value);
   }
 
   _checkSetting(settingName, settingValue) {
@@ -134,15 +130,6 @@ class DragItem extends DefaultDndElement {
         } else {
           localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
         }
-        break;
-      case '_ariaGrabbed':
-        verifiedValue = localUtils.checkOnBoolean(settingValue);
-
-        if (verifiedValue === null) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set true or false.');
-        }
-
-        this.node.setAttribute('aria-grabbed', settingValue);
         break;
       default:
         verifiedValue = sheckingSetting;
