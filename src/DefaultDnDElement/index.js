@@ -59,6 +59,12 @@ class DefaultDndElement {
     this._getDefaultCoordinates();
 
     this.siblings = {};
+
+    /**
+     * Fix for IE + JAWS
+     */
+    // TODO: think about aria-describedby for jaws and ios+vo
+    this.node.setAttribute('role', 'presentation');
   }
 
   set onKeyDownHandler(handler) {
@@ -216,7 +222,7 @@ class DefaultDndElement {
   }
 
   _applySettings(settings) {
-    const correctDeepMergedObj = merge.recursive(true, this.constructor.DEFAULT_SETTINGS, settings);
+    const correctDeepMergedObj = merge.recursive(true, {}, this.constructor.DEFAULT_SETTINGS, settings);
 
     merge.recursive(this, correctDeepMergedObj);
 
