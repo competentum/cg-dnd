@@ -529,11 +529,11 @@ class CgDnd extends EventEmitter {
   }
 
   isSomethingToReplaceInDropAreas() {
-    return this.settings.possibleToReplaceDroppedItem && this._dropAreasHaveDragItems() && this.firstAllowedDropArea.tabIndex === -1;
+    return this.firstAllowedDropArea.tabIndex === -1 && this.settings.possibleToReplaceDroppedItem && this._dropAreasHaveDragItems();
   }
 
   _isNothingToReplaceInDropAreas() {
-    return this.settings.possibleToReplaceDroppedItem && !this._dropAreasHaveDragItems() && this.firstAllowedDropArea.tabIndex === 0;
+    return this.firstAllowedDropArea.tabIndex === 0 && this.settings.possibleToReplaceDroppedItem && !this._dropAreasHaveDragItems();
   }
 
   _dropAreasHaveDragItems() {
