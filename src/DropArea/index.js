@@ -241,6 +241,7 @@ class DropArea extends DefaultDndElement {
         top: dragItem.coordinates.current.top
       };
     }
+    this.coordinates.default.update();
 
     const dragItemIndents = this._getDragItemIndents(dragItem);
 

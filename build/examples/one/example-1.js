@@ -135,9 +135,14 @@
 
   checkButton.addEventListener('click', function () {
     dnd.resetIncorrectItems();
+    dnd.dragItems.forEach(function (item) {
+      if (item.correct) {
+        item.addClass('correct-item');
+      }
+    })
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset();
+    dnd.reset({ removedClassName: 'correct-item' });
   });
 })();

@@ -84,6 +84,10 @@ a {
     background-color: #26ba13;
 }
 
+.incorrect-item {
+    background-color: #b13c2f;
+}
+
 .disabled {
     opacity: 0.5;
 }

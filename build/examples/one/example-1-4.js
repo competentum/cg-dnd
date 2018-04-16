@@ -76,18 +76,25 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      console.log('STOP')
+      var visuallyDelay = null;
+
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
         if (params.dragItem.correct) {
           params.dragItem.addClass('correct-item');
+          if (params.remainingDragItems[0]) {
+            params.remainingDragItems[0].focus(visuallyDelay);
+          }
         } else {
-          params.dragItem.reset();
-        }
+          params.dragItem.addClass('incorrect-item');
+          visuallyDelay = 500;
 
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
+          setTimeout(function () {
+            params.dragItem.reset();
+            params.dragItem.removeClass('incorrect-item');
+            params.remainingDragItems[0].focus(visuallyDelay);
+          }, visuallyDelay);
         }
       }
     },
