@@ -226,9 +226,9 @@ class DropArea extends DefaultDndElement {
         top: () => lastDragItemCoordinates.bottom + itemIndents.top,
         bottom: () => lastDragItemCoordinates.top - dragItem.coordinates.current.height - itemIndents.bottom,
         center: () => {
-          this.shiftRemainingDroppedItems(0, dragItem, 'center');
+          const yShift = this.shiftRemainingDroppedItems(0, dragItem, 'center');
 
-          return lastDragItemCoordinates.bottom + itemIndents.top;
+          return lastDragItemCoordinates.bottom + yShift + itemIndents.top;
         }
       };
     }
@@ -290,6 +290,8 @@ class DropArea extends DefaultDndElement {
         }, true, {}, () => this.innerDragItems[i].coordinates.droppedIn.update());
       }
     }
+
+    return shiftY;
   }
 
   _getDragItemIndents(dragItem) {

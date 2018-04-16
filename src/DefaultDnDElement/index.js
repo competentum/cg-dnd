@@ -89,7 +89,7 @@ class DefaultDndElement {
     this.keyboardDescElement.innerHTML = text;
   }
 
-  get currentkeyboardDesc() {
+  get currentKeyboardDesc() {
     return this.keyboardDescElement.innerHTML;
   }
 

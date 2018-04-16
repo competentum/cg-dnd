@@ -185,15 +185,6 @@ class DragItem extends DefaultDndElement {
       };
 
       this.node.addEventListener('transitionend', transitionListener);
-
-      // We update coordinates before animation ends
-
-      this.coordinates.current.update({
-        left: x,
-        top: y,
-        right: x + this.coordinates.current.width,
-        bottom: y + this.coordinates.current.height
-      });
     }
 
     this.node.style.transform = `translate(${left}px, ${top}px)`;
