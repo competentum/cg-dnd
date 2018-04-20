@@ -1,4 +1,4 @@
-import localUtils from '../utils';
+import utils from '../utils';
 import DefaultDndElement from '../DefaultDnDElement';
 
 /**
@@ -77,7 +77,7 @@ class DropArea extends DefaultDndElement {
         verifiedValue = +settingValue;
 
         if (isNaN(verifiedValue) || verifiedValue < 0) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set positive number or 0');
+          utils.showSettingError(settingName, settingValue, 'Please set positive number or 0');
         }
         break;
       case 'snapAlignParams':
@@ -90,7 +90,7 @@ class DropArea extends DefaultDndElement {
 
           verifiedValue = checkingSetting;
         } else {
-          localUtils.showSettingError(settingName, checkingSetting, 'Please set object of align params.');
+          utils.showSettingError(settingName, checkingSetting, 'Please set object of align params.');
         }
         break;
       case 'verticalAlign':
@@ -99,7 +99,7 @@ class DropArea extends DefaultDndElement {
             ? checkingSetting
             : 'top';
         } else {
-          localUtils.showSettingError(settingName, checkingSetting, 'Please set string "top, center or bottom".');
+          utils.showSettingError(settingName, checkingSetting, 'Please set string "top, center or bottom".');
         }
         break;
       case 'horizontalAlign':
@@ -108,16 +108,16 @@ class DropArea extends DefaultDndElement {
             ? checkingSetting
             : 'left';
         } else {
-          localUtils.showSettingError(settingName, checkingSetting, 'Please set string "left, center or right".');
+          utils.showSettingError(settingName, checkingSetting, 'Please set string "left, center or right".');
         }
         break;
       case 'withShift':
       case 'withDroppedItemCSSMargins':
       case 'snap':
-        verifiedValue = localUtils.checkOnBoolean(checkingSetting);
+        verifiedValue = utils.checkOnBoolean(checkingSetting);
 
         if (verifiedValue === null) {
-          localUtils.showSettingError(settingName, checkingSetting, 'Please set true or false.');
+          utils.showSettingError(settingName, checkingSetting, 'Please set true or false.');
         }
         break;
       case 'eachDroppedItemIndents':
@@ -130,7 +130,7 @@ class DropArea extends DefaultDndElement {
             checkedIndentArray.splice(RIGHT_ARRAY_LENGTH, checkedIndentArray.length - RIGHT_ARRAY_LENGTH);
           }
 
-          const marker = localUtils.findIndex(checkedIndentArray, (item) => item === null);
+          const marker = utils.findIndex(checkedIndentArray, (item) => item === null);
 
           if (marker !== -1) {
             const ZERO = 0;
@@ -141,10 +141,10 @@ class DropArea extends DefaultDndElement {
             switch (marker) {
               case ZERO:
               default:
-                verifiedValue = [...localUtils.fillArray(checkedIndentArray, 0)];
+                verifiedValue = [...utils.fillArray(checkedIndentArray, 0)];
                 break;
               case ONE:
-                verifiedValue = [...localUtils.fillArray(checkedIndentArray, checkedIndentArray[0])];
+                verifiedValue = [...utils.fillArray(checkedIndentArray, checkedIndentArray[0])];
                 break;
               case TWO:
                 verifiedValue = [checkedIndentArray[0], checkedIndentArray[1], checkedIndentArray[0], checkedIndentArray[1]];
@@ -157,7 +157,7 @@ class DropArea extends DefaultDndElement {
             verifiedValue = [...checkedIndentArray];
           }
         } else {
-          localUtils.showSettingError(settingName, checkingSetting, 'Please set indents array like [top, right, bottom, left].');
+          utils.showSettingError(settingName, checkingSetting, 'Please set indents array like [top, right, bottom, left].');
         }
         break;
       default:
@@ -198,7 +198,7 @@ class DropArea extends DefaultDndElement {
       return true;
     }
 
-    return localUtils.findIndex(dragItem.groups, (item) => this.accept.includes(item)) > -1;
+    return utils.findIndex(dragItem.groups, (item) => this.accept.includes(item)) > -1;
   }
 
   _getHorizontalAlignedCoordinates(dragItem, itemIndents) {
@@ -277,15 +277,14 @@ class DropArea extends DefaultDndElement {
     for (let i = fromIndex; i < this.innerDragItems.length; i++) {
       const droppedItem = this.innerDragItems[i];
 
-      droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, shiftY), true, {}, () => droppedItem.coordinates.droppedIn.update());
+      droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, shiftY), true, () => droppedItem.coordinates.droppedIn.update());
     }
 
     if (aligningKind === 'center' && fromIndex) {
       for (let i = 0; i < fromIndex; i++) {
         const droppedItem = this.innerDragItems[i];
 
-        droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, -shiftY), true, {},
-                                () => droppedItem.coordinates.droppedIn.update());
+        droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, -shiftY), true, () => droppedItem.coordinates.droppedIn.update());
       }
     }
 

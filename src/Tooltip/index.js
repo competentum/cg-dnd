@@ -1,7 +1,7 @@
 import './index.less';
 
 import merge from 'merge';
-import localUtils from '../utils';
+import utils from '../utils';
 import cgUtils from 'cg-component-utils';
 
 /**
@@ -107,14 +107,14 @@ class Tooltip {
         if (typeof settingValue === 'string' && settingValue.length) {
           verifiedValue = settingValue;
         } else {
-          localUtils.showSettingError(settingName, settingValue, `Please set html-string of ${settingName}.`);
+          utils.showSettingError(settingName, settingValue, `Please set html-string of ${settingName}.`);
         }
         break;
       case 'className':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
         } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
+          utils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }
         break;
       case 'marginLeft':
@@ -122,7 +122,7 @@ class Tooltip {
         verifiedValue = parseFloat(settingValue);
 
         if (isNaN(verifiedValue)) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set number of margin.');
+          utils.showSettingError(settingName, settingValue, 'Please set number of margin.');
         }
         break;
       default:

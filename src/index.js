@@ -2,7 +2,7 @@ import './common.less';
 
 import EventEmitter from 'events';
 import merge from 'merge';
-import localUtils from 'utils';
+import utils from 'utils';
 import DragItem from 'DragItem';
 import DropArea from 'DropArea';
 import Tooltip from 'Tooltip';
@@ -284,7 +284,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _addListeners() {
-    this.deviceEvents = localUtils.getDeviceEvents();
+    this.deviceEvents = utils.getDeviceEvents();
 
     this.dragItems.forEach((item) => {
       item.onMouseDownHandler = this._onMouseDown.bind(this, item);
@@ -320,7 +320,7 @@ class CgDnd extends EventEmitter {
         this.breakTransition(item);
       }
 
-      const box = localUtils.getElementPosition(item.node);
+      const box = utils.getElementPosition(item.node);
       const pageX = e.pageX || e.touches[0].pageX;
       const pageY = e.pageY || e.touches[0].pageY;
 
@@ -328,12 +328,12 @@ class CgDnd extends EventEmitter {
       item.shiftY = pageY - box.top;
 
       const boundsParams = this.settings.bounds instanceof Element
-        ? localUtils.getElementPosition(this.settings.bounds)
+        ? utils.getElementPosition(this.settings.bounds)
         : this.settings.bounds;
 
       this.currentDragParams = {
         draggedItem: item,
-        currentBounds: localUtils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
+        currentBounds: utils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
         initPosition: {
           x: pageX,
           y: pageY
@@ -363,8 +363,8 @@ class CgDnd extends EventEmitter {
     }
 
     if (!this.isClick) {
-      const x = localUtils.applyLimit(pageX, this.currentDragParams.currentBounds.left, this.currentDragParams.currentBounds.right);
-      const y = localUtils.applyLimit(pageY, this.currentDragParams.currentBounds.top, this.currentDragParams.currentBounds.bottom);
+      const x = utils.applyLimit(pageX, this.currentDragParams.currentBounds.left, this.currentDragParams.currentBounds.right);
+      const y = utils.applyLimit(pageY, this.currentDragParams.currentBounds.top, this.currentDragParams.currentBounds.bottom);
 
       this.currentDragParams.draggedItem.translateTo({
         left: x - this.currentDragParams.draggedItem.shiftX,
@@ -670,7 +670,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _dropAreasHaveDragItems() {
-    return localUtils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
+    return utils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
   }
 
   /**
@@ -733,7 +733,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _getIntersectedElement(checkedElements, checkCB) {
-    const intersectedItemIndex = localUtils.findIndex(checkedElements, checkCB);
+    const intersectedItemIndex = utils.findIndex(checkedElements, checkCB);
 
     return intersectedItemIndex > -1 ? checkedElements[intersectedItemIndex] : null;
   }
@@ -748,7 +748,7 @@ class CgDnd extends EventEmitter {
   _checkIntersection(dragItem, dropArea) {
     const comparedAreaCoords = dropArea instanceof DropArea ? dropArea.coordinates.default.update() : dropArea.coordinates.currentStart;
 
-    return localUtils.isIntersectRect(dragItem.coordinates.current.update(), comparedAreaCoords);
+    return utils.isIntersectRect(dragItem.coordinates.current.update(), comparedAreaCoords);
   }
 
   /**
@@ -788,7 +788,7 @@ class CgDnd extends EventEmitter {
        * If drag item was returned to remaining drag items from drop area
        */
 
-      const returnedItemIndex = localUtils.findIndex(elementsArray, (remainingItem) => remainingItem === element);
+      const returnedItemIndex = utils.findIndex(elementsArray, (remainingItem) => remainingItem === element);
       const closestElements = this._getClosestArraySiblings(elementsArray, returnedItemIndex);
 
       this._includeToSiblings(element, closestElements, elementsArray, firstCurrentElement, setFirstCurrentElementCB);
@@ -922,7 +922,7 @@ class CgDnd extends EventEmitter {
     // TODO: add changes checking
     if (this.settings.alignRemainingDragItems) {
       this.remainingDragItems.forEach((item, index) => {
-        item.translateTo(this.initDragItemsPlaces[index], true, {}, () => item.coordinates.currentStart.update());
+        item.translateTo(this.initDragItemsPlaces[index], true, () => item.coordinates.currentStart.update());
       });
     }
   }
@@ -954,10 +954,10 @@ class CgDnd extends EventEmitter {
     const firstItemStartCoordinates = merge.recursive(true, {}, dragItem1.coordinates.currentStart);
     const secondItemStartCoordinates = merge.recursive(true, {}, dragItem2.coordinates.currentStart);
 
-    dragItem1.translateTo(secondItemStartCoordinates, true, {}, () => dragItem1.coordinates.currentStart.update());
-    dragItem2.translateTo(firstItemStartCoordinates, true, {}, () => dragItem2.coordinates.currentStart.update());
+    dragItem1.translateTo(secondItemStartCoordinates, true, () => dragItem1.coordinates.currentStart.update());
+    dragItem2.translateTo(firstItemStartCoordinates, true, () => dragItem2.coordinates.currentStart.update());
 
-    localUtils.replaceArrayItems(this.remainingDragItems, dragItem1, dragItem2);
+    utils.replaceArrayItems(this.remainingDragItems, dragItem1, dragItem2);
     this._replaceSiblings(this.remainingDragItems);
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
@@ -975,11 +975,11 @@ class CgDnd extends EventEmitter {
    * @public
    */
   moveDragItems(dragItem, toDragItem) {
-    localUtils.moveArrayItems(this.remainingDragItems, this.remainingDragItems.indexOf(dragItem),
+    utils.moveArrayItems(this.remainingDragItems, this.remainingDragItems.indexOf(dragItem),
                               this.remainingDragItems.indexOf(toDragItem));
 
     this.remainingDragItems.forEach((item) => {
-      item.translateTo(this.initDragItemsPlaces[item.index], true, {}, () => item.coordinates.currentStart.update());
+      item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
     });
 
     this._replaceSiblings(this.remainingDragItems);
@@ -1068,13 +1068,13 @@ class CgDnd extends EventEmitter {
                 ? new DragItem(merge.recursive(true, {}, this.settings.commonDragItemsSettings, settings), this.emit.bind(this))
                 : new DropArea(merge.recursive(true, {}, this.settings.commonDropAreasSettings, settings));
             } else {
-              localUtils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
+              utils.showSettingError(settingName, settingValue, `Please set object in each element of ${settingName}.`);
             }
 
             return dndElement;
           });
         } else {
-          localUtils.showSettingError(settingName, settingValue, `Please set Array of ${settingName}.`);
+          utils.showSettingError(settingName, settingValue, `Please set Array of ${settingName}.`);
         }
         break;
       case 'bounds':
@@ -1084,7 +1084,7 @@ class CgDnd extends EventEmitter {
                                      && (settingValue[0] < settingValue[2] && settingValue[1] < settingValue[3]);
 
           if (!isValidBoundsArray) {
-            localUtils.showSettingError(settingName, settingValue, 'Please set array of 4 positive numbers as [x0, y0, x1, y1]');
+            utils.showSettingError(settingName, settingValue, 'Please set array of 4 positive numbers as [x0, y0, x1, y1]');
           }
           verifiedValue = {
             left: settingValue[0],
@@ -1093,7 +1093,7 @@ class CgDnd extends EventEmitter {
             bottom: settingValue[3]
           };
         } else {
-          verifiedValue = localUtils.getElement(settingValue) || document.documentElement;
+          verifiedValue = utils.getElement(settingValue) || document.documentElement;
         }
         break;
       case 'helper':
@@ -1104,10 +1104,10 @@ class CgDnd extends EventEmitter {
       case 'alignRemainingDragItems':
       case 'possibleToReplaceDroppedItem':
       case 'forbidFocusOnFilledDropAreas':
-        verifiedValue = localUtils.checkOnBoolean(settingValue);
+        verifiedValue = utils.checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set true or false.');
+          utils.showSettingError(settingName, settingValue, 'Please set true or false.');
         }
         break;
       case 'onCreate':
@@ -1120,14 +1120,14 @@ class CgDnd extends EventEmitter {
           verifiedValue = settingValue;
           this.on(this.constructor.EVENTS_HANDLER_RELATIONS[settingName], settingValue);
         } else if (settingValue !== null) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set function as event handler.');
+          utils.showSettingError(settingName, settingValue, 'Please set function as event handler.');
         }
         break;
       case 'container':
-        verifiedValue = localUtils.getElement(settingValue);
+        verifiedValue = utils.getElement(settingValue);
 
         if (!verifiedValue) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
+          utils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
         }
 
         verifiedValue.setAttribute('role', 'application');
@@ -1136,7 +1136,7 @@ class CgDnd extends EventEmitter {
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
         } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
+          utils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }
         break;
       default:
@@ -1187,7 +1187,7 @@ class CgDnd extends EventEmitter {
   _createHiddenDescriptionBlock() {
     this.constructor.AT_PAGE_DND_COUNTER++;
 
-    this.hiddenDescContainer = localUtils.createHTML({
+    this.hiddenDescContainer = utils.createHTML({
       html: '',
       container: this.container,
       attrs: {

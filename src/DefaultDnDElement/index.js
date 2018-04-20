@@ -1,6 +1,6 @@
 import merge from 'merge';
 import cgUtils from 'cg-component-utils';
-import localUtils from '../utils';
+import utils from '../utils';
 
 /**
  * @typedef {Object} DefaultDndElementSettings
@@ -125,7 +125,7 @@ class DefaultDndElement {
    * @param {Element|string} node
    */
   set keyboardDescElement(node) {
-    this._keyboardDescElement = localUtils.getElement(node);
+    this._keyboardDescElement = utils.getElement(node);
   }
 
   /**
@@ -140,7 +140,7 @@ class DefaultDndElement {
    * @param {Element|string} node
    */
   set currentStateDescElement(node) {
-    this._currentStateDescElement = localUtils.getElement(node);
+    this._currentStateDescElement = utils.getElement(node);
   }
 
   /**
@@ -231,7 +231,7 @@ class DefaultDndElement {
    * @param {boolean} flag
    */
   set disabled(flag) {
-    this._disabled = localUtils.checkOnBoolean(flag);
+    this._disabled = utils.checkOnBoolean(flag);
 
     this.node.setAttribute('aria-disabled', this._disabled);
     this.ariaHidden = this._disabled;
@@ -288,7 +288,7 @@ class DefaultDndElement {
     if (this.hasOwnProperty('node')) {
       this.node = this._checkSetting('node', this.node);
     } else {
-      localUtils.showSettingError('node', undefined, 'Please set html-node element or html-selector');
+      utils.showSettingError('node', undefined, 'Please set html-node element or html-selector');
     }
 
     for (const key in this) {
@@ -355,10 +355,10 @@ class DefaultDndElement {
 
     switch (settingName) {
       case 'node':
-        verifiedValue = localUtils.getElement(settingValue);
+        verifiedValue = utils.getElement(settingValue);
 
         if (!verifiedValue) {
-          localUtils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
+          utils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
         }
 
         break;
@@ -368,7 +368,7 @@ class DefaultDndElement {
           verifiedValue = settingValue.replace(/^\./, '');
           settingName === 'className' && this.addClass(verifiedValue);
         } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set string of class name.');
+          utils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }
         break;
       case 'ariaLabel':
@@ -380,7 +380,7 @@ class DefaultDndElement {
             this.node.setAttribute(this.constructor.ARIA_ATTRIBUTES[settingName], verifiedValue);
           }
         } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set string.');
+          utils.showSettingError(settingName, settingValue, 'Please set string.');
         }
         break;
       case 'groups':
@@ -390,7 +390,7 @@ class DefaultDndElement {
         } else if (Array.isArray(settingValue) && settingValue.every((item) => typeof item === 'string')) {
           verifiedValue = [...settingValue];
         } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set string or array of strings.');
+          utils.showSettingError(settingName, settingValue, 'Please set string or array of strings.');
         }
         break;
       default:
@@ -401,7 +401,7 @@ class DefaultDndElement {
   }
 
   _getDefaultCoordinates() {
-    const initCoordinates = localUtils.getElementPosition(this.node);
+    const initCoordinates = utils.getElementPosition(this.node);
 
     this.coordinates = {};
     this._createCoordinatesObject('default', initCoordinates);
@@ -415,12 +415,12 @@ class DefaultDndElement {
    * @param {object} coords - existing coordinates object
    */
   _createCoordinatesObject(coordinatesName, coords) {
-    this.coordinates[coordinatesName] = coords || localUtils.getElementPosition(this.node);
+    this.coordinates[coordinatesName] = coords || utils.getElementPosition(this.node);
     this.coordinates[coordinatesName] = merge.recursive(
       {},
       this.coordinates[coordinatesName],
       {
-        update: (data) => merge.recursive(this.coordinates[coordinatesName], data || localUtils.getElementPosition(this.node))
+        update: (data) => merge.recursive(this.coordinates[coordinatesName], data || utils.getElementPosition(this.node))
       });
   }
 
@@ -457,14 +457,14 @@ class DefaultDndElement {
   createOwnDescElements() {
     this.constructor.ID_UNIQUE_COUNTER++;
 
-    this.keyboardDescElement = localUtils.createHTML({
+    this.keyboardDescElement = utils.createHTML({
       html: '',
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC }
     });
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC, true);
 
-    this.currentStateDescElement = localUtils.createHTML({
+    this.currentStateDescElement = utils.createHTML({
       html: '',
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC }

@@ -1,5 +1,5 @@
 import merge from 'merge';
-import localUtils from '../utils';
+import utils from '../utils';
 import cgUtils from 'cg-component-utils';
 import DefaultDndElement from '../DefaultDnDElement';
 
@@ -77,7 +77,7 @@ class DragItem extends DefaultDndElement {
   }
 
   set correct(value) {
-    this._correct = localUtils.checkOnBoolean(value);
+    this._correct = utils.checkOnBoolean(value);
   }
 
   get correct() {
@@ -113,9 +113,9 @@ class DragItem extends DefaultDndElement {
     switch (settingName) {
       case 'handler':
         if (typeof sheckingSetting === 'string') {
-          verifiedValue = localUtils.getElement(sheckingSetting, this.node) || this.node;
+          verifiedValue = utils.getElement(sheckingSetting, this.node) || this.node;
         } else {
-          localUtils.showSettingError(settingName, sheckingSetting, 'Please set class selector or empty string.');
+          utils.showSettingError(settingName, sheckingSetting, 'Please set class selector or empty string.');
         }
         break;
       case 'animationParams':
@@ -128,7 +128,7 @@ class DragItem extends DefaultDndElement {
 
           verifiedValue = settingValue;
         } else {
-          localUtils.showSettingError(settingName, settingValue, 'Please set object of css animataion settings.');
+          utils.showSettingError(settingName, settingValue, 'Please set object of css animataion settings.');
         }
         break;
       case 'delay':
@@ -136,7 +136,7 @@ class DragItem extends DefaultDndElement {
         verifiedValue = +settingValue;
 
         if (!verifiedValue && verifiedValue !== 0 || isNaN(verifiedValue)) {
-          localUtils.showSettingError(settingName, settingValue, `Please set number for animation ${settingName} value in ms`);
+          utils.showSettingError(settingName, settingValue, `Please set number for animation ${settingName} value in ms`);
         }
         break;
       case 'animatedProperty':
@@ -144,7 +144,7 @@ class DragItem extends DefaultDndElement {
         if (typeof settingValue === 'string' && settingValue.length) {
           verifiedValue = settingValue;
         } else {
-          localUtils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
+          utils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
         }
         break;
       default:
@@ -158,11 +158,11 @@ class DragItem extends DefaultDndElement {
    * Moves drag item element to (x, y) coordinates by transform: translate with/without animation
    * @param {object} coords - object of x/left y/top node's coordinates
    * @param {boolean} isAnimate - animate flag
-   * @param {object} animateParams - params for css-transition
    * @param {function} animationEndCallback - callback, which would calls after animation's end
+   * @param {object} animateParams - params for css-transition
    * @public
    */
-  translateTo(coords, isAnimate, animateParams, animationEndCallback = () => {}) {
+  translateTo(coords, isAnimate, animationEndCallback = () => {}, animateParams = {}) {
     const animProps = merge({}, this.animationParams, animateParams);
     const left = coords.left - this.coordinates.default.left;
     const top = coords.top - this.coordinates.default.top;
@@ -200,7 +200,7 @@ class DragItem extends DefaultDndElement {
   }
 
   reset(params = {}) {
-    this.translateTo(params.coordinates || this.coordinates.currentStart, true, {}, () => this.coordinates.currentStart.update());
+    this.translateTo(params.coordinates || this.coordinates.currentStart, true, () => this.coordinates.currentStart.update());
     this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || params.from);
 
     if (this.chosenDropArea) {
@@ -254,7 +254,7 @@ class DragItem extends DefaultDndElement {
       return false;
     }
 
-    this.translateTo(chosenDropArea.getAlignedCoords(this), true, {}, () => {
+    this.translateTo(chosenDropArea.getAlignedCoords(this), true, () => {
       this.coordinates.droppedIn.update();
 
       callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, false);
