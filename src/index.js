@@ -651,7 +651,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _isSomethingToReplaceInDropAreas() {
-    return this.firstAllowedDropArea.tabIndex === -1 && this.settings.possibleToReplaceDroppedItem && this._dropAreasHaveDragItems();
+    return this.settings.possibleToReplaceDroppedItem && this.firstAllowedDropArea.tabIndex === -1 && this._dropAreasHaveDragItems();
   }
 
   /**
@@ -661,7 +661,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _isNothingToReplaceInDropAreas() {
-    return this.firstAllowedDropArea.tabIndex === 0 && this.settings.possibleToReplaceDroppedItem && !this._dropAreasHaveDragItems();
+    return this.settings.possibleToReplaceDroppedItem && this.firstAllowedDropArea.tabIndex === 0 && !this._dropAreasHaveDragItems();
   }
 
   /**
