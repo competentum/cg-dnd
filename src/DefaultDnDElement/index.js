@@ -74,10 +74,11 @@ class DefaultDndElement {
     this.siblings = {};
 
     /**
-     * Fix for IE + JAWS
+     * Fix for IE + JAWS. Otherwise, JAWS doesn't read description text
      */
-    // TODO: think about aria-describedby for jaws and ios+vo
-    this.node.setAttribute('role', 'presentation');
+    if (utils.IS_IE) {
+      this.node.setAttribute('role', 'presentation');
+    }
   }
 
   /**
