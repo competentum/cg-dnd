@@ -405,32 +405,30 @@ class CgDnd extends EventEmitter {
   }
 
   _onKeyDown(item, e) {
-    if (!item.disabled) {
-      const KEY_CODES = this.constructor.KEY_CODES;
+    const KEY_CODES = this.constructor.KEY_CODES;
 
-      switch (e.keyCode) {
-        case KEY_CODES.UP_ARROW:
-        case KEY_CODES.LEFT_ARROW:
-          e.preventDefault();
-          if (item.siblings.prev) {
-            item.siblings.prev.focus();
-          }
-          break;
-        case KEY_CODES.DOWN_ARROW:
-        case KEY_CODES.RIGHT_ARROW:
-          e.preventDefault();
-          if (item.siblings.next) {
-            item.siblings.next.focus();
-          }
-          break;
-        case KEY_CODES.ENTER:
-        case KEY_CODES.SPACE:
-          e.preventDefault();
-          this.isClick = true;
-          item.node.click();
-          break;
-        default:
-      }
+    switch (e.keyCode) {
+      case KEY_CODES.UP_ARROW:
+      case KEY_CODES.LEFT_ARROW:
+        e.preventDefault();
+        if (item.siblings.prev) {
+          item.siblings.prev.focus();
+        }
+        break;
+      case KEY_CODES.DOWN_ARROW:
+      case KEY_CODES.RIGHT_ARROW:
+        e.preventDefault();
+        if (item.siblings.next) {
+          item.siblings.next.focus();
+        }
+        break;
+      case KEY_CODES.ENTER:
+      case KEY_CODES.SPACE:
+        e.preventDefault();
+        this.isClick = true;
+        item.node.click();
+        break;
+      default:
     }
   }
 
