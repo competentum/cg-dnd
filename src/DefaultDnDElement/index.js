@@ -25,7 +25,9 @@ class DefaultDndElement {
         node: '',
         data: null,
         ariaLabel: '',
-        className: ''
+        className: '',
+        initAriaKeyboardAccessDesc: '',
+        initAriaElementDesc: '',
       };
     }
 
@@ -394,6 +396,14 @@ class DefaultDndElement {
           utils.showSettingError(settingName, settingValue, 'Please set string or array of strings.');
         }
         break;
+      case 'initAriaKeyboardAccessDesc':
+      case 'initAriaElementDesc':
+        if (typeof settingValue === 'string') {
+          verifiedValue = settingValue;
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set string');
+        }
+        break;
       default:
         verifiedValue = settingValue;
     }
@@ -459,14 +469,14 @@ class DefaultDndElement {
     this.constructor.ID_UNIQUE_COUNTER++;
 
     this.keyboardDescElement = utils.createHTML({
-      html: '',
+      html: `${this.initAriaKeyboardAccessDesc}`,
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC }
     });
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC, true);
 
     this.currentStateDescElement = utils.createHTML({
-      html: '',
+      html: `${this.initAriaElementDesc}`,
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC }
     });

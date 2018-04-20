@@ -86,6 +86,8 @@ class CgDnd extends EventEmitter {
         forbidFocusOnFilledDropAreas: false,
         commonDragItemsSettings: {
           handler: '',
+          initAriaKeyboardAccessDesc: '',
+          initAriaElementDesc: '',
           animationParams: {
             animatedProperty: 'transform',
             duration: 500,
@@ -96,6 +98,8 @@ class CgDnd extends EventEmitter {
         commonDropAreasSettings: {
           maxItemsInDropArea: 1,
           snap: true,
+          initAriaKeyboardAccessDesc: '',
+          initAriaElementDesc: '',
           snapAlignParams: {
             withShift: true,
             withDroppedItemCSSMargins: false,

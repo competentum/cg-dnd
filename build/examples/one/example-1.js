@@ -10,10 +10,9 @@
     container: '#first-example',
     commonDragItemsSettings: {
       handler: '.handler',
-    },
-    ariaDescriptions: {
-      keyboardAccessForDragItems: 'use arrow keys to select item. Press space to choose drag item.',
-      keyboardAccessForDropAreas: 'use arrow keys to select area. Press space to drop item into drop area'
+      initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drag item, then press space button to select it'
+    },monDropAreasSettings: {
+      initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drop area, then press space button to select it'
     },
     tooltipParams: {
       html: 'custom tooltip',
