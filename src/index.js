@@ -174,7 +174,9 @@ class CgDnd extends EventEmitter {
       this._KEY_CODES = {
         ENTER: 13,
         SPACE: 32,
+        LEFT_ARROW: 37,
         UP_ARROW: 38,
+        RIGHT_ARROW: 39,
         DOWN_ARROW: 40
       };
     }
@@ -408,12 +410,14 @@ class CgDnd extends EventEmitter {
 
       switch (e.keyCode) {
         case KEY_CODES.UP_ARROW:
+        case KEY_CODES.LEFT_ARROW:
           e.preventDefault();
           if (item.siblings.prev) {
             item.siblings.prev.focus();
           }
           break;
         case KEY_CODES.DOWN_ARROW:
+        case KEY_CODES.RIGHT_ARROW:
           e.preventDefault();
           if (item.siblings.next) {
             item.siblings.next.focus();
