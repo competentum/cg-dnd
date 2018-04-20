@@ -7,17 +7,60 @@ import DragItem from 'DragItem';
 import DropArea from 'DropArea';
 import Tooltip from 'Tooltip';
 
-/* For ES-Lint comment
- const DND_CLASS = 'cg-dnd';
- const CLASS = {
-   DND: DND_CLASS,
-   DRAG: `${DND_CLASS}-drag-item`
- };
+/**
+ * DnD's customizing settings
+ * @typedef {Object} DndSettings
+ * @property {boolean} disabled - disables all DnD's elements.
+ * @property {string} disabledClassName - the css class name, which will be assigned to disabled elements.
+ * @property {(string|number[])} bounds - the limits for dragged elements. It accepts css-selector or number's array like [x0, y0, x1, y1].
+ * @property {string} helper - announces, what element's part will be dragged (original or clone). Accepts 'original' or 'clone'.
+ * @property {(string|Element)} container - css-selector or Element, which contains dragItems and dropAreas.
+ * @property {boolean} alignRemainingDragItems - if 'true', remaining drag items will be aligned after dragging one of them.
+ * @property {boolean} possibleToReplaceDroppedItem - if 'true', user can change dropped items position.
+ * @property {boolean} shiftDragItems - flag for only drag items case (without existing drop areas). If 'true', replaced drag item will
+ *                                      shift remaining drag items after or before it.
+ * @property {boolean} forbidFocusOnFilledDropAreas - if 'true', fully filled drop areas will not be focused.
 
- const KEY_CODE = {
- ESC: 27,
- TAB: 9
- }; */
+ * @property {object} commonDragItemsSettings - initial settings for all drag items.
+   * @property {(string|Element)} commonDragItemsSettings.handler - html-element for start dragging by mouse/touch.
+   * @property {object} commonDragItemsSettings.animationParams - settings for CSS-transition property.
+     * @property {string} commonDragItemsSettings.animationParams.animatedProperty - animated CSS-property name.
+     * @property {number} commonDragItemsSettings.animationParams.duration - animation's duration in ms.
+     * @property {string} commonDragItemsSettings.animationParams.timingFunction - animation's timing function name.
+     * @property {number} commonDragItemsSettings.animationParams.delay
+ *
+ * @property {object} commonDropAreasSettings - initial settings for all drop areas.
+   * @property {number} commonDropAreasSettings.maxItemsInDropArea - if '0', drop area accepts unlimited dropped items count.
+   * @property {boolean} commonDropAreasSettings.snap - if 'true', dropped item will be aligned by drop area boundaries
+   *                                                    or special snap settings (snapAlignParams).
+   * @property {object} commonDropAreasSettings.snapAlignParams - aligning params for items, which were dropped in own drop area
+     * @property {boolean} commonDropAreasSettings.snapAlignParams.withShift - if 'true' dropped items will be aligned
+     *                                                                         after dragging in/out one of them.
+     * @property {boolean} commonDropAreasSettings.snapAlignParams.withDroppedItemCSSMargins - dropped item's position will be calculated
+     *                                                                                         with considering of their css-margins
+     * @property {number[]} commonDropAreasSettings.snapAlignParams.eachDroppedItemIndents - custom indents for each dropped item like
+     *                                                                                       css-margins property: [all] | [top, bottom] |
+     *                                                                                       [top, left&right, bottom] |
+     *                                                                                       [top, right, bottom, left]
+     * @property {string} commonDropAreasSettings.snapAlignParams.horizontalAlign - aligns dropped item by horizontal.
+     *                                                                              Accepts [left|center|right].
+     * @property {string} commonDropAreasSettings.snapAlignParams.verticalAlign - aligns dropped item by vertical.
+     *                                                                              Accepts [top|center|bottom].
+
+ * @property {function(number):*} onCreate - on DnDObject creating callback
+ * @property {function(number):*} onDragStart - on drag start event callback
+ * @property {function(number):*} onDragMove - on drag start event callback
+ * @property {function(number):*} onDragStop - on drag start event callback
+ * @property {function(number):*} onDragItemSelect - on drag item, selected by space/enter buttons or by double touch
+ *                                                   with enabled screenreader, event callback
+ * @property {function(number):*} onDropAreaSelect - on drop area, selected by space/enter buttons or by double touch
+ *                                                   with enabled screenreader, event callback
+ */
+
+/**
+ * @typedef {object} dragItem
+ * @typedef {object} dropArea
+ */
 
 /**
  * Accessible DnD Component
@@ -26,7 +69,8 @@ class CgDnd extends EventEmitter {
 
   /**
    * DnD's customizing settings
-   * @typedef {Object} DndSettings
+   * @type {DndSettings}
+   * @static
    */
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
@@ -50,8 +94,8 @@ class CgDnd extends EventEmitter {
           },
         },
         commonDropAreasSettings: {
-          snap: true,
           maxItemsInDropArea: 1,
+          snap: true,
           snapAlignParams: {
             withShift: true,
             withDroppedItemCSSMargins: false,
@@ -86,6 +130,11 @@ class CgDnd extends EventEmitter {
     };
   }
 
+  /**
+   * Unique CSS IDs for multiple dnd-objects on the page
+   * @type {object}
+   * @static
+   */
   static get CSS_ID() {
     return {
       HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-aria-descriptions-container-${this.AT_PAGE_DND_COUNTER}`,
@@ -94,12 +143,6 @@ class CgDnd extends EventEmitter {
     };
   }
 
-  /**
-   *
-   * @property {string} CREATE - emit on drag creating
-   * @return {Object} - events
-   * @constructor
-   */
   static get EVENTS() {
     if (!this._EVENTS) {
       this._EVENTS = {
@@ -139,6 +182,9 @@ class CgDnd extends EventEmitter {
     return this._KEY_CODES;
   }
 
+  /**
+   * @return {Object} - callbacks with appropriate events relations
+   */
   static get EVENTS_HANDLER_RELATIONS() {
     if (!this._EVENTS_HANDLER_RELATIONS) {
       this._EVENTS_HANDLER_RELATIONS = {
@@ -187,13 +233,15 @@ class CgDnd extends EventEmitter {
       this.disable();
     }
 
-    // This._render();
-
     this._addListeners();
 
     this.emit(this.constructor.EVENTS.CREATE, this);
   }
 
+  /**
+   * Sets remaining first drag item
+   * @param {dragItem} dragItem
+   */
   set remainingFirstDragItem(dragItem) {
     if (this._remainingFirstDragItem) {
       this._remainingFirstDragItem.tabIndex = -1;
@@ -207,14 +255,24 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * @return {dragItem} first remaining dragItem
+   */
   get remainingFirstDragItem() {
     return this._remainingFirstDragItem;
   }
 
+  /**
+   * Sets first allowed drop area
+   * @param {dropArea} dropArea
+   */
   set firstAllowedDropArea(dropArea) {
     this._firstAllowedDropArea = dropArea;
   }
 
+  /**
+   * @return {dropArea} first allowed drop area
+   */
   get firstAllowedDropArea() {
     return this._firstAllowedDropArea;
   }
@@ -372,6 +430,12 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Handler on drag item, which is selected by space/enter or touch event with enabled screenreader
+   * @param {dragItem} item
+   * @param {object} e
+   * @private
+   */
   _onDragItemClick(item, e) {
     if (this.isClick && !item.disabled) {
       this.currentDragParams = { draggedItem: this.currentDragParams ? this.currentDragParams.draggedItem : item };
@@ -395,6 +459,12 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Handler on drop area, which is selected by space/enter or touch event with enabled screenreader
+   * @param {dropArea} area
+   * @param {object} e
+   * @private
+   */
   _onDropAreaClick(area, e) {
     if (this.isClick && !area.disabled) {
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
@@ -407,9 +477,10 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Checks, is drop area was intersects by drag item. If it's true and settings.snap is true,
-   * then align drag item by drop area, else move drag item to default position
-   * @param {object} dragItem
+   * Checks, is drop area intersected by drag item. If it's true and settings.snap is true,
+   * then aligns drag item by drop area boundaries, else move drag item to default position.
+   * For case, when only drag items are exist, checks intersection with other drag item
+   * @param {dragItem} dragItem
    * @private
    */
   _checkDragItemPosition(dragItem) {
@@ -439,6 +510,13 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Checks main setting's conditions before putting drag item into drop area
+   * @param {dragItem} dragItem
+   * @param {dropArea} dropArea
+   * @param {boolean} isSameDropArea - if true, drag item returns back to chosen drop area's position
+   * @private
+   */
   _onDragItemDroppedOnDropArea(dragItem, dropArea, isSameDropArea) {
     const forUserArgs = {
       dragItem,
@@ -488,21 +566,38 @@ class CgDnd extends EventEmitter {
     this._finishDrag(forUserArgs);
   }
 
+  /**
+   * Add dragItem to DropArea's innerDragItems property with updating dragItem's siblings elements for keyboard access
+   * @param {dragItem} dragItem
+   * @param {dropArea} dropArea
+   * @private
+   */
   _insertToDropArea(dragItem, dropArea) {
     dropArea.includeDragItem(dragItem);
     dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
 
-    if (this.isSomethingToReplaceInDropAreas()) {
+    if (this._isSomethingToReplaceInDropAreas()) {
       this.firstAllowedDropArea.tabIndex = 0;
     }
   }
 
+  /**
+   * Remove dragItem from DropArea's innerDragItems property with updating dragItem's siblings elements for keyboard access
+   * @param {dragItem} dragItem
+   * @param {dropArea} dropArea
+   * @private
+   */
   _removeFromDropArea(dragItem, dropArea) {
     dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
     dropArea.excludeDragItem(dragItem);
     this._resetSiblings(dragItem);
   }
 
+  /**
+   * Remove dragItem from remaining drag items array with shifting other remaining drag items, if it will be needed
+   * @param {dragItem} dragItem
+   * @private
+   */
   _removeFromRemainingDragItems(dragItem) {
     this._excludeElementFromArray(this.remainingDragItems, dragItem);
     this._shiftRemainingDragItems();
@@ -516,30 +611,71 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Checks, is dropArea's inner dragItem needed for replacing
+   * @param {dropArea} dropArea
+   * @return {boolean} - flag
+   * @private
+   */
   _isNeedToReplace(dropArea) {
     return dropArea.maxItemsInDropArea === 1 && dropArea.innerDragItemsCount && this.settings.possibleToReplaceDroppedItem;
   }
 
+  /**
+   * Checks dragged item accepting in dropArea
+   * @param {dragItem} dragItem
+   * @param {dropArea} dropArea
+   * @return {boolean} - flag
+   * @private
+   */
   _isNeedToReset(dragItem, dropArea) {
     return dropArea.maxItemsInDropArea && dropArea.innerDragItemsCount === dropArea.maxItemsInDropArea || !dropArea.checkAccept(dragItem);
   }
 
+  /**
+   * Checks, is dropArea disabled for future focus access
+   * @param {dropArea} dropArea
+   * @return {boolean} - flag
+   * @private
+   */
   _isDropAreaBecomesForbidden(dropArea) {
     return this.settings.forbidFocusOnFilledDropAreas && dropArea.maxItemsInDropArea === dropArea.innerDragItemsCount;
   }
 
-  isSomethingToReplaceInDropAreas() {
+  /**
+   * Checks, has drop area inner drag item, which is available for replacing. If true,
+   * first drop area will have tabindex="0", for drag item replacing possibility
+   * @return {boolean} - flag
+   * @private
+   */
+  _isSomethingToReplaceInDropAreas() {
     return this.firstAllowedDropArea.tabIndex === -1 && this.settings.possibleToReplaceDroppedItem && this._dropAreasHaveDragItems();
   }
 
+  /**
+   * Checks, hasn't each drop area inner drag item, which is available for replacing. If true,
+   * first drop area will have tabindex="-1"
+   * @return {boolean} - flag
+   * @private
+   */
   _isNothingToReplaceInDropAreas() {
     return this.firstAllowedDropArea.tabIndex === 0 && this.settings.possibleToReplaceDroppedItem && !this._dropAreasHaveDragItems();
   }
 
+  /**
+   * Checks, are one of drop areas exist with inner drag items
+   * @return {boolean} - flag
+   * @private
+   */
   _dropAreasHaveDragItems() {
     return localUtils.findIndex(this.allowedDropAreas, (area) => area.innerDragItemsCount > 0) !== -1;
   }
 
+  /**
+   * Setup needed aria-attributes after stop dragging and emit DRAG_STOP event with needed parameters
+   * @param {object} params - parameter's object, which will be sent to user onDragStop-callback
+   * @private
+   */
   _finishDrag(params = {}) {
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);
 
@@ -580,6 +716,20 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * @callback checkCallBack
+   * @param {dragItem|dropArea} element - one of checked elements
+   * @return {number} - intersected element index or '-1', if it wasn't found
+   */
+
+  /**
+   * Return intersected element or null, if it wasn't found
+   * @param {dropAreas[]|dragItems[]} checkedElements - elements for comparing
+   * @param {checkCallBack} checkCB - callback for comparing each element with dragged item,
+   *                                                       which return intersected element index
+   * @return {dropArea|dragItem|null} - return intersected element or null, if it wasn't found
+   * @private
+   */
   _getIntersectedElement(checkedElements, checkCB) {
     const intersectedItemIndex = localUtils.findIndex(checkedElements, checkCB);
 
@@ -587,10 +737,10 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Checks, is drop area was intersects by drag item
-   * @param {object} dragItem
-   * @param {object} dropArea
-   * @return {boolean} - return intersection result (true/false)
+   * Checks, was drop area intersected by drag item
+   * @param {dragItem} dragItem
+   * @param {dropArea} dropArea
+   * @return {boolean} - return intersection's result
    * @private
    */
   _checkIntersection(dragItem, dropArea) {
@@ -599,6 +749,14 @@ class CgDnd extends EventEmitter {
     return localUtils.isIntersectRect(dragItem.coordinates.current.update(), comparedAreaCoords);
   }
 
+  /**
+   * Update sibling relations for drag item or drop area with setting new first element, if it will needed.
+   * Or update sibling relations for dropped items inside drop areas with some existing inner drag items.
+   * @param {dragItem|dropArea} element
+   * @param {boolean} [withoutCB = false] - if true, element's siblings will be updated with setting new appropriate first element
+   * @param {dragItem[]} array - drag items array (drop area's innerDragItems)
+   * @private
+   */
   _updateSiblings(element, withoutCB = false, array) {
     if (withoutCB) {
       this._updateElementSiblings(element, array);
@@ -614,11 +772,12 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Set new relations of remaining drag items for future keyboard access
-   * @param {object} element - drag item, which set to drop area
-   * @param {array} elementsArray - array with siblings elements
-   * @param {object} firstCurrentElement - first remaining drag item or first allowed drp area
-   * @param {function} setFirstCurrentElementCB - callback-function for setting first element
+   * Set new relations for dragItem or dropArea for keyboard access
+   * @param {dragItem|dropArea} element
+   * @param {dropAreas[]|dragItems[]} elementsArray - array with siblings elements
+   * @param {dragItem|dropArea} firstCurrentElement - first remaining drag item or first allowed drop area (optional)
+   * @param {function} setFirstCurrentElementCB - callback-function for setting a first element (optional)
+   * @private
    */
   _updateElementSiblings(element, elementsArray, firstCurrentElement, setFirstCurrentElementCB) {
     if (!element.siblings.next && !element.siblings.prev) {
@@ -640,6 +799,13 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Returns closest elements (previous and next) for an element just inserted into an array (for keyboard access).
+   * @param {dragItem[]|dropArea[]} elementsArray
+   * @param {number} elementIndex - inserted element index in array
+   * @return {object} - object with previous and next elements
+   * @private
+   */
   _getClosestArraySiblings(elementsArray, elementIndex) {
     const arrayBegin = 0;
     const arrayEnd = elementsArray.length - 1;
@@ -652,6 +818,20 @@ class CgDnd extends EventEmitter {
     };
   }
 
+  /**
+   * @callback setterCallBack
+   * @param {dragItem|dropArea} element - new first element
+   */
+
+  /**
+   * Sets relations with new inserted element
+   * @param {dragItem[]|dropArea[]} element
+   * @param {object} inArraySiblings - previous and next elements in array
+   * @param {dragItem[]|dropArea[]} elementsArray
+   * @param {dragItem|dropArea} firstCurrentElement - current first element
+   * @param {setterCallBack} setFirstCurrentElementCB - callback with setter for new first element
+   * @private
+   */
   _includeToSiblings(element, inArraySiblings, elementsArray, firstCurrentElement, setFirstCurrentElementCB) {
     const { prevElement, nextElement } = inArraySiblings;
 
@@ -666,6 +846,13 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Remove relations with excluded from array element
+   * @param {dragItem|dropArea} excludedElement
+   * @param {dragItem|dropArea} currentFirstElement
+   * @param {setterCallBack} setFirstCurrentElementCB - callback with setter for new first element
+   * @private
+   */
   _excludeFromSiblings(excludedElement, currentFirstElement, setFirstCurrentElementCB) {
     excludedElement.siblings.prev.siblings.next = excludedElement.siblings.next;
     excludedElement.siblings.next.siblings.prev = excludedElement.siblings.prev;
@@ -687,6 +874,11 @@ class CgDnd extends EventEmitter {
     elementsArray.forEach((item) => this._resetSiblings(item));
   }
 
+  /**
+   * Updates siblings relations for only existing drag items case (drop areas aren't existed)
+   * @param {dragItem[]} elementsArray
+   * @private
+   */
   _replaceSiblings(elementsArray) {
     this._resetAllSiblings(elementsArray);
     this._initSiblings(elementsArray, false);
@@ -694,9 +886,9 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Set drag-handlers for each drag item, if Element was got, otherwise set drag-item as drag-handler
-   * @param {array} dndElements - array of DragItem/DropArea objects
-   * @param {boolean} resetIndex - if  true, we set new indexes since 0, otherwise indexes are not
+   * Initialises element's siblings relations
+   * @param {dragItems[]|dropAreas[]} dndElements - drag items or drop areas array for setting element's siblings relations
+   * @param {boolean} resetIndex - if  true, we set new indexes since 0, otherwise indexes aren't
    * reinstalled (needs for case, when drag items was shuffle)
    * @private
    */
@@ -733,6 +925,12 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Replaces drag items (for only drag items case (without existing drop areas))
+   * @param {dragItem} dragItem1
+   * @param {dragItem} dragItem2
+   * @public
+   */
   shuffleDragItems(dragItem1, dragItem2) {
     if (dragItem1 && dragItem2 && !dragItem2.disabled) {
       this.settings.shiftDragItems
@@ -748,6 +946,7 @@ class CgDnd extends EventEmitter {
    * Replace drag items between themselves, when drop areas don't exist
    * @param {object} dragItem1 - first replaced drag item
    * @param {object} dragItem2 - second replaced drag item
+   * @public
    */
   replaceDragItems(dragItem1, dragItem2) {
     const firstItemStartCoordinates = merge.recursive(true, {}, dragItem1.coordinates.currentStart);
@@ -767,9 +966,11 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Replace first drag item after second drag item with a shift intermediate drag items, when drop areas don't exist
-   * @param {object} dragItem - first replaced drag item
-   * @param {object} toDragItem - drag item, on which place first drag item would be replaced
+   * Move drag item after or before selected other drag item. Other drag items will be shifted
+   * (for only drag items case (without existing drop areas)
+   * @param {dragItem} dragItem
+   * @param {dragItem} toDragItem
+   * @public
    */
   moveDragItems(dragItem, toDragItem) {
     localUtils.moveArrayItems(this.remainingDragItems, this.remainingDragItems.indexOf(dragItem),
@@ -790,7 +991,7 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Merge user settings with default settings
+   * Merge user settings with default settings and apply them.
    * @param {DndSettings} settings
    * @private
    */
@@ -831,8 +1032,13 @@ class CgDnd extends EventEmitter {
     });
   }
 
-  setHiddenAriaContainerFor(dndElem) {
-    dndElem.forEach((item) => {
+  /**
+   * Creates hidden containers for aria descriptions
+   * @param {dragItem[]|dropAreas[]} dndElems
+   * @private
+   */
+  setHiddenAriaContainerFor(dndElems) {
+    dndElems.forEach((item) => {
       item.initOwnAriaDescElement(this.hiddenDescContainer);
     });
   }
@@ -841,7 +1047,7 @@ class CgDnd extends EventEmitter {
    * Checks and fix user settings
    * @param {string} settingName - checked property.
    * @param {string|number|object|boolean} settingValue - checked property value
-   * @return {string|number|object|boolean} - return verified value
+   * @return {string|number|object|boolean|dragItem|dropArea} - return verified value
    * @private
    */
   _checkSetting(settingName, settingValue) {
@@ -972,6 +1178,10 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Creates hidden container for all aria descriptions
+   * @private
+   */
   _createHiddenDescriptionBlock() {
     this.constructor.AT_PAGE_DND_COUNTER++;
 
@@ -1017,6 +1227,10 @@ class CgDnd extends EventEmitter {
     this.remainingFirstDragItem.tabIndex = 0;
   }
 
+  /**
+   * Removes all events emitters and handlers
+   * @public
+   */
   destroy() {
     this._removeEventsHandlers(this.constructor.EVENTS);
     this._removeEventsHandlers(DragItem.EVENTS);
@@ -1042,7 +1256,7 @@ class CgDnd extends EventEmitter {
   }
 
   /**
-   * Reset dragItems, when drop areas do not exist
+   * Reset dragItems for case, when drop areas aren't exist
    * @param {object} params
    */
   _resetOnlyDragItemsCase(params = {}) {
@@ -1057,6 +1271,9 @@ class CgDnd extends EventEmitter {
     this.remainingDragItems = [...this.dragItems];
   }
 
+  /**
+   * Exclude correct drag items from keyboard focus access for only drag items case (drop areas aren't exist)
+   */
   disableFocusOnCorrectItems() {
     const toRemoveFromRemainingItems = [];
 

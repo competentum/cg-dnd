@@ -4,12 +4,24 @@ import cgUtils from 'cg-component-utils';
 import DefaultDndElement from '../DefaultDnDElement';
 
 /**
+ * @typedef {Object} DragItemSettings
+ * @property {Element} node - html-node of dnd element.
+ * @property {*} data - unique data for checking
+ * @property {string} - ariaLabel
+ * @property {string} - css class name selector
+ * @property {string[]} groups - groups names array for drop areas, which accepts only special drag items
+ * @property {string|Element} handler - html-element for start dragging by mouse/touch.
+ * @property {string|boolean} _ariaGrabbed - aria-attribute. It will be set 'true', when start dragging
+ * @property {string|boolean} ariaHidden
+ */
+
+/**
  * Accessible drag item Component
  */
 class DragItem extends DefaultDndElement {
   /**
    *DragItem's customizing settings
-   * @typedef {Object} DragItemSettings
+   * @type {DragItemSettings}
    */
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
@@ -28,6 +40,10 @@ class DragItem extends DefaultDndElement {
     return this._DEFAULT_SETTINGS;
   }
 
+  /**
+   * @return {{DRAG_ITEM_RESET: string, ATTEMPT_TO_PUT_DRAG_ITEM: string}} events, which are emitted to CgDnD-object
+   * @constructor
+   */
   static get EVENTS() {
     if (!this._EVENTS) {
       this._EVENTS = {

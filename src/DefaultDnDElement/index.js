@@ -3,12 +3,21 @@ import cgUtils from 'cg-component-utils';
 import localUtils from '../utils';
 
 /**
+ * @typedef {Object} DefaultDndElementSettings
+ * @property {Element} node - html-node of dnd element.
+ * @property {*} data - unique data
+ * @property {string} ariaLabel
+ * @property {string} className - css class name selector
+ */
+
+/**
  * Accessible drag/drop element Component
  */
 class DefaultDndElement {
   /**
    *DefaulDndElement's customizing settings
-   * @typedef {Object} DnDElementSettings
+   * @type {DefaultDndElementSettings}
+   * @static
    */
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
@@ -47,6 +56,10 @@ class DefaultDndElement {
     this._idUniqueCounter = number;
   }
 
+  /**
+   * Unique IDs for aria descriptions elements
+   * @return {{KEYBOARD_ACCESS_DEC: string, CURRENT_STATE_DESC: string}} id for current desc and keyboard desc elements
+   */
   static get ARIA_DESC_IDS() {
     return {
       KEYBOARD_ACCESS_DEC: `${this.DND_ELEM_KIND}-keyboard-description-${this.ID_UNIQUE_COUNTER}`,
@@ -66,6 +79,10 @@ class DefaultDndElement {
     // TODO: think about aria-describedby for jaws and ios+vo
     this.node.setAttribute('role', 'presentation');
   }
+
+  /**
+   * Own interactive handlers (for future destroying)
+   * */
 
   set onKeyDownHandler(handler) {
     this._onKeyDownHandler = typeof handler === 'function' ? handler : () => {};
@@ -103,27 +120,48 @@ class DefaultDndElement {
     return this._onMouseDownHandler;
   }
 
+  /**
+   *  Set html-node of keyboard aria description
+   * @param {Element|string} node
+   */
   set keyboardDescElement(node) {
     this._keyboardDescElement = localUtils.getElement(node);
   }
 
+  /**
+   * @return {Element|string} node
+   */
   get keyboardDescElement() {
     return this._keyboardDescElement;
   }
 
+  /**
+   *  Set html-node, which will contains current element state aria description
+   * @param {Element|string} node
+   */
   set currentStateDescElement(node) {
     this._currentStateDescElement = localUtils.getElement(node);
   }
 
+  /**
+   * @return {Element|string} node
+   */
   get currentStateDescElement() {
     return this._currentStateDescElement;
   }
 
+  /**
+   * Set current state aria description
+   * @param {string} text
+   */
   set currentAriaState(text) {
     this._currentAriaState = text;
     this.currentStateDescElement.innerHTML = this._currentAriaState;
   }
 
+  /**
+   * @return {string} current state aria description
+   */
   get currentAriaState() {
     if (!this._currentAriaState) {
       this._currentAriaState = this.currentStateDescElement.innerHTML;
@@ -132,11 +170,18 @@ class DefaultDndElement {
     return this._currentAriaState;
   }
 
+  /**
+   * Set current keyboard aria description
+   * @param {string} text
+   */
   set currentKeyboardDesc(text) {
     this._currentKeyboardDesc = text;
     this.keyboardDescElement.innerHTML = this._currentKeyboardDesc;
   }
 
+  /**
+   * @return {string} current keyboard aria description
+   */
   get currentKeyboardDesc() {
     if (!this._currentKeyboardDesc) {
       this._currentKeyboardDesc = this.keyboardDescElement.innerHTML;
@@ -172,12 +217,19 @@ class DefaultDndElement {
     this.node.setAttribute('tabindex', this._tabIndex);
   }
 
+  /**
+   * @return {boolean} - current disabled/enabled state
+   */
   get disabled() {
     this._disabled = this._disabled === undefined ? false : this._disabled;
 
     return this._disabled;
   }
 
+  /**
+   * Disable/enable element, add/remove user's disable class and appropriate html-attributes
+   * @param {boolean} flag
+   */
   set disabled(flag) {
     this._disabled = localUtils.checkOnBoolean(flag);
 
@@ -213,10 +265,17 @@ class DefaultDndElement {
     }
   }
 
+  /**
+   * Set common hidden aria descriptions container
+   * @param {Element} node
+   */
   set hiddenDescContainer(node) {
     this._hiddenDescContainer = node;
   }
 
+  /**
+   * @return {Element} common description container node
+   */
   get hiddenDescContainer() {
     return this._hiddenDescContainer;
   }
@@ -277,6 +336,16 @@ class DefaultDndElement {
     }
   }
 
+  /**
+   * @callback descCB
+   * @param {dropArea} dropArea
+   * @return {string} - new element's aria-description
+   */
+
+  /**
+   * Changes current hidden araia description for element
+   * @param {descCB} userCB
+   */
   changeCurrentKeyboardDesc(userCB) {
     this.currentKeyboardDesc = userCB(this);
   }
@@ -341,7 +410,7 @@ class DefaultDndElement {
   }
 
   /**
-   * Create element's position object with updating method
+   * Create element's position object with own updating method
    * @param {string} coordinatesName - coordinates object name
    * @param {object} coords - existing coordinates object
    */
@@ -365,6 +434,12 @@ class DefaultDndElement {
     return this[name];
   }
 
+  /**
+   * Add new attribute value to existing value
+   * @param {string} attrName
+   * @param {string} attrValue
+   * @param {boolean} [toBegin=false] - if 'true', add new value at the beginning of the attribute, otherwise - at the end
+   */
   addToExistingAttribute(attrName, attrValue, toBegin = false) {
     const existingAttrValue = this.getSetting(attrName) || '';
 
@@ -376,6 +451,9 @@ class DefaultDndElement {
     this.createOwnDescElements();
   }
 
+  /**
+   * Creates own hidden aria description's elements
+   */
   createOwnDescElements() {
     this.constructor.ID_UNIQUE_COUNTER++;
 
