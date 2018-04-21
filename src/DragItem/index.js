@@ -76,10 +76,17 @@ class DragItem extends DefaultDndElement {
     this.emit = dndEmitterFunc;
   }
 
+  /**
+   * User sets this value for own drag item
+   * @param {boolean} value
+   */
   set correct(value) {
     this._correct = utils.checkOnBoolean(value);
   }
 
+  /**
+   * @return {boolean} current correct/incorrect value
+   */
   get correct() {
     if (!this._correct) {
       this._correct = false;
@@ -88,10 +95,9 @@ class DragItem extends DefaultDndElement {
     return this._correct;
   }
 
-  get group() {
-    return this._group;
-  }
-
+  /**
+   * @return {boolean} aria-grabbed current value
+   */
   get ariaGrabbed() {
     if (!this._ariaGrabbed) {
       this._ariaGrabbed = false;
@@ -100,6 +106,10 @@ class DragItem extends DefaultDndElement {
     return this._ariaGrabbed;
   }
 
+  /**
+   * Set this aria-attribute in 'true', when drag item is dragged, set in 'false', when dragging was stopped
+   * @param {boolean} value
+   */
   set ariaGrabbed(value) {
     this._ariaGrabbed = value;
 
@@ -155,10 +165,10 @@ class DragItem extends DefaultDndElement {
   }
 
   /**
-   * Moves drag item element to (x, y) coordinates by transform: translate with/without animation
-   * @param {object} coords - object of x/left y/top node's coordinates
+   * Moves drag item element to (x, y) coordinates by css-transform: translate with/without animation
+   * @param {object} coords - object of 'left' 'top' node's coordinates
    * @param {boolean} isAnimate - animate flag
-   * @param {function} animationEndCallback - callback, which would calls after animation's end
+   * @param {function} animationEndCallback - callback, which will called after animation's end
    * @param {object} animateParams - params for css-transition
    * @public
    */
@@ -199,6 +209,11 @@ class DragItem extends DefaultDndElement {
     }
   }
 
+  /**
+   * Reset item to default settings
+   * @param {{coordinates: object, from: dropArea, removedClassName: string}} params - additional settings for resettable element
+   * @public
+   */
   reset(params = {}) {
     this.translateTo(params.coordinates || this.coordinates.currentStart, true, () => this.coordinates.currentStart.update());
     this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || params.from);
@@ -218,6 +233,10 @@ class DragItem extends DefaultDndElement {
     this.correct = false;
   }
 
+  /**
+   * Set initial node-coordinates
+   * @private
+   */
   _getDefaultCoordinates() {
     const initCoordinates = super._getDefaultCoordinates();
 
@@ -226,6 +245,10 @@ class DragItem extends DefaultDndElement {
     this._createCoordinatesObject('droppedIn', initCoordinates);
   }
 
+  /**
+   * Save node's css-margins for future aligning in dropArea, if it will be needed.
+   * @private
+   */
   _getMargins() {
     this.cssProperties = getComputedStyle(this.node);
 
@@ -239,11 +262,11 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Try to put drag item to chosen drop area
-   * @param {object} chosenDropArea - DropArea object
-   * @param {boolean} callCheckAfterAnimationEnd - if "true", checking would been execute after animation end,
-   * else it would been execute in this function end
-   * @param {function} afterAnimationCB - callback function, which would been execute after animation end
-   * @return {boolean} - return "true", if dragItem change his position, otherwise return "false"
+   * @param {dropArea} chosenDropArea - DropArea object
+   * @param {boolean} callCheckAfterAnimationEnd - if "true", checking will be executed after animation end,
+   * else it will be executed in this function end
+   * @param {function} afterAnimationCB - callback function, which will be executed after animation end
+   * @return {boolean} - return "true", if dragItem changes his position, otherwise return "false"
    * @public
    */
   putIntoDropArea(chosenDropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}) {
@@ -267,6 +290,10 @@ class DragItem extends DefaultDndElement {
     return true;
   }
 
+  /**
+   * Replace two drag items between themselves
+   * @param {dragItem} replacedDragItem - second replaced drag item
+   */
   replaceBy(replacedDragItem) {
     const firstItemDropArea = this.chosenDropArea;
     const secondItemDropArea = replacedDragItem.chosenDropArea;

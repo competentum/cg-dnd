@@ -2,12 +2,24 @@ import utils from '../utils';
 import DefaultDndElement from '../DefaultDnDElement';
 
 /**
+ * @typedef {Object} DropAreaSettings
+ * @property {Element} node - html-node of dnd element.
+ * @property {*} data - unique data for checking
+ * @property {string} - ariaLabel
+ * @property {string} - css class name selector
+ * @property {string[]} accept - if not empty, drop area will accept only those drag items, which have a same groups
+ * @property {dragItem[]} innerDragItems - drag items, which were dropped at this drop area
+ * @property {number} innerDragItemsCount - dropped in item's count
+ * @property {string|boolean} ariaHidden
+ */
+
+/**
  * Accessible drop area Component
  */
 class DropArea extends DefaultDndElement {
   /**
-   *DragItem's customizing settings
-   * @typedef {Object} DragItemSettings
+   *DropAreas's customizing settings
+   * @type {DropAreaSettings}
    */
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
@@ -26,6 +38,9 @@ class DropArea extends DefaultDndElement {
     return this._DEFAULT_SETTINGS;
   }
 
+  /**
+   * @return {string[]} vertical align settings for inner drag items
+   */
   static get DROP_AREAS_VERTICAL_ALIGN_KINDS() {
     if (!this._dropAreasVerticalAlignKinds) {
       this._dropAreasVerticalAlignKinds = ['top', 'center', 'bottom'];
@@ -34,6 +49,9 @@ class DropArea extends DefaultDndElement {
     return this._dropAreasVerticalAlignKinds;
   }
 
+  /**
+   * @return {string[]} horizontal align settings for inner drag items
+   */
   static get DROP_AREAS_HORIZONTAL_ALIGN_KINDS() {
     if (!this._dropAreasHorizontallAlignKinds) {
       this._dropAreasHorizontallAlignKinds = ['left', 'center', 'right'];
@@ -46,20 +64,28 @@ class DropArea extends DefaultDndElement {
     return 'drop-area';
   }
 
-  get ariaDropEffect() {
-    if (!this._ariaDropEffect) {
-      this._ariaDropEffect = 'none';
-    }
-
-    return this._ariaDropEffect;
-  }
-
+  /**
+   * Set 'move' value for this aria-attribute, if it can accepts dragged item at this moment.
+   * Removes this aria-attribute after dragging stop
+   * @param {string} value
+   */
   set ariaDropEffect(value) {
     if (value) {
       this.node.setAttribute('aria-dropeffect', value);
     } else {
       this.node.removeAttribute('aria-dropeffect');
     }
+  }
+
+  /**
+   * @return {string} current value
+   */
+  get ariaDropEffect() {
+    if (!this._ariaDropEffect) {
+      this._ariaDropEffect = 'none';
+    }
+
+    return this._ariaDropEffect;
   }
 
   constructor(settings) {
@@ -167,6 +193,10 @@ class DropArea extends DefaultDndElement {
     return verifiedValue;
   }
 
+  /**
+   * Place drag item to drop area
+   * @param {dragItem} dragItem
+   */
   includeDragItem(dragItem) {
     if (this.innerDragItems.indexOf(dragItem) === -1) {
       this.innerDragItems.push(dragItem);
@@ -175,6 +205,10 @@ class DropArea extends DefaultDndElement {
     }
   }
 
+  /**
+   * Remove drag item from drop area
+   * @param {dragItem} dragItem
+   */
   excludeDragItem(dragItem) {
     const existingItemIndex = this.innerDragItems.indexOf(dragItem);
 
@@ -189,6 +223,14 @@ class DropArea extends DefaultDndElement {
     }
   }
 
+  /**
+   * Checks for shift inner drag items, if it will be needed. If this setting was enabled and excluded drag item wasn't been last
+   * or vertical align equals 'center', we shift needed remaining inner drag items in drop area
+   * @param {number} excludedItemIndex - innerDragItems's array index of excluded item
+   * @param {number} updatedLength - innerDragItems's array length, after item excluding
+   * @return {boolean} flag
+   * @private
+   */
   _isNeedForShift(excludedItemIndex, updatedLength) {
     return this.snapAlignParams.withShift && (excludedItemIndex !== updatedLength || this.snapAlignParams.verticalAlign === 'center');
   }
@@ -201,6 +243,15 @@ class DropArea extends DefaultDndElement {
     return utils.findIndex(dragItem.groups, (item) => this.accept.includes(item)) > -1;
   }
 
+  /**
+   * Give functions for new dropped item horizontal aligning
+   * @param {dragItem} dragItem
+   * @param {{top: number, left: number, right: number, bottom: number}} itemIndents - drag item css-margins, if this setting was set,
+   *                                                                      otherwise all properties equals '0'
+   * @return {{left: (function(): number), center: (function(): number), right: (function(): number)}} callbacks, which calculate aligned
+   * horizontal coordinates for dropped item depending on the type of alignment
+   * @private
+   */
   _getHorizontalAlignedCoordinates(dragItem, itemIndents) {
     return {
       left: () => this.coordinates.default.left + itemIndents.left,
@@ -209,6 +260,15 @@ class DropArea extends DefaultDndElement {
     };
   }
 
+  /**
+   * Give functions for new dropped item vertical aligning
+   * @param {dragItem} dragItem
+   * @param {{top: number, left: number, right: number, bottom: number}} itemIndents - drag item css-margins, if this setting was set,
+   *                                                                      otherwise all properties equals '0'
+   * @return {{left: (function(): number), center: (function(): number), right: (function(): number)}} callbacks, which calculate aligned
+   * vertical coordinates for dropped item depending on the type of alignment
+   * @private
+   */
   _getVerticalAlignedCoordinates(dragItem, itemIndents) {
     const innerDragItemsLength = this.innerDragItems.length;
     const lastDragItemCoordinates = innerDragItemsLength && this.maxItemsInDropArea !== 1
@@ -234,6 +294,12 @@ class DropArea extends DefaultDndElement {
     };
   }
 
+  /**
+   * Give aligned coordinates for new dropped item, or its current coordinates, if 'snap'-setting are equals 'false'
+   * @param {dragItem} dragItem
+   * @return {{left: number, top: number}} coordinates
+   * @public
+   */
   getAlignedCoords(dragItem) {
     if (!this.snap && this._isVisuallyMoved(dragItem)) {
       return {
@@ -251,26 +317,39 @@ class DropArea extends DefaultDndElement {
     };
   }
 
+  /**
+   * Checks, is item changed his position by dragging (needs for right keyboard access, when 'snap'-setting equals 'false')
+   * @param {dragItem} dragItem
+   * @return {boolean} flag
+   * @private
+   */
   _isVisuallyMoved(dragItem) {
     const coords = dragItem.coordinates;
 
     return coords.current.left !== coords.currentStart.left && coords.current.top !== coords.currentStart.top;
   }
 
-  shiftRemainingDroppedItems(fromIndex, draggedOutItem, aligningKind = 'top') {
+  /**
+   * Shift remaining drop area's inner drag items depending on the type of alignment
+   * @param {number} fromIndex - index of item, since which needs to shift other dropped items
+   * @param {dragItem} dragItem - excluded or included drag item
+   * @param {string} [aligningKind='top']
+   * @return {number} - vertical shift value
+   */
+  shiftRemainingDroppedItems(fromIndex, dragItem, aligningKind = 'top') {
     let shiftY;
-    const itemIndents = this._getDragItemIndents(draggedOutItem);
+    const itemIndents = this._getDragItemIndents(dragItem);
 
     switch (aligningKind) {
       case 'bottom':
-        shiftY = draggedOutItem.coordinates.current.height + itemIndents.bottom;
+        shiftY = dragItem.coordinates.current.height + itemIndents.bottom;
         break;
       case 'center':
-        shiftY = -1 * (draggedOutItem.coordinates.current.height + itemIndents.bottom) / 2;
+        shiftY = -1 * (dragItem.coordinates.current.height + itemIndents.bottom) / 2;
         break;
       case 'top':
       default:
-        shiftY = -1 * (draggedOutItem.coordinates.current.height + itemIndents.top);
+        shiftY = -1 * (dragItem.coordinates.current.height + itemIndents.top);
         break;
     }
 
@@ -291,6 +370,13 @@ class DropArea extends DefaultDndElement {
     return shiftY;
   }
 
+  /**
+   * Give vertical shifted coordinates for item. (For beautiful above translateTo-method calling)
+   * @param {dragItem} droppedItem
+   * @param {number} yShift
+   * @return {{left: number, top: number}} coordinate's object
+   * @private
+   */
   _getShiftedCoordinates(droppedItem, yShift) {
     return {
       left: droppedItem.coordinates.current.left,
@@ -298,6 +384,12 @@ class DropArea extends DefaultDndElement {
     };
   }
 
+  /**
+   * Give item's css-margins values (if 'withDroppedItemCSSMargins'-setting was enabled) with indents, which were set by user.
+   * @param {dragItem} dragItem
+   * @return {{top: number, right: number, bottom: number, left: number}} indents coordinate's object
+   * @private
+   */
   _getDragItemIndents(dragItem) {
     const defaultMargins = {
       top: 0,
@@ -315,6 +407,10 @@ class DropArea extends DefaultDndElement {
     };
   }
 
+  /**
+   * Reset all inner dropped items
+   * @param {object} params - additional parameters
+   */
   resetInnerDragItems(params) {
     if (this.innerDragItems.length) {
       while (this.innerDragItems.length) {
@@ -323,6 +419,9 @@ class DropArea extends DefaultDndElement {
     }
   }
 
+  /**
+   * Reset only incorrect inner dropped items
+   */
   resetIncorrectDragItems() {
     if (this.innerDragItems.length) {
       const incorrectItems = [];
@@ -337,6 +436,10 @@ class DropArea extends DefaultDndElement {
     }
   }
 
+  /**
+   * Change current drop area aria-description
+   * @param {function}userCB - user callback, that returns new description
+   */
   changeCurrentAriaState(userCB) {
     this.currentAriaState = userCB({
       area: this,
