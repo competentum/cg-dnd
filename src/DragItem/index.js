@@ -345,6 +345,16 @@ class DragItem extends DefaultDndElement {
       this.node.focus();
     }
   }
+
+  /**
+   * Checks, will be drag item needed to update his position during a drag items shifting
+   * @param {object} toShiftPosition - new position after shifting
+   * @return {boolean} if 'true', it will be needed, otherwise - not needed
+   * @public
+   */
+  isNeedForShiftTo(toShiftPosition) {
+    return this.coordinates.current.left !== toShiftPosition.left || this.coordinates.current.top !== toShiftPosition.top;
+  }
 }
 
 export default DragItem;

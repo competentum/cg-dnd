@@ -928,10 +928,11 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _shiftRemainingDragItems() {
-    // TODO: add changes checking
     if (this.settings.alignRemainingDragItems) {
       this.remainingDragItems.forEach((item, index) => {
-        item.translateTo(this.initDragItemsPlaces[index], true, () => item.coordinates.currentStart.update());
+        if (item.isNeedForShiftTo(this.initDragItemsPlaces[index])) {
+          item.translateTo(this.initDragItemsPlaces[index], true, () => item.coordinates.currentStart.update());
+        }
       });
     }
   }
