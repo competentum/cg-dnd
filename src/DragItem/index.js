@@ -179,8 +179,16 @@ class DragItem extends DefaultDndElement {
 
     cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
 
+    /* If (this.hasTransition()) {
+      const currentPosition = getComputedStyle(this.node).transform;
+
+      this.breakTransition();
+      this.node.style.transform = currentPosition;
+    } */
+
     if (isAnimate) {
       this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
+      this.isAnimatedNow = true;
 
       /**
        * Transitionend event handler for disabling animation, when it was finished
@@ -191,6 +199,7 @@ class DragItem extends DefaultDndElement {
         this.node.removeEventListener('transitionend', transitionEndListener);
         animationEndCallback();
         cgUtils.removeClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
+        this.isAnimatedNow = false;
       };
 
       this.node.addEventListener('transitionend', transitionEndListener);
@@ -202,6 +211,7 @@ class DragItem extends DefaultDndElement {
          */
         transitionEndListener();
       }
+
     } else {
       this.node.style.transform = `translate(${left}px, ${top}px)`;
       this.coordinates.current.update();
@@ -316,10 +326,16 @@ class DragItem extends DefaultDndElement {
   /**
    * Checks element current transition presence
    * @return {boolean} transition presence or absence
-   * @private
+   * @public
    */
-  _hasTransition() {
+  hasTransition() {
     return this.node.style.transition !== '';
+  }
+
+  breakTransition() {
+    const event = new Event('transitionend');
+
+    this.node.dispatchEvent(event);
   }
 
   /**
@@ -330,7 +346,7 @@ class DragItem extends DefaultDndElement {
   focus(delay = 0) {
     if (delay) {
       setTimeout(() => this.node.focus(), delay);
-    } else if (this._hasTransition()) {
+    } else if (this.hasTransition()) {
       /**
        * We set focus on element after his animation's end for NVDA + FF (otherwise NVDA reads element description twice)
        */
@@ -340,7 +356,6 @@ class DragItem extends DefaultDndElement {
       };
 
       this.node.addEventListener('transitionend', setFocusAfterTransition);
-
     } else {
       this.node.focus();
     }
@@ -353,7 +368,16 @@ class DragItem extends DefaultDndElement {
    * @public
    */
   isNeedForShiftTo(toShiftPosition) {
-    return this.coordinates.current.left !== toShiftPosition.left || this.coordinates.current.top !== toShiftPosition.top;
+    const atCurrentTimeShift = getComputedStyle(this.node).transform.match(/matrix\(.*, (.*)?, (.*)?\)$/i);
+
+    if (atCurrentTimeShift) {
+      const currentLeft = this.coordinates.default.left + parseFloat(atCurrentTimeShift[1]);
+      const currentTop = this.coordinates.default.top + parseFloat(atCurrentTimeShift[2]);
+
+      return currentLeft !== toShiftPosition.left || currentTop !== toShiftPosition.top;
+    }
+
+    return this.coordinates.currentStart.left !== toShiftPosition.left || this.coordinates.currentStart.top !== toShiftPosition.top;
   }
 }
 

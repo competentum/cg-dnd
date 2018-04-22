@@ -320,8 +320,8 @@ class CgDnd extends EventEmitter {
 
       this.isClick = true;
 
-      if (item.node.style.transition) {
-        this.breakTransition(item);
+      if (item.hasTransition()) {
+        item.breakTransition();
       }
 
       const box = utils.getElementPosition(item.node);
@@ -603,21 +603,15 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _removeFromRemainingDragItems(dragItem) {
-    const isLastItem = dragItem.siblings.next === this.remainingFirstDragItem;
-
     this._excludeElementFromArray(this.remainingDragItems, dragItem);
 
-    if (!isLastItem) {
-      this._shiftRemainingDragItems();
-    }
+    this._shiftRemainingDragItems();
   }
 
   _insertToRemainingDragItems(dragItem) {
     this._includeElementToArray(this.remainingDragItems, dragItem);
 
-    const isLastItem = dragItem.siblings.next === this.remainingFirstDragItem;
-
-    if (this.dropAreas && !isLastItem) {
+    if (this.dropAreas) {
       this._shiftRemainingDragItems();
     }
   }
@@ -1300,12 +1294,6 @@ class CgDnd extends EventEmitter {
     } else {
       this.remainingFirstDragItem = null;
     }
-  }
-
-  breakTransition(item) {
-    const event = new Event('transitionend');
-
-    item.node.dispatchEvent(event);
   }
 }
 
