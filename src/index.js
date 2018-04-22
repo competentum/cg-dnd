@@ -603,14 +603,21 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _removeFromRemainingDragItems(dragItem) {
+    const isLastItem = dragItem.siblings.next === this.remainingFirstDragItem;
+
     this._excludeElementFromArray(this.remainingDragItems, dragItem);
-    this._shiftRemainingDragItems();
+
+    if (!isLastItem) {
+      this._shiftRemainingDragItems();
+    }
   }
 
   _insertToRemainingDragItems(dragItem) {
     this._includeElementToArray(this.remainingDragItems, dragItem);
 
-    if (this.dropAreas) {
+    const isLastItem = dragItem.siblings.next === this.remainingFirstDragItem;
+
+    if (this.dropAreas && !isLastItem) {
       this._shiftRemainingDragItems();
     }
   }

@@ -312,6 +312,39 @@ class DragItem extends DefaultDndElement {
       this.reset({ from: firstItemDropArea });
     }
   }
+
+  /**
+   * Checks element current transition presence
+   * @return {boolean} transition presence or absence
+   * @private
+   */
+  _hasTransition() {
+    return this.node.style.transition !== '';
+  }
+
+  /**
+   * Set focus, that screenreader will reads description
+   * @param {number} [delay=0] - setting focus delay, if it will be needed
+   * @public
+   */
+  focus(delay = 0) {
+    if (delay) {
+      setTimeout(() => this.node.focus(), delay);
+    } else if (this._hasTransition()) {
+      /**
+       * We set focus on element after his animation's end for NVDA + FF (otherwise NVDA reads element description twice)
+       */
+      const setFocusAfterTransition = () => {
+        this.node.focus();
+        this.node.removeEventListener('transitionend', setFocusAfterTransition);
+      };
+
+      this.node.addEventListener('transitionend', setFocusAfterTransition);
+
+    } else {
+      this.node.focus();
+    }
+  }
 }
 
 export default DragItem;

@@ -11,7 +11,8 @@
     commonDragItemsSettings: {
       handler: '.handler',
       initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drag item, then press space button to select it'
-    },monDropAreasSettings: {
+    },
+    commonDropAreasSettings: {
       initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drop area, then press space button to select it'
     },
     tooltipParams: {
@@ -105,21 +106,21 @@
         });
       }
 
-      setTimeout(function () {
+     // setTimeout(function () {
         if (params.remainingDragItems[0]) {
           params.remainingDragItems[0].focus();
         } else {
           checkButton.focus();
         }
-      }, 0);
+   //   }, 0);
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
     },
     onDragItemSelect: function (e, params) {
-      setTimeout(function () {
+   //   setTimeout(function () {
         params.dropAreas[0].focus();
-      }, 0);
+   //   }, 0);
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
