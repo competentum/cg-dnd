@@ -20,6 +20,7 @@ import Tooltip from 'Tooltip';
  * @property {boolean} shiftDragItems - flag for only drag items case (without existing drop areas). If 'true', replaced drag item will
  *                                      shift remaining drag items after or before it.
  * @property {boolean} forbidFocusOnFilledDropAreas - if 'true', fully filled drop areas will not be focused.
+ * @property {string} selectedDragItemClassName - class name for keyboard's selected dragItem
 
  * @property {object} commonDragItemsSettings - initial settings for all drag items.
    * @property {(string|Element)} commonDragItemsSettings.handler - html-element for start dragging by mouse/touch.
@@ -84,6 +85,7 @@ class CgDnd extends EventEmitter {
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
+        selectedDragItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
         commonDragItemsSettings: {
           handler: '',
           initAriaKeyboardAccessDesc: '',
@@ -130,7 +132,8 @@ class CgDnd extends EventEmitter {
       DND: this.DND_CLASS,
       DRAG: `${this.DND_CLASS}-drag-item`,
       HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-visually-hidden`,
-      CURRENT_DRAGGED_ITEM: `${this.DND_CLASS}-current-dragged-item`
+      CURRENT_DRAGGED_ITEM: `${this.DND_CLASS}-current-dragged-item`,
+      SELECTED_DRAG_ITEM: `${this.DND_CLASS}-selected-item`
     };
   }
 
@@ -444,8 +447,10 @@ class CgDnd extends EventEmitter {
    */
   _onDragItemClick(item, e) {
     if (this.isClick && !item.disabled) {
-      this.currentDragParams = { draggedItem: this.currentDragParams ? this.currentDragParams.draggedItem : item };
+      this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
+      this.currentDragParams = { draggedItem: item };
       this.currentDragParams.draggedItem.ariaGrabbed = true;
+      item.addClass(this.settings.selectedDragItemClassName);
 
       if (this.dropAreas) {
         this.allowedDropAreas.forEach((area) => {
@@ -473,6 +478,7 @@ class CgDnd extends EventEmitter {
    */
   _onDropAreaClick(area, e) {
     if (this.isClick && !area.disabled) {
+      this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
         dropArea: area,
         droppedItems: area.innerDragItems,
@@ -686,6 +692,7 @@ class CgDnd extends EventEmitter {
 
     if (this.currentDragParams) {
       this.currentDragParams.draggedItem.ariaGrabbed = false;
+      this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
     }
 
     if (this.allowedDropAreas) {
@@ -1137,6 +1144,7 @@ class CgDnd extends EventEmitter {
         verifiedValue.setAttribute('role', 'application');
         break;
       case 'disabledClassName':
+      case 'selectedDragItemClassName':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
         } else {

@@ -8,6 +8,7 @@
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
     container: '#first-example',
+    selectedDragItemClassName: 'selected-item',
     commonDragItemsSettings: {
       handler: '.handler',
       initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drag item, then press space button to select it'

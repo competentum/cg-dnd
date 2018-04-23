@@ -88,6 +88,10 @@ a {
     background-color: #b13c2f;
 }
 
+.selected-item {
+    background-color: #2f21db;
+}
+
 .disabled {
     opacity: 0.5;
 }
