@@ -180,15 +180,14 @@ class DragItem extends DefaultDndElement {
     cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
 
     /* If (this.hasTransition()) {
-      const currentPosition = getComputedStyle(this.node).transform;
+     const currentPosition = getComputedStyle(this.node).transform;
 
-      this.breakTransition();
-      this.node.style.transform = currentPosition;
-    } */
+     this.breakTransition();
+     this.node.style.transform = currentPosition;
+     } */
 
     if (isAnimate) {
       this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
-      this.isAnimatedNow = true;
 
       /**
        * Transitionend event handler for disabling animation, when it was finished
@@ -199,7 +198,6 @@ class DragItem extends DefaultDndElement {
         this.node.removeEventListener('transitionend', transitionEndListener);
         animationEndCallback();
         cgUtils.removeClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
-        this.isAnimatedNow = false;
       };
 
       this.node.addEventListener('transitionend', transitionEndListener);
@@ -210,6 +208,15 @@ class DragItem extends DefaultDndElement {
          * Transitionend event doesn't called, if duration = 0. So we call this handler manually
          */
         transitionEndListener();
+      } else {
+        /**
+         * Sometimes, 'transitionend' event doesn't fired, then we fire it manually
+         */
+        setTimeout(() => {
+          if (this.hasTransition()) {
+            this.breakTransition();
+          }
+        }, animProps.duration);
       }
 
     } else {
