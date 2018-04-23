@@ -1033,9 +1033,7 @@ class CgDnd extends EventEmitter {
       }
     }
 
-    if (Object.keys(this.settings.tooltipParams).length) {
-      this.tooltip = new Tooltip(this.settings.tooltipParams);
-    }
+    this.tooltip = new Tooltip(this.settings.tooltipParams);
 
     this.remainingDragItems = [...this.dragItems];
     this.allowedDropAreas = this.dropAreas ? [...this.dropAreas] : null;

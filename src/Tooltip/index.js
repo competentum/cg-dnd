@@ -15,10 +15,10 @@ class Tooltip {
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
       this._DEFAULT_SETTINGS = {
-        html: '',
+        html: 'Use arrow keys or touch swipes to choose element and space button or double touch to select it.',
         className: '',
         marginLeft: 0,
-        marginBottom: 35
+        marginBottom: 10
       };
     }
 
@@ -141,17 +141,21 @@ class Tooltip {
     this.hide();
   }
 
-  show(elem, message) {
+  show(elem, message = this.html) {
     const coordinates = elem.coordinates.current || elem.coordinates.default;
 
-    this.node.style.left = `${coordinates.left + this.marginLeft}px`;
-    this.node.style.top = `${coordinates.top - this.marginBottom}px`;
-
     if (message) {
-      this.html = message;
+      this.messageContainer.innerHTML = message;
     }
 
+    /**
+     * At first, show tooltip, that calculate its height, then move it to needed coordinates
+     * @type {string}
+     */
     this.node.style.display = 'block';
+    this.node.style.left = `${coordinates.left + this.marginLeft}px`;
+    this.node.style.top = `${coordinates.top - this.marginBottom - this.node.offsetHeight}px`;
+
   }
 
   hide() {

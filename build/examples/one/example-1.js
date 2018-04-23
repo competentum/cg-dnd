@@ -16,10 +16,6 @@
     commonDropAreasSettings: {
       initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drop area, then press space button to select it'
     },
-    tooltipParams: {
-      html: 'custom tooltip',
-      className: 'custom-tooltip',
-    },
     dragItems: [
       {
         node: '#drag-item-1',
@@ -126,8 +122,6 @@
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
         params.currentDraggedItem.putIntoDropArea(params.dropArea, true);
-
-
       }
     }
   };
@@ -146,4 +140,17 @@
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: 'correct-item' });
   });
+
+  function showTooltip() {
+    dnd.tooltip.show(dnd.remainingFirstDragItem);
+    dnd.remainingFirstDragItem.node.removeEventListener('focus', showTooltip);
+  }
+
+  function hideTooltip() {
+    dnd.tooltip.hide();
+    dnd.remainingFirstDragItem.node.removeEventListener('focusout', hideTooltip);
+  }
+
+  dnd.remainingFirstDragItem.node.addEventListener('focus', showTooltip);
+  dnd.remainingFirstDragItem.node.addEventListener('focusout', hideTooltip);
 })();

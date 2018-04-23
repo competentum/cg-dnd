@@ -2,7 +2,9 @@
   var exampleContainer = document.getElementById('third-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
-      disableSwitcher = exampleContainer.querySelector('#disable-switcher');
+      disableSwitcher = exampleContainer.querySelector('#disable-switcher'),
+      REPLACE_BY_CHOSEN_DRAG_ITEM_INSTRUCTION = 'Press space (double touch) to replace dropped in drag item by chosen drag item.',
+      REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to choose dropped item, then press space (double touch) to select it';
 
   var settings = {
     disabled: true,
@@ -20,7 +22,7 @@
       }
     },
     tooltipParams: {
-      html: 'custom tooltip',
+      html: REPLACE_BY_CHOSEN_DRAG_ITEM_INSTRUCTION,
       className: 'custom-tooltip',
     },
     dragItems: [
@@ -136,5 +138,23 @@
     } else {
       dnd.enable();
     }
+  });
+
+  dnd.dropAreas.forEach(function (area) {
+    area.node.addEventListener('focus', function () {
+      if (area.innerDragItemsCount) {
+        if (dnd.currentDragParams) {
+          dnd.tooltip.show(area);
+        } else {
+          dnd.tooltip.show(area, REPLACE_DROPPED_ITEM_INSTRUCTION);
+        }
+      }
+    });
+
+    area.node.addEventListener('focusout', function () {
+      if (area.innerDragItemsCount) {
+        dnd.tooltip.hide();
+      }
+    });
   })
 })();
