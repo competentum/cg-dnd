@@ -36,6 +36,7 @@
     user-select: none;
     width: 80px;
     text-align: center;
+    font-size: 0.9em;
 }
 
 .drag-item {

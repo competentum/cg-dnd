@@ -25,9 +25,7 @@ class DefaultDndElement {
         node: '',
         data: null,
         ariaLabel: '',
-        className: '',
-        initAriaKeyboardAccessDesc: '',
-        initAriaElementDesc: '',
+        className: ''
       };
     }
 
@@ -348,9 +346,18 @@ class DefaultDndElement {
   /**
    * Changes current hidden araia description for element
    * @param {descCB} userCB
+   * @public
    */
   changeCurrentKeyboardDesc(userCB) {
     this.currentKeyboardDesc = userCB(this);
+  }
+
+  resetKeyboardDesc() {
+    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
+  }
+
+  resetAriaStateDesc() {
+    this.currentAriaState = this.initAriaElementDesc;
   }
 
   _checkSetting(settingName, settingValue) {

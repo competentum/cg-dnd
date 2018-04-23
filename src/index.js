@@ -88,7 +88,8 @@ class CgDnd extends EventEmitter {
         selectedDragItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
         commonDragItemsSettings: {
           handler: '',
-          initAriaKeyboardAccessDesc: '',
+          initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
+                                      + ' then press space button or make double touch to select it',
           initAriaElementDesc: '',
           animationParams: {
             animatedProperty: 'transform',
@@ -100,7 +101,8 @@ class CgDnd extends EventEmitter {
         commonDropAreasSettings: {
           maxItemsInDropArea: 1,
           snap: true,
-          initAriaKeyboardAccessDesc: '',
+          initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
+                                      + ' then press space button or make double touch to put drag item inside',
           initAriaElementDesc: '',
           snapAlignParams: {
             withShift: true,
@@ -573,7 +575,7 @@ class CgDnd extends EventEmitter {
       dragItem.disable();
     }
 
-    this._finishDrag(forUserArgs);
+    this._finishDrag(merge({}, forUserArgs, { previousDropArea }));
   }
 
   /**
@@ -695,6 +697,7 @@ class CgDnd extends EventEmitter {
       this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
     }
 
+    // TODO: fix aria-hidden, when replacing is allowed
     if (this.allowedDropAreas) {
       this.allowedDropAreas.forEach((area) => {
         area.ariaDropEffect = '';

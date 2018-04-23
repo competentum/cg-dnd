@@ -241,6 +241,9 @@ class DragItem extends DefaultDndElement {
     }
 
     this.correct = false;
+
+    this.currentAriaState = this.initAriaKeyboardAccessDesc;
+    this.currentAriaState = this.initAriaElementDesc;
   }
 
   /**
@@ -378,6 +381,14 @@ class DragItem extends DefaultDndElement {
     }
 
     return this.coordinates.currentStart.left !== toShiftPosition.left || this.coordinates.currentStart.top !== toShiftPosition.top;
+  }
+
+  /**
+   * Change current drop area aria-description
+   * @param {function}userCB - user callback, that returns new description
+   */
+  changeCurrentAriaState(userCB) {
+    this.currentAriaState = userCB({ item: this });
   }
 }
 

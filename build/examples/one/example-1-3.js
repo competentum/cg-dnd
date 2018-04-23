@@ -4,7 +4,9 @@
       resetButton = exampleContainer.querySelector('.reset-btn'),
       disableSwitcher = exampleContainer.querySelector('#disable-switcher'),
       REPLACE_BY_CHOSEN_DRAG_ITEM_INSTRUCTION = 'Press space (double touch) to replace dropped in drag item by chosen drag item.',
-      REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to choose dropped item, then press space (double touch) to select it';
+      REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to select dropped item, that replace it',
+      FILLED_DROP_AREA_KEYBOARD_DESC = 'Press space or double touch to replace dropped item by current dragged item or to select dropped item,'
+                                       + ' if current dragged item doesn\'t exist';
 
   var settings = {
     disabled: true,
@@ -29,65 +31,65 @@
       {
         node: '#drag-item-3-1',
         data: 1,
-        ariaLabel: '',
+        ariaLabel: 'drag item 1',
         className: 'custom-class',
         groups: ['www', 'something']
       },
       {
         node: '#drag-item-3-2',
         data: 2,
-        ariaLabel: '',
+        ariaLabel: 'drag item 2',
         className: 'custom-class',
         groups: 'something'
       },
       {
         node: '#drag-item-3-3',
         data: 3,
-        ariaLabel: '',
+        ariaLabel: 'drag item 3',
         className: 'custom-class'
       },
       {
         node: '#drag-item-3-4',
         data: 4,
-        ariaLabel: '',
+        ariaLabel: 'drag item 4',
         className: 'custom-class'
       },
       {
         node: '#drag-item-3-5',
         data: 5,
-        ariaLabel: '',
+        ariaLabel: 'drag item 5',
         className: 'custom-class'
       }
     ],
     dropAreas: [
       {
         node: '#drop-area-3-1',
-        ariaLabel: '',
+        ariaLabel: 'drop area 1',
         data: 2,
         className: 'transparent-drop-area'
       },
       {
         node: '#drop-area-3-2',
-        ariaLabel: '',
+        ariaLabel: 'drop area 2',
         data: 4,
         className: 'transparent-drop-area',
         //  accept: 'something'
       },
       {
         node: '#drop-area-3-3',
-        ariaLabel: '',
+        ariaLabel: 'drop area 3',
         data: 1,
         className: 'transparent-drop-area'
       },
       {
         node: '#drop-area-3-4',
-        ariaLabel: '',
+        ariaLabel: 'drop area 4',
         data: 5,
         className: 'transparent-drop-area'
       },
       {
         node: '#drop-area-3-5',
-        ariaLabel: '',
+        ariaLabel: 'drop area 5',
         data: 3,
         className: 'transparent-drop-area'
       }
@@ -99,6 +101,19 @@
     onDragStop: function (e, params) {
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
+
+        params.dropArea.changeCurrentAriaState(function (params) {
+          return 'Area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel') + '. ';
+        });
+        params.dropArea.changeCurrentKeyboardDesc(function (params) {
+          return FILLED_DROP_AREA_KEYBOARD_DESC;
+        });
+
+        if (params.previousDropArea) {
+          console.log('reset')
+          params.previousDropArea.resetAriaStateDesc();
+          params.previousDropArea.resetKeyboardDesc();
+        }
       }
 
       if (params.remainingDragItems[0]) {

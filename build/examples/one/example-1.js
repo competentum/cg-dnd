@@ -11,10 +11,10 @@
     selectedDragItemClassName: 'selected-item',
     commonDragItemsSettings: {
       handler: '.handler',
-      initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drag item, then press space button to select it'
+    //  initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drag item, then press space button to select it'
     },
     commonDropAreasSettings: {
-      initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drop area, then press space button to select it'
+    //  initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drop area, then press space button to select it'
     },
     dragItems: [
       {
@@ -88,28 +88,23 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      if (params.dragItem && params.dropArea && params.dragItem.data === params.dropArea.data) {
-        params.dragItem.correct = true;
-      }
+      if (params.dragItem && params.dropArea) {
+        if (params.dragItem.data === params.dropArea.data) {
+          params.dragItem.correct = true;
+        }
 
-      if (params.dropArea) {
-        params.dropArea.changeCurrentKeyboardDesc(function (area) {
-          return 'press keys';
-        });
         params.dropArea.changeCurrentAriaState(function (params) {
           if (params.innerDragItemsCount) {
-            return 'drop area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel');
+            return 'Area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel') + '. ';
           }
         });
       }
 
-     // setTimeout(function () {
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        } else {
-          checkButton.focus();
-        }
-   //   }, 0);
+      if (params.remainingDragItems[0]) {
+        params.remainingDragItems[0].focus();
+      } else {
+        checkButton.focus();
+      }
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
@@ -133,6 +128,10 @@
     dnd.dragItems.forEach(function (item) {
       if (item.correct) {
         item.addClass('correct-item');
+
+        item.chosenDropArea.changeCurrentAriaState(function (params) {
+          return 'Correct! Area was filled by ' + item.getSetting('ariaLabel') + '. ';
+        });
       }
     })
   });
