@@ -448,9 +448,9 @@ class CgDnd extends EventEmitter {
   _onDragItemClick(item, e) {
     if (this.isClick && !item.disabled) {
       this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
-      this.currentDragParams = { draggedItem: item };
+      this.currentDragParams = { draggedItem: this.currentDragParams && !this.dropAreas ? this.currentDragParams.draggedItem : item };
       this.currentDragParams.draggedItem.ariaGrabbed = true;
-      item.addClass(this.settings.selectedDragItemClassName);
+      this.currentDragParams.draggedItem.addClass(this.settings.selectedDragItemClassName);
 
       if (this.dropAreas) {
         this.allowedDropAreas.forEach((area) => {

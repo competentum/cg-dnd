@@ -10,6 +10,7 @@
       html: 'custom tooltip',
       className: 'custom-tooltip',
     },
+    selectedDragItemClassName: 'selected-item',
     dragItems: [
       {
         node: '#drag-item-4',
