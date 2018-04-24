@@ -249,7 +249,7 @@ class DragItem extends DefaultDndElement {
 
     this.correct = this.ariaHidden = false;
 
-    this.currentAriaState = this.initAriaKeyboardAccessDesc;
+    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
     this.currentAriaState = this.initAriaElementDesc;
   }
 
@@ -395,7 +395,10 @@ class DragItem extends DefaultDndElement {
    * @param {function}userCB - user callback, that returns new description
    */
   changeCurrentAriaState(userCB) {
-    this.currentAriaState = userCB({ item: this });
+    this.currentAriaState = userCB({
+      item: this,
+      chosenDropArea: this.chosenDropArea
+    });
   }
 }
 
