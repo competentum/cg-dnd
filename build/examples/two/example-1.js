@@ -3,6 +3,53 @@
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn');
 
+  function changeDropAreaAriaDescriptions(dropArea, previousDropArea) {
+    if (dropArea.innerDragItems.length) {
+      setFilledDropAreaDescription(dropArea);
+    } else {
+      setEmptyDropAreaDescription(dropArea);
+    }
+
+    if (previousDropArea) {
+      changeDropAreaAriaDescriptions(previousDropArea);
+    }
+  }
+
+  function setFilledDropAreaDescription(dropArea) {
+    dropArea.changeCurrentAriaState(function (params) {
+      var dropAreaStateDesc = 'Area contains';
+
+      params.innerDragItems.forEach(function (innerItem, index) {
+        dropAreaStateDesc += ' ' + innerItem.getSetting('ariaLabel') + (index + 1 === params.innerDragItems.length ? '.' : ',');
+      });
+
+      return dropAreaStateDesc;
+    });
+
+    dropArea.changeCurrentKeyboardDesc(function () {
+      return 'Press space or double touch to put current drag item or to choose dropped items inside. ';
+    });
+  }
+
+  function setEmptyDropAreaDescription(dropArea) {
+    dropArea.resetAriaStateDesc();
+    dropArea.resetKeyboardDesc();
+  }
+
+  function changeDragItemAriaDescription(dragItem) {
+    dragItem.changeCurrentAriaState(function (params) {
+      if (params.chosenDropArea) {
+        return ' Item was placed in ' + params.chosenDropArea.getSetting('ariaLabel');
+      }
+
+      return '';
+    });
+
+    dragItem.changeCurrentKeyboardDesc(function () {
+      return 'Use arrow keys or swipes to choose other dropped items, then press cpase or double touch to replace it. ';
+    });
+  }
+
   var settings = {
     bounds: '#first-example',
     //bounds: [0, 0, 800, 600],
@@ -15,49 +62,55 @@
         verticalAlign: 'top',
         withDroppedItemCSSMargins: true
       },
+      initAriaKeyboardAccessDesc: 'Press space or double touch to put drag item inside. ',
+      initAriaElementDesc: 'Area is empty. ',
     },
+    commonDragItemsSettings: {
+      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose other drag items, then press spase or double touch to drag it. '
+    },
+    container: '#first-example',
     dragItems: [
       {
         node: '#drag-item-1',
         data: 'first',
-        ariaLabel: '',
+        ariaLabel: 'drag item 1',
         className: 'custom-class'
       },
       {
         node: '#drag-item-2',
         data: 'second',
-        ariaLabel: '',
+        ariaLabel: 'drag item 2',
         className: 'custom-class',
       },
       {
         node: '#drag-item-3',
         data: 'third',
-        ariaLabel: '',
+        ariaLabel: 'drag item 3',
         className: 'custom-class'
       },
       {
         node: '#drag-item-4',
         data: 'third',
-        ariaLabel: '',
+        ariaLabel: 'drag item 4',
         className: 'custom-class'
       },
       {
         node: '#drag-item-5',
         data: 'third',
-        ariaLabel: '',
+        ariaLabel: 'drag item 5',
         className: 'custom-class'
       }
     ],
     dropAreas: [
       {
         node: '#drop-area-1',
-        ariaLabel: '',
+        ariaLabel: 'drop area 1',
         data: 'first',
         className: 'custom-drop-area-class',
       },
       {
         node: '#drop-area-2',
-        ariaLabel: '',
+        ariaLabel: 'drop area 2',
         data: 'second',
         className: 'custom-drop-area-class',
         snapAlignParams: {
@@ -66,7 +119,7 @@
       },
       {
         node: '#drop-area-3',
-        ariaLabel: '',
+        ariaLabel: 'drop area 3',
         data: 'third',
         className: 'custom-drop-area-class',
         snapAlignParams: {
@@ -82,6 +135,9 @@
       console.log('stop')
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
+
+        changeDropAreaAriaDescriptions(params.dropArea, params.previousDropArea);
+        changeDragItemAriaDescription(params.dragItem);
       }
     },
     onCreate: function (dndObj) {
