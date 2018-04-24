@@ -288,6 +288,18 @@ class CgDnd extends EventEmitter {
     return this._firstAllowedDropArea;
   }
 
+  set areRemainingDragitemsHiddenFromTabletsFocus(flag) {
+    this._areRemainingDragitemsHiddenFromTabletsFocus = flag;
+  }
+
+  get areRemainingDragitemsHiddenFromTabletsFocus() {
+    if (this._areRemainingDragitemsHiddenFromTabletsFocus === undefined) {
+      this._areRemainingDragitemsHiddenFromTabletsFocus = false;
+    }
+
+    return this._areRemainingDragitemsHiddenFromTabletsFocus;
+  }
+
   /**
    * Add event listeners
    * @private
@@ -500,6 +512,7 @@ class CgDnd extends EventEmitter {
     if (this.isClick && !area.disabled) {
       if (!this.currentDragParams && this.settings.possibleToReplaceDroppedItem) {
         area.addTabletsAccessForInnerDragItems();
+        this._forbidTabletsFocusForRemainingDragItems();
       }
 
       this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
@@ -715,6 +728,7 @@ class CgDnd extends EventEmitter {
   _finishDrag(params = {}) {
     const isNothingToReplaceInDropAreas = this._isNothingToReplaceInDropAreas();
 
+    this._allowTabletsFocusForRemainingDragItems();
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);
 
     if (this.currentDragParams) {
@@ -1346,6 +1360,32 @@ class CgDnd extends EventEmitter {
     } else {
       this.remainingFirstDragItem = null;
     }
+  }
+
+  /**
+   * Hide remaining drag items from tablet's screenreader focus. (It's needed, when we navigate on drop area's inner drag items)
+   */
+  _forbidTabletsFocusForRemainingDragItems() {
+    if (!this.areRemainingDragitemsHiddenFromTabletsFocus) {
+      this.remainingDragItems.forEach((item) => {
+        item.ariaHidden = true;
+      });
+    }
+
+    this.areRemainingDragitemsHiddenFromTabletsFocus = true;
+  }
+
+  /**
+   * Show remaining drag items for tablet's screenreader focus.
+   */
+  _allowTabletsFocusForRemainingDragItems() {
+    if (this.areRemainingDragitemsHiddenFromTabletsFocus) {
+      this.remainingDragItems.forEach((item) => {
+        item.ariaHidden = false;
+      });
+    }
+
+    this.areRemainingDragitemsHiddenFromTabletsFocus = false;
   }
 }
 
