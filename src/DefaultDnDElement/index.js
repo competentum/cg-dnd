@@ -250,7 +250,7 @@ class DefaultDndElement {
 
   get ariaHidden() {
     if (!this._ariaHidden) {
-      this._ariaHidden = 'false';
+      this._ariaHidden = false;
     }
 
     return this._ariaHidden;

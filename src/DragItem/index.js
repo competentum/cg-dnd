@@ -247,7 +247,7 @@ class DragItem extends DefaultDndElement {
       cgUtils.removeClass(this.node, params.removedClassName);
     }
 
-    this.correct = false;
+    this.correct = this.ariaHidden = false;
 
     this.currentAriaState = this.initAriaKeyboardAccessDesc;
     this.currentAriaState = this.initAriaElementDesc;

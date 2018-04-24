@@ -448,27 +448,44 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _onDragItemClick(item, e) {
-    if (this.isClick && !item.disabled) {
-      this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
-      this.currentDragParams = { draggedItem: this.currentDragParams && !this.dropAreas ? this.currentDragParams.draggedItem : item };
-      this.currentDragParams.draggedItem.ariaGrabbed = true;
-      this.currentDragParams.draggedItem.addClass(this.settings.selectedDragItemClassName);
+    if (this.isClick) {
+      if (!item.disabled && !item.ariaHidden) {
+        this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
+        this.currentDragParams = { draggedItem: this.currentDragParams && !this.dropAreas ? this.currentDragParams.draggedItem : item };
+        this.currentDragParams.draggedItem.ariaGrabbed = true;
+        this.currentDragParams.draggedItem.addClass(this.settings.selectedDragItemClassName);
 
-      if (this.dropAreas) {
-        this.allowedDropAreas.forEach((area) => {
-          area.ariaDropEffect = 'move';
-          area.ariaHidden = false;
+        /**
+         * Add copy of currentDragParams, which will be needed, when we try replace drag items,
+         * one or both of which are inside drop area and were occupied center of drag item. Otherwise we will lose current dragged item,
+         * because TalkBack on Android makes physical click on the center of the element (in the center of which there is drag item),
+         * therefore fires touchstart event on this drag item instead drop area.
+         */
+        this.forTalkBackCurrentDragParams = merge({}, this.currentDragParams);
+
+        if (this.dropAreas) {
+          this.allowedDropAreas.forEach((area) => {
+            area.ariaDropEffect = 'move';
+            area.ariaHidden = false;
+          });
+        }
+
+        this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+        this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
+          dragItem: item,
+          currentDraggedItem: this.currentDragParams.draggedItem,
+          dropAreas: this.dropAreas,
+          allowedDropAreas: this.allowedDropAreas,
+          firstAllowedDropArea: this.firstAllowedDropArea
         });
+      } else if (item.chosenDropArea) {
+        /**
+         * We fire click-event on dropArea, inside of which this drag item is located,
+         * because TalkBack on Android makes physical click on the center of the element (in the center of which there is drag item),
+         * therefore fires touchstart event on this drag item instead drop area.
+         */
+        item.chosenDropArea.node.click();
       }
-
-      this.emit(this.constructor.EVENTS.DRAG_START, e, item);
-      this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
-        dragItem: item,
-        currentDraggedItem: this.currentDragParams.draggedItem,
-        dropAreas: this.dropAreas,
-        allowedDropAreas: this.allowedDropAreas,
-        firstAllowedDropArea: this.firstAllowedDropArea
-      });
     }
   }
 
@@ -479,7 +496,12 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _onDropAreaClick(area, e) {
+    this.currentDragParams = this.forTalkBackCurrentDragParams;
     if (this.isClick && !area.disabled) {
+      if (!this.currentDragParams && this.settings.possibleToReplaceDroppedItem) {
+        area.addTabletsAccessForInnerDragItems();
+      }
+
       this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
         dropArea: area,
@@ -488,6 +510,7 @@ class CgDnd extends EventEmitter {
         remainingDragItems: this.remainingDragItems
       });
     }
+    this.forTalkBackCurrentDragParams = null;
   }
 
   /**
@@ -672,7 +695,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _isNothingToReplaceInDropAreas() {
-    return this.settings.possibleToReplaceDroppedItem && this.firstAllowedDropArea.tabIndex === 0 && !this._dropAreasHaveDragItems();
+    return !this.settings.possibleToReplaceDroppedItem || !this._dropAreasHaveDragItems();
   }
 
   /**
@@ -690,6 +713,8 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _finishDrag(params = {}) {
+    const isNothingToReplaceInDropAreas = this._isNothingToReplaceInDropAreas();
+
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);
 
     if (this.currentDragParams) {
@@ -697,14 +722,14 @@ class CgDnd extends EventEmitter {
       this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
     }
 
-    // TODO: fix aria-hidden, when replacing is allowed
     if (this.allowedDropAreas) {
       this.allowedDropAreas.forEach((area) => {
         area.ariaDropEffect = '';
-        area.ariaHidden = true;
+        area.ariaHidden = isNothingToReplaceInDropAreas;
+        area.removeTabletsAccessForInnerDragItems();
       });
 
-      if (this._isNothingToReplaceInDropAreas()) {
+      if (isNothingToReplaceInDropAreas) {
         this.firstAllowedDropArea.tabIndex = -1;
       }
     }
@@ -1213,7 +1238,10 @@ class CgDnd extends EventEmitter {
 
   reset(params = {}) {
     if (this.dropAreas) {
-      this.dropAreas.forEach((area) => area.resetInnerDragItems({ removedClassName: params.removedClassName }));
+      this.dropAreas.forEach((area) => {
+        area.resetInnerDragItems({ removedClassName: params.removedClassName });
+        area.ariaHidden = true;
+      });
       this.firstAllowedDropArea.tabIndex = -1;
     } else {
       this._resetOnlyDragItemsCase(params);
@@ -1226,6 +1254,9 @@ class CgDnd extends EventEmitter {
 
       if (this._isNothingToReplaceInDropAreas()) {
         this.firstAllowedDropArea.tabIndex = -1;
+        this.dropAreas.forEach((area) => {
+          area.ariaHidden = true;
+        });
       }
     }
   }
@@ -1236,10 +1267,22 @@ class CgDnd extends EventEmitter {
   }
 
   enable() {
+    const areDroppedItemsPossibleToReplace = !this._isNothingToReplaceInDropAreas();
+
     this.dragItems.forEach((item) => item.enable());
-    this.dropAreas.forEach((area) => area.enable());
+    this.dropAreas.forEach((area) => {
+      area.enable();
+
+      /**
+       * We remove from tablet's focused elements drop areas, if there are not dropped items to replace
+       */
+      if (!areDroppedItemsPossibleToReplace) {
+        area.ariaHidden = true;
+      }
+    });
 
     this.remainingFirstDragItem.tabIndex = 0;
+    this.firstAllowedDropArea.tabIndex = areDroppedItemsPossibleToReplace ? 0 : -1;
   }
 
   /**

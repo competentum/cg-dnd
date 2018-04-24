@@ -88,6 +88,25 @@ class DropArea extends DefaultDndElement {
     return this._ariaDropEffect;
   }
 
+  /**
+   * Flag for tablet's screenreader focus for drag items were dropped inside drop area
+   * @param {boolean} flag
+   */
+  set hasTabletsAccessForInnerDragItems(flag) {
+    this._hasTabletsAccessForInnerDragItems = flag;
+  }
+
+  /**
+   * @return {boolean} tablet's focus flag for drop area's inner drag items
+   */
+  get hasTabletsAccessForInnerDragItems() {
+    if (this._hasTabletsAccessForInnerDragItems === undefined) {
+      this._hasTabletsAccessForInnerDragItems = false;
+    }
+
+    return this._hasTabletsAccessForInnerDragItems;
+  }
+
   constructor(settings) {
     super(settings);
 
@@ -202,6 +221,7 @@ class DropArea extends DefaultDndElement {
       this.innerDragItems.push(dragItem);
       this.innerDragItemsCount++;
       dragItem.chosenDropArea = this;
+      dragItem.ariaHidden = true;
     }
   }
 
@@ -459,6 +479,34 @@ class DropArea extends DefaultDndElement {
   allowKeyboardAccess(flag) {
     if (flag) {
       this.tabIndex = 0;
+    }
+  }
+
+  /**
+   * Makes drop area's inner drag items accessible for tablet's focus
+   * @public
+   */
+  addTabletsAccessForInnerDragItems() {
+    if (this.innerDragItemsCount && !this.hasTabletsAccessForInnerDragItems) {
+      this.innerDragItems.forEach((dragItem) => {
+        dragItem.ariaHidden = false;
+      });
+
+      this.hasTabletsAccessForInnerDragItems = true;
+    }
+  }
+
+  /**
+   * Remove tablet's focus access for drop area's inner drag items
+   * @public
+   */
+  removeTabletsAccessForInnerDragItems() {
+    if (this.innerDragItemsCount && this.hasTabletsAccessForInnerDragItems) {
+      this.innerDragItems.forEach((dragItem) => {
+        dragItem.ariaHidden = true;
+      });
+
+      this.hasTabletsAccessForInnerDragItems = false;
     }
   }
 }
