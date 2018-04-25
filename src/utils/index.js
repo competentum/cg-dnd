@@ -3,6 +3,7 @@ import cgUtils from 'cg-component-utils';
 const utils = {
   IS_TOUCH: !!navigator.userAgent.match(/Android|webOS|webOS|iPad|iPod|BlackBerry|Windows Phone/i),
   IS_IE: (/MSIE|Trident/i).test(navigator.userAgent),
+  IS_ANDROID: (/(android)/i).test(navigator.userAgent),
 
   getDeviceEvents() {
     if (this.IS_TOUCH) {

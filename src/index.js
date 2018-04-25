@@ -461,7 +461,10 @@ class CgDnd extends EventEmitter {
    */
   _onDragItemClick(item, e) {
     if (this.isClick) {
-      if (!item.disabled && !item.ariaHidden) {
+      /**
+       * Check for android - is click event was fired on dragItem or dropArea (if dragItem is placed on the center of dropArea)
+       */
+      if (!item.disabled && (!utils.IS_ANDROID || (utils.IS_ANDROID && !item.ariaHidden))) {
         this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
         this.currentDragParams = { draggedItem: this.currentDragParams && !this.dropAreas ? this.currentDragParams.draggedItem : item };
         this.currentDragParams.draggedItem.ariaGrabbed = true;
@@ -490,13 +493,13 @@ class CgDnd extends EventEmitter {
           allowedDropAreas: this.allowedDropAreas,
           firstAllowedDropArea: this.firstAllowedDropArea
         });
-      } else if (item.chosenDropArea) {
+      } else if (utils.IS_ANDROID && item.chosenDropArea) {
         /**
          * We fire click-event on dropArea, inside of which this drag item is located,
          * because TalkBack on Android makes physical click on the center of the element (in the center of which there is drag item),
          * therefore fires touchstart event on this drag item instead drop area.
          */
-        item.chosenDropArea.node.click();
+        item.chosenDropArea.select();
       }
     }
   }

@@ -353,8 +353,8 @@ class DragItem extends DefaultDndElement {
    * @param {number} [delay=0] - setting focus delay, if it will be needed
    * @public
    */
-  focus(delay = 0) {
-    if (delay) {
+  focus(delay) {
+    if (delay !== undefined) {
       setTimeout(() => this.node.focus(), delay);
     } else if (this.hasTransition()) {
       /**

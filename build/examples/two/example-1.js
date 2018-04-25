@@ -156,7 +156,7 @@
           checkButton.focus();
         }
       } else if (params.droppedItems.length) {
-        params.droppedItems[0].focus();
+        params.droppedItems[0].focus(0);
       }
     }
   };
