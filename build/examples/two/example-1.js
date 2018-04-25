@@ -1,7 +1,9 @@
 (function () {
   var exampleContainer = document.getElementById('first-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
-      resetButton = exampleContainer.querySelector('.reset-btn');
+      resetButton = exampleContainer.querySelector('.reset-btn'),
+      PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION = 'Press space or double touch to put chosen drag item to this drop area',
+      REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION = 'Press space button or double touch to start choose dropped item, which you want to replace';
 
   function changeDropAreaAriaDescriptions(dropArea, previousDropArea) {
     if (dropArea.innerDragItems.length) {
@@ -52,7 +54,6 @@
 
   var settings = {
     bounds: '#first-example',
-    //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
     commonDropAreasSettings: {
@@ -132,7 +133,6 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      console.log('stop')
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
@@ -169,5 +169,31 @@
 
   resetButton.addEventListener('click', function () {
     dnd.reset();
+  });
+
+  dnd.dropAreas.forEach(function (area) {
+    area.node.addEventListener('focus', function () {
+      if (area.innerDragItemsCount && !dnd.currentDragParams) {
+        dnd.tooltip.show(area, REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION);
+      } else if (dnd.currentDragParams) {
+        dnd.tooltip.show(area, PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION);
+      }
+    });
+
+    area.node.addEventListener('focusout', function () {
+      if (area.innerDragItemsCount) {
+        dnd.tooltip.hide();
+      }
+    });
+  });
+
+  dnd.dragItems.forEach(function (item) {
+    item.node.addEventListener('focus', function () {
+      dnd.tooltip.show(item);
+    });
+
+    item.node.addEventListener('focusout', function () {
+      dnd.tooltip.hide();
+    });
   });
 })();
