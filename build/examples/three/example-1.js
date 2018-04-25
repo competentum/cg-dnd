@@ -64,8 +64,8 @@
       });
     },
     onDragItemSelect: function (e, params) {
-      if (params.currentDraggedItem !== params.dragItem) {
-        this.shuffleDragItems(params.currentDraggedItem, params.dragItem);
+      if (params.chosenDraggedItem && params.dragItem !== params.chosenDraggedItem) {
+        this.shuffleDragItems(params.dragItem, params.chosenDraggedItem);
       }
     },
   };
@@ -74,7 +74,7 @@
   var correctItems = [];
 
   checkButton.addEventListener('click', function () {
-    dnd.dragItems.forEach((item) => {
+    dnd.dragItems.forEach(function(item) {
       item.correct = item.index === item.data;
 
       if (item.correct) {

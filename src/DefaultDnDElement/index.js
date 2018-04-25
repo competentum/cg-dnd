@@ -489,6 +489,23 @@ class DefaultDndElement {
     });
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC, true);
   }
+
+  /**
+   * Updates all element's coordinates
+   * @param {object} newPositionDOMRectCoordinates - alredy computed coordinates of new item position (needed merged object)
+   * @public
+   */
+  updateAllCoordinates(newPositionDOMRectCoordinates) {
+    if (newPositionDOMRectCoordinates) {
+      delete newPositionDOMRectCoordinates.update;
+    }
+
+    for (const key in this.coordinates) {
+      if (this.coordinates.hasOwnProperty(key)) {
+        this.coordinates[key].update(newPositionDOMRectCoordinates);
+      }
+    }
+  }
 }
 
 export default DefaultDndElement;

@@ -59,8 +59,8 @@
       });
     },
     onDragItemSelect: function (e, params) {
-      if (params.currentDraggedItem !== params.dragItem) {
-        this.shuffleDragItems(params.currentDraggedItem, params.dragItem);
+      if (params.dragItem !== params.chosenDraggedItem) {
+        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
       }
     },
   };

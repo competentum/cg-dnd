@@ -64,8 +64,8 @@
       });
     },
     onDragItemSelect: function (e, params) {
-      if (params.currentDraggedItem !== params.dragItem && !params.currentDraggedItem.disabled && !params.dragItem.disabled) {
-        this.shuffleDragItems(params.currentDraggedItem, params.dragItem);
+      if (params.chosenDraggedItem !== params.dragItem && !params.chosenDraggedItem.disabled && !params.dragItem.disabled) {
+        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
       }
     },
   };

@@ -232,7 +232,13 @@ class DragItem extends DefaultDndElement {
    * @public
    */
   reset(params = {}) {
-    this.translateTo(params.coordinates || this.coordinates.currentStart, true, () => this.coordinates.currentStart.update());
+    this.translateTo(params.coordinates || this.coordinates.currentStart, true, () => {
+      this.coordinates.currentStart.update();
+
+      if (params.afterAnimationCB) {
+        params.afterAnimationCB();
+      }
+    });
     this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || params.from);
 
     if (this.chosenDropArea) {

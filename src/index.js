@@ -358,7 +358,8 @@ class CgDnd extends EventEmitter {
         initPosition: {
           x: pageX,
           y: pageY
-        }
+        },
+        chosenDraggedItem: this.currentDragParams ? this.currentDragParams.chosenDraggedItem : item
       };
 
       this.onMouseMoveHandler = this._onMouseMove.bind(this);
@@ -466,7 +467,13 @@ class CgDnd extends EventEmitter {
        */
       if (!item.disabled && (!utils.IS_ANDROID || (utils.IS_ANDROID && !item.ariaHidden))) {
         this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
-        this.currentDragParams = { draggedItem: this.currentDragParams && !this.dropAreas ? this.currentDragParams.draggedItem : item };
+        this.currentDragParams = {
+          draggedItem: item,
+          /**
+           * This chosenDraggedItem property is needed for case, when only drag items are exist
+           */
+          chosenDraggedItem: this.currentDragParams ? this.currentDragParams.chosenDraggedItem : item
+        };
         this.currentDragParams.draggedItem.ariaGrabbed = true;
         this.currentDragParams.draggedItem.addClass(this.settings.selectedDragItemClassName);
 
@@ -488,7 +495,7 @@ class CgDnd extends EventEmitter {
         this.emit(this.constructor.EVENTS.DRAG_START, e, item);
         this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
           dragItem: item,
-          currentDraggedItem: this.currentDragParams.draggedItem,
+          chosenDraggedItem: this.currentDragParams.chosenDraggedItem,
           dropAreas: this.dropAreas,
           allowedDropAreas: this.allowedDropAreas,
           firstAllowedDropArea: this.firstAllowedDropArea
@@ -1010,17 +1017,36 @@ class CgDnd extends EventEmitter {
     const firstItemStartCoordinates = merge.recursive(true, {}, dragItem1.coordinates.currentStart);
     const secondItemStartCoordinates = merge.recursive(true, {}, dragItem2.coordinates.currentStart);
 
-    dragItem1.translateTo(secondItemStartCoordinates, true, () => dragItem1.coordinates.currentStart.update());
-    dragItem2.translateTo(firstItemStartCoordinates, true, () => dragItem2.coordinates.currentStart.update());
-
     utils.replaceArrayItems(this.remainingDragItems, dragItem1, dragItem2);
     this._replaceSiblings(this.remainingDragItems);
+
+    dragItem1.translateTo(secondItemStartCoordinates, true, () => {
+      this._updateNodePositionInDOM(dragItem1, secondItemStartCoordinates);
+    });
+    dragItem2.translateTo(firstItemStartCoordinates, true, () => {
+      this._updateNodePositionInDOM(dragItem2, firstItemStartCoordinates);
+    });
+
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
       dragItems: this.dragItems,
       dragItem1,
       dragItem2
     });
+  }
+
+  _updateNodePositionInDOM(dragItem, newPositionDOMRectCoordinates, resetToDefault = false) {
+    const index = this.remainingDragItems.indexOf(dragItem);
+
+    dragItem.node.style.transform = '';
+
+    if (!resetToDefault && index > -1 && index < this.remainingDragItems.length - 1) {
+      dragItem.node.parentElement.insertBefore(dragItem.node, this.remainingDragItems[index + 1].node);
+    } else {
+      dragItem.node.parentElement.appendChild(dragItem.node);
+    }
+
+    dragItem.updateAllCoordinates(newPositionDOMRectCoordinates);
   }
 
   /**
@@ -1035,7 +1061,14 @@ class CgDnd extends EventEmitter {
                               this.remainingDragItems.indexOf(toDragItem));
 
     this.remainingDragItems.forEach((item) => {
-      item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
+      item.translateTo(this.initDragItemsPlaces[item.index], true, () => {
+        if (item === dragItem) {
+          this._updateNodePositionInDOM(item, this.initDragItemsPlaces[item.index]);
+        } else {
+          item.node.style.transform = '';
+          item.updateAllCoordinates(this.initDragItemsPlaces[item.index]);
+        }
+      });
     });
 
     this._replaceSiblings(this.remainingDragItems);
@@ -1335,10 +1368,20 @@ class CgDnd extends EventEmitter {
    * @param {object} params
    */
   _resetOnlyDragItemsCase(params = {}) {
-    this.dragItems.forEach((item) => item.reset({
-      coordinates: item.coordinates.default,
-      removedClassName: params.removedClassName
-    }));
+    // This.dragItems.forEach((item) => item.reset({
+    //   Coordinates: item.coordinates.default,
+    //   RemovedClassName: params.removedClassName
+    // }));
+
+    this.dragItems.forEach((item, index) => {
+      item.reset({
+        coordinates: this.initDragItemsPlaces[index],
+        removedClassName: params.removedClassName,
+        afterAnimationCB: () => this.remainingDragItems.forEach((item, index) => {
+          this._updateNodePositionInDOM(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
+        })
+      });
+    });
 
     this._resetAllSiblings(this.dragItems);
     this._initSiblings(this.dragItems);
