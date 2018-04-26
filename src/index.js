@@ -1023,6 +1023,11 @@ class CgDnd extends EventEmitter {
     dragItem1.translateTo(secondItemStartCoordinates, true, () => this._updateDragItem(dragItem1, secondItemStartCoordinates));
     dragItem2.translateTo(firstItemStartCoordinates, true, () => this._updateDragItem(dragItem2, firstItemStartCoordinates));
 
+    /**
+     * We change DOM-tree for touch devices -> focus will disappear, so we set it again
+     */
+    utils.IS_TOUCH && dragItem2.focus();
+
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
       dragItems: this.dragItems,
@@ -1066,6 +1071,11 @@ class CgDnd extends EventEmitter {
        * We change DOM-tree for right focus by touch screenreaders, like TalkBack or VoiceOver
        */
       this._updateAllNodesDOMPositions([...this.dragItems]);
+
+      /**
+       * We change DOM-tree for touch devices -> focus will disappear, so we set it again
+       */
+      dragItem.focus();
     } else {
       this.remainingDragItems.forEach((item) => {
         item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
