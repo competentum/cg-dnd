@@ -1,20 +1,40 @@
 (function () {
   var exampleContainer = document.getElementById('first-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
-      resetButton = exampleContainer.querySelector('.reset-btn');
+      resetButton = exampleContainer.querySelector('.reset-btn'),
+      DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
+      FILLED_DROP_AREA_KEYBOARD_DESC = 'Choose another empty drop area',
+      FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ';
+
+  function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
+    var draggedItemLabel = draggedItem.getSetting('ariaLabel');
+
+    dropAreas.forEach(function (area) {
+      if (!area.innerDragItemsCount) {
+        area.changeCurrentKeyboardDesc(function () { return DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART + draggedItemLabel + ' inside' });
+      }
+    });
+  }
+
+  function changeFilledDropAreaDesc(area) {
+    area.changeCurrentKeyboardDesc(function () { return FILLED_DROP_AREA_KEYBOARD_DESC });
+    area.changeCurrentAriaState(function (area) { return FILLED_DROP_AREA_ARIA_DESC_PART + area.innerDragItems[0].getSetting('ariaLabel') });
+  }
+
+  function setCorrectDesc(area) {
+    area.changeCurrentAriaState(function (params) { return 'Correct! ' + params.area.currentAriaState });
+  }
 
   var settings = {
     bounds: '#first-example',
-    //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
     container: '#first-example',
     selectedDragItemClassName: 'selected-item',
     commonDragItemsSettings: {
-      handler: '.handler',
-    //  initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drag item, then press space button to select it'
+      handler: '.handler'
     },
     commonDropAreasSettings: {
-    //  initAriaKeyboardAccessDesc: 'Press UP/DOWN buttons to choose drop area, then press space button to select it'
+      initAriaElementDesc: 'Area is empty. '
     },
     dragItems: [
       {
@@ -22,14 +42,12 @@
         data: 1,
         ariaLabel: 'drag item 1',
         className: 'custom-class',
-        groups: ['www', 'something']
       },
       {
         node: '#drag-item-2',
         data: 2,
         ariaLabel: 'drag item 2',
-        className: 'custom-class',
-        groups: 'something'
+        className: 'custom-class'
       },
       {
         node: '#drag-item-3',
@@ -61,8 +79,7 @@
         node: '#drop-area-2',
         ariaLabel: 'drop area 2',
         data: 4,
-        className: 'custom-drop-area-class',
-        //  accept: 'something'
+        className: 'custom-drop-area-class'
       },
       {
         node: '#drop-area-3',
@@ -84,20 +101,19 @@
       }
     ],
     onDragStart: function (e, item) {
+      changeDropAreasKeyBoardDescDuringDrag(item, dnd.dropAreas);
     },
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
+      dnd.dragItems.forEach(function (item) {item.resetKeyboardDesc()});
+
       if (params.dragItem && params.dropArea) {
         if (params.dragItem.data === params.dropArea.data) {
           params.dragItem.correct = true;
         }
 
-        params.dropArea.changeCurrentAriaState(function (params) {
-          if (params.innerDragItemsCount) {
-            return 'Area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel') + '. ';
-          }
-        });
+        changeFilledDropAreaDesc(params.dropArea);
       }
 
       if (params.remainingDragItems[0]) {
@@ -110,9 +126,7 @@
       console.log(dndObj);
     },
     onDragItemSelect: function (e, params) {
-   //   setTimeout(function () {
-        params.dropAreas[0].focus();
-   //   }, 0);
+      params.dropAreas[0].focus();
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
@@ -128,10 +142,7 @@
     dnd.dragItems.forEach(function (item) {
       if (item.correct) {
         item.addClass('correct-item');
-
-        item.chosenDropArea.changeCurrentAriaState(function (params) {
-          return 'Correct! Area was filled by ' + item.getSetting('ariaLabel') + '. ';
-        });
+        setCorrectDesc(item.chosenDropArea);
       }
     })
   });

@@ -7,14 +7,17 @@
 
 .with-handler {
   display: flex;
+  position: relative;
 }
 
 .with-handler .handler {
-  display: flex;
   align-items: center;
+  display: flex;
   background-color: red;
-  position: relative;
-  margin: -10px 11px -10px 9px;
+  position: absolute;
+  right: 0;
+  height: 100%;
+  top: 0;
   cursor: pointer;
 }
 
@@ -27,7 +30,7 @@
 
 .horizontal {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-around;
 }
 
 #third-example .dnd-container {

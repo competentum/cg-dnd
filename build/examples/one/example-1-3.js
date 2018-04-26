@@ -5,8 +5,66 @@
       disableSwitcher = exampleContainer.querySelector('#disable-switcher'),
       REPLACE_BY_CHOSEN_DRAG_ITEM_INSTRUCTION = 'Press space (double touch) to replace dropped in drag item by chosen drag item.',
       REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to select dropped item, that replace it',
-      FILLED_DROP_AREA_KEYBOARD_DESC = 'Press space or double touch to replace dropped item by current dragged item or to select dropped item,'
-                                       + ' if current dragged item doesn\'t exist';
+
+      ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
+      ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to replace',
+      ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART = 'Press space or double touch to stay ',
+      FILLED_DROP_AREA_KEYBOARD_DESC = 'Choose another empty drop area',
+      FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ';
+
+  function getKeyboardDescForEmptyAreaDuringDragging(dragItemLabel) {
+    return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel;
+  }
+
+  function getKeyboardDescForFilledAreaDuringDragging(draggedItem, filledArea) {
+    var droppedInItem = filledArea.innerDragItems[0],
+        draggedItemLabel = draggedItem.getSetting('ariaLabel'),
+        droppedInItemLabel = droppedInItem.getSetting('ariaLabel');
+
+    if (draggedItem === droppedInItem) {
+      return ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART + draggedItemLabel + ' inside the same area. ';
+    } else {
+      return ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART + droppedInItemLabel + ' by ' + draggedItemLabel + '. ';
+    }
+  }
+
+  function getKeyboardDescForFilledArea(filledArea) {
+    return ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART + filledArea.innerDragItems[0].getSetting('ariaLabel') + '. ';
+  }
+
+  function getAriaStateDescForFilledArea(filledArea) {
+    return FILLED_DROP_AREA_ARIA_DESC_PART + filledArea.innerDragItems[0].getSetting('ariaLabel') + '. ';
+  }
+
+
+  function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
+    var draggedItemLabel = draggedItem.getSetting('ariaLabel');
+
+    dropAreas.forEach(function (area) {
+      if (!area.innerDragItemsCount) {
+        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForEmptyAreaDuringDragging(draggedItemLabel) });
+      } else {
+        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledAreaDuringDragging(draggedItem, area) });
+      }
+    });
+  }
+
+  function changeFilledDropAreaDesc(area) {
+    area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledArea(area) });
+    area.changeCurrentAriaState(function (area) { return getAriaStateDescForFilledArea(area) });
+  }
+
+  function setCorrectDesc(area) {
+    area.changeCurrentAriaState(function (params) { return 'Correct! ' + params.area.currentAriaState });
+  }
+
+  function updateFilledAreasKeyboardDescAfterStopDragging(dropAreas) {
+    dropAreas.forEach(function (area) {
+      if (area.innerDragItemsCount) {
+        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledArea(area) });
+      }
+    })
+  }
 
   var settings = {
     disabled: true,
@@ -95,6 +153,7 @@
       }
     ],
     onDragStart: function (e, item) {
+      changeDropAreasKeyBoardDescDuringDrag(item, dnd.dropAreas);
     },
     onDragMove: function (e, item) {
     },
@@ -102,15 +161,10 @@
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
-        params.dropArea.changeCurrentAriaState(function (params) {
-          return 'Area was filled by ' + params.innerDragItems[0].getSetting('ariaLabel') + '. ';
-        });
-        params.dropArea.changeCurrentKeyboardDesc(function (params) {
-          return FILLED_DROP_AREA_KEYBOARD_DESC;
-        });
+        changeFilledDropAreaDesc(params.dropArea);
+        updateFilledAreasKeyboardDescAfterStopDragging(dnd.dropAreas);
 
         if (params.previousDropArea) {
-          console.log('reset')
           params.previousDropArea.resetAriaStateDesc();
           params.previousDropArea.resetKeyboardDesc();
         }
@@ -132,7 +186,7 @@
       if (params.currentDraggedItem) {
         params.currentDraggedItem.putIntoDropArea(params.dropArea);
       } else if (params.droppedItems.length) {
-          params.droppedItems[0].focus();
+          params.droppedItems[0].select();
       }
     }
   };
