@@ -466,7 +466,7 @@ class CgDnd extends EventEmitter {
       /**
        * Check for android - is click event was fired on dragItem or dropArea (if dragItem is placed on the center of dropArea)
        */
-      if (!item.disabled && (!utils.IS_ANDROID || (utils.IS_ANDROID && !item.ariaHidden))) {
+      if (!item.disabled && (!utils.IS_TOUCH || (utils.IS_TOUCH && !item.ariaHidden))) {
         this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
         this.currentDragParams = {
           draggedItem: item,
@@ -502,7 +502,7 @@ class CgDnd extends EventEmitter {
           firstAllowedDropArea: this.firstAllowedDropArea
         });
         this.isClick = false;
-      } else if (utils.IS_ANDROID && item.chosenDropArea) {
+      } else if (utils.IS_TOUCH && item.chosenDropArea) {
         /**
          * We fire click-event on dropArea, inside of which this drag item is located,
          * because TalkBack on Android makes physical click on the center of the element (in the center of which there is drag item),
@@ -520,7 +520,10 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _onDropAreaClick(area, e) {
-    this.currentDragParams = this.forTalkBackCurrentDragParams;
+    if (utils.IS_TOUCH) {
+      this.currentDragParams = this.forTalkBackCurrentDragParams;
+    }
+
     if (!area.disabled) {
       if (!this.currentDragParams && this.settings.possibleToReplaceDroppedItem) {
         area.addTabletsAccessForInnerDragItems();
