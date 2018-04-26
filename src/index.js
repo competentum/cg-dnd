@@ -352,6 +352,7 @@ class CgDnd extends EventEmitter {
         ? utils.getElementPosition(this.settings.bounds)
         : this.settings.bounds;
 
+      this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
       this.currentDragParams = {
         draggedItem: item,
         currentBounds: utils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
@@ -500,6 +501,7 @@ class CgDnd extends EventEmitter {
           allowedDropAreas: this.allowedDropAreas,
           firstAllowedDropArea: this.firstAllowedDropArea
         });
+        this.isClick = false;
       } else if (utils.IS_ANDROID && item.chosenDropArea) {
         /**
          * We fire click-event on dropArea, inside of which this drag item is located,
@@ -519,7 +521,7 @@ class CgDnd extends EventEmitter {
    */
   _onDropAreaClick(area, e) {
     this.currentDragParams = this.forTalkBackCurrentDragParams;
-    if (this.isClick && !area.disabled) {
+    if (!area.disabled) {
       if (!this.currentDragParams && this.settings.possibleToReplaceDroppedItem) {
         area.addTabletsAccessForInnerDragItems();
         this._forbidTabletsFocusForRemainingDragItems();
