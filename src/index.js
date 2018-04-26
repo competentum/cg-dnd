@@ -1020,12 +1020,8 @@ class CgDnd extends EventEmitter {
     utils.replaceArrayItems(this.remainingDragItems, dragItem1, dragItem2);
     this._replaceSiblings(this.remainingDragItems);
 
-    dragItem1.translateTo(secondItemStartCoordinates, true, () => {
-      this._updateNodePositionInDOM(dragItem1, secondItemStartCoordinates);
-    });
-    dragItem2.translateTo(firstItemStartCoordinates, true, () => {
-      this._updateNodePositionInDOM(dragItem2, firstItemStartCoordinates);
-    });
+    dragItem1.translateTo(secondItemStartCoordinates, true, () => this._updateDragItem(dragItem1, secondItemStartCoordinates));
+    dragItem2.translateTo(firstItemStartCoordinates, true, () => this._updateDragItem(dragItem2, firstItemStartCoordinates));
 
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
@@ -1035,18 +1031,21 @@ class CgDnd extends EventEmitter {
     });
   }
 
-  _updateNodePositionInDOM(dragItem, newPositionDOMRectCoordinates, resetToDefault = false) {
-    const index = this.remainingDragItems.indexOf(dragItem);
-
-    dragItem.node.style.transform = '';
-
-    if (!resetToDefault && index > -1 && index < this.remainingDragItems.length - 1) {
-      dragItem.node.parentElement.insertBefore(dragItem.node, this.remainingDragItems[index + 1].node);
+  /**
+   * Update drag item coordinates for "only drag items are exist" case
+   * @param {dragItem} item
+   * @param {object} newPositionDOMRectCoordinates - DOM-rect coordinates of new dragItem position
+   * @private
+   */
+  _updateDragItem(item, newPositionDOMRectCoordinates) {
+    if (utils.IS_TOUCH) {
+      /**
+       * If it is a touch device, we translate DOM-element of drag item to new position's order for right focus by touch screenreaders
+       */
+      this._updateNodeDOMPosition(item, newPositionDOMRectCoordinates);
     } else {
-      dragItem.node.parentElement.appendChild(dragItem.node);
+      item.coordinates.currentStart.update();
     }
-
-    dragItem.updateAllCoordinates(newPositionDOMRectCoordinates);
   }
 
   /**
@@ -1060,18 +1059,18 @@ class CgDnd extends EventEmitter {
     utils.moveArrayItems(this.remainingDragItems, this.remainingDragItems.indexOf(dragItem),
                               this.remainingDragItems.indexOf(toDragItem));
 
-    this.remainingDragItems.forEach((item) => {
-      item.translateTo(this.initDragItemsPlaces[item.index], true, () => {
-        if (item === dragItem) {
-          this._updateNodePositionInDOM(item, this.initDragItemsPlaces[item.index]);
-        } else {
-          item.node.style.transform = '';
-          item.updateAllCoordinates(this.initDragItemsPlaces[item.index]);
-        }
-      });
-    });
-
     this._replaceSiblings(this.remainingDragItems);
+
+    if (utils.IS_TOUCH) {
+      /**
+       * We change DOM-tree for right focus by touch screenreaders, like TalkBack or VoiceOver
+       */
+      this._updateAllNodesDOMPositions([...this.dragItems]);
+    } else {
+      this.remainingDragItems.forEach((item) => {
+        item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
+      });
+    }
 
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
@@ -1079,6 +1078,51 @@ class CgDnd extends EventEmitter {
       dragItem1: dragItem,
       dragItem2: toDragItem
     });
+  }
+
+  /**
+   * Replace drag items in DOM depending on which order they are shown on the screen. It's needed for right focus by touch screenreaders
+   * @param {dragItem} dragItem
+   * @param {object} newPositionDOMRectCoordinates - DOM-rect coordinates of new dragItem position
+   * @param {boolean} resetToDefault - flag for reset drag items
+   * @private
+   */
+  _updateNodeDOMPosition(dragItem, newPositionDOMRectCoordinates, resetToDefault = false) {
+    dragItem.node.style.transform = '';
+
+    if (!resetToDefault && dragItem.index < this.dragItems.length - 1) {
+      const lowerDOMSibling = this.dragItems[utils.findIndex(this.dragItems, (elem) => elem.index === dragItem.index + 1)].node;
+
+      dragItem.node.parentElement.insertBefore(dragItem.node, lowerDOMSibling);
+    } else {
+      dragItem.node.parentElement.appendChild(dragItem.node);
+    }
+
+    dragItem.updateAllCoordinates(newPositionDOMRectCoordinates);
+  }
+
+  /**
+   * Move all drag items in DOM depending on which order they are shown on the screen
+   * @param {dragItem[]} elemsArray - dragItem's array
+   * @private
+   */
+  _updateAllNodesDOMPositions(elemsArray) {
+    /**
+     * Sort array to add nodes down up
+     */
+    elemsArray.sort((elem1, elem2) => elem2.index - elem1.index);
+
+    /**
+     * Moves DOM-nodes in first element's animation end callback, that they were updated sequentially.
+     * Otherwise, animations will not be ended sequentially and DOM elements will be moved randomize
+     */
+    elemsArray[0].translateTo(this.initDragItemsPlaces[elemsArray[0].index], true, () => {
+      elemsArray.forEach((item) => this._updateNodeDOMPosition(item, this.initDragItemsPlaces[item.index]));
+    });
+
+    for (let i = 1; i < elemsArray.length; i++) {
+      elemsArray[i].translateTo(this.initDragItemsPlaces[elemsArray[i].index], true);
+    }
   }
 
   /**
@@ -1378,7 +1422,7 @@ class CgDnd extends EventEmitter {
         coordinates: this.initDragItemsPlaces[index],
         removedClassName: params.removedClassName,
         afterAnimationCB: () => this.remainingDragItems.forEach((item, index) => {
-          this._updateNodePositionInDOM(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
+          this._updateNodeDOMPosition(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
         })
       });
     });
