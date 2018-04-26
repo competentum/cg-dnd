@@ -99,6 +99,6 @@ a {
     background-color: #2f21db;
 }
 
-.disabled {
+.disabled, button:disabled {
     opacity: 0.5;
 }

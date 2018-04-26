@@ -758,7 +758,7 @@ class CgDnd extends EventEmitter {
         area.removeTabletsAccessForInnerDragItems();
       });
 
-      if (isNothingToReplaceInDropAreas) {
+      if (isNothingToReplaceInDropAreas && this.firstAllowedDropArea) {
         this.firstAllowedDropArea.tabIndex = -1;
       }
     }

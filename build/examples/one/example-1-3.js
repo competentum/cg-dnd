@@ -204,8 +204,12 @@
   disableSwitcher.addEventListener('change', function () {
     if (this.checked) {
       dnd.disable();
+      checkButton.setAttribute('disabled', true);
+      resetButton.setAttribute('disabled', true);
     } else {
       dnd.enable();
+      checkButton.removeAttribute('disabled');
+      resetButton.removeAttribute('disabled');
     }
   });
 
