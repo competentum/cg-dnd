@@ -3,6 +3,10 @@
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
       disableSwitcher = exampleContainer.querySelector('#disable-switcher'),
+      liveRegion = document.getElementById('live-region'),
+      CORRECT_ITEM_CLASSNAME = 'correct-item',
+      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
       REPLACE_BY_CHOSEN_DRAG_ITEM_INSTRUCTION = 'Press space (double touch) to replace dropped in drag item by chosen drag item.',
       REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to select dropped item, that replace it',
 
@@ -13,7 +17,7 @@
       FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ';
 
   function getKeyboardDescForEmptyAreaDuringDragging(dragItemLabel) {
-    return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel;
+    return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel + ' inside. ';
   }
 
   function getKeyboardDescForFilledAreaDuringDragging(draggedItem, filledArea) {
@@ -63,7 +67,7 @@
       if (area.innerDragItemsCount) {
         area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledArea(area) });
       }
-    })
+    });
   }
 
   var settings = {
@@ -158,6 +162,7 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
+      params.dragItem.removeClass(CORRECT_ITEM_CLASSNAME);
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
@@ -196,11 +201,26 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
+    var areIncorrectItemsExist = false;
+
     dnd.resetIncorrectItems();
+    dnd.dragItems.forEach(function (item) {
+      if (item.correct) {
+        item.addClass(CORRECT_ITEM_CLASSNAME);
+        setCorrectDesc(item.chosenDropArea);
+      } else if (!areIncorrectItemsExist) {
+        areIncorrectItemsExist = true;
+      }
+    });
+
+    if (areIncorrectItemsExist) {
+      liveRegion.innerHTML = INCORRECT_MESSAGE;
+    }
+    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset();
+    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
   });
 
   disableSwitcher.addEventListener('change', function () {

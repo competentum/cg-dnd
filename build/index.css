@@ -61,7 +61,7 @@
 }
 
 *:focus {
-    outline: 2px dashed #000;
+    outline: 2px dashed #000 !important;
 }
 
 .standard-btn {
@@ -88,7 +88,7 @@ a {
 }
 
 .correct-item {
-    background-color: #26ba13;
+    background-color: #26ba13 !important;
 }
 
 .incorrect-item {
@@ -102,3 +102,16 @@ a {
 .disabled, button:disabled {
     opacity: 0.5;
 }
+
+.visually-hidden {
+    position: absolute;
+    border: 0;
+    height: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+

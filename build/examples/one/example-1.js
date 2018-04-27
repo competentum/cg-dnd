@@ -2,9 +2,12 @@
   var exampleContainer = document.getElementById('first-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
+      liveRegion = document.getElementById('live-region'),
       DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
       FILLED_DROP_AREA_KEYBOARD_DESC = 'Choose another empty drop area',
-      FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ';
+      FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ',
+      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items';
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
     var draggedItemLabel = draggedItem.getSetting('ariaLabel');
@@ -138,13 +141,22 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
+    var areIncorrectItemsExist = false;
+
     dnd.resetIncorrectItems();
     dnd.dragItems.forEach(function (item) {
       if (item.correct) {
         item.addClass('correct-item');
         setCorrectDesc(item.chosenDropArea);
+      } else if (!areIncorrectItemsExist) {
+        areIncorrectItemsExist = true;
       }
-    })
+    });
+
+    if (areIncorrectItemsExist) {
+      liveRegion.innerHTML = INCORRECT_MESSAGE;
+    }
+    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
   });
 
   resetButton.addEventListener('click', function () {

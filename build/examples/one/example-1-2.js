@@ -2,7 +2,10 @@
   var exampleContainer = document.getElementById('second-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
-      DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ';
+      liveRegion = document.getElementById('live-region'),
+      DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
+      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items';
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
     var draggedItemLabel = draggedItem.getSetting('ariaLabel');
@@ -122,10 +125,24 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
+    var areIncorrectItemsExist = false;
+
     dnd.resetIncorrectItems();
+    dnd.dragItems.forEach(function (item) {
+      if (item.correct) {
+        item.addClass('correct-item');
+      } else if (!areIncorrectItemsExist) {
+        areIncorrectItemsExist = true;
+      }
+    });
+
+    if (areIncorrectItemsExist) {
+      liveRegion.innerHTML = INCORRECT_MESSAGE;
+    }
+    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset();
+    dnd.reset({ removedClassName: 'correct-item' });
   });
 })();

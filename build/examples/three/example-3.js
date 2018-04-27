@@ -1,6 +1,7 @@
 (function () {
   var exampleContainer = document.getElementById('third-example'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
+      CORRECT_ITEM_CLASSNAME = 'correct-item',
       DRAG_START_ITEMS_KEYBOARD_DESC = 'Press space or double touch to replace this item by ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
       CORRECT_ITEM_KEYBOARD_DESC = 'Use arrow keys or swipes to choose another item';
@@ -34,7 +35,7 @@
     item.correct = item.index === item.data;
 
     if (item.correct) {
-      item.addClass('correct-item');
+      item.addClass(CORRECT_ITEM_CLASSNAME);
       setCorrectDesc(item);
     }
   }
@@ -85,7 +86,7 @@
     ],
     onDragStart: function (e, item) {
       console.log('start')
-      item.removeClass('correct-item');
+      item.removeClass(CORRECT_ITEM_CLASSNAME);
       item.resetAriaStateDesc();
       item.resetKeyboardDesc();
       changeNotSelectedItemsAriaDesc(dnd.dragItems, item);
@@ -93,7 +94,10 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      dnd.dragItems.forEach(function (item) {item.resetKeyboardDesc()});
+      params.dragItem1.removeClass(CORRECT_ITEM_CLASSNAME);
+      params.dragItem2.removeClass(CORRECT_ITEM_CLASSNAME);
+
+      dnd.dragItems.forEach(function (item) { item.resetKeyboardDesc() });
 
       if (params.dragItem1 && params.dragItem2) {
         replaceItemsDescriptions(params.dragItem1, params.dragItem2);
@@ -117,6 +121,6 @@
   var dnd = new CgDnd(settings);
 
   resetButton.addEventListener('click', function () {
-    dnd.reset({ removedClassName: 'correct-item' });
+    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
   });
 })();

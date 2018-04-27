@@ -2,8 +2,16 @@
   var exampleContainer = document.getElementById('first-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
+      liveRegion = document.getElementById('live-region'),
+      CORRECT_ITEM_CLASSNAME = 'correct-item',
+      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
       PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION = 'Press space or double touch to put chosen drag item to this drop area',
-      REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION = 'Press space button or double touch to start choose dropped item, which you want to replace';
+      REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION = 'Press space button or double touch to start choose dropped item, which you want to replace',
+      ARIA_FILLED_AREA_KEYBOARD_INSTRUCTION = 'Press space or double touch to choose and replace dropped items inside. ',
+      ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
+      ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART = 'Press space or double touch to stay ',
+      UNLIMITED_COUNT_DESC = 'This area accept an unlimited items count. ';
 
   function changeDropAreaAriaDescriptions(dropArea, previousDropArea) {
     if (dropArea.innerDragItems.length) {
@@ -25,12 +33,10 @@
         dropAreaStateDesc += ' ' + innerItem.getSetting('ariaLabel') + (index + 1 === params.innerDragItems.length ? '.' : ',');
       });
 
-      return dropAreaStateDesc;
+      return dropAreaStateDesc + ' ' + UNLIMITED_COUNT_DESC;
     });
 
-    dropArea.changeCurrentKeyboardDesc(function () {
-      return 'Press space or double touch to put current drag item or to choose dropped items inside. ';
-    });
+    dropArea.changeCurrentKeyboardDesc(function () { return ARIA_FILLED_AREA_KEYBOARD_INSTRUCTION });
   }
 
   function setEmptyDropAreaDescription(dropArea) {
@@ -48,8 +54,49 @@
     });
 
     dragItem.changeCurrentKeyboardDesc(function () {
-      return 'Use arrow keys or swipes to choose other dropped items, then press cpase or double touch to replace it. ';
+      return 'Use arrow keys or swipes to choose other dropped items, then press spase or double touch to replace it. ';
     });
+  }
+
+  function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
+    var draggedItemLabel = draggedItem.getSetting('ariaLabel');
+
+    dropAreas.forEach(function (area) {
+      if (!area.innerDragItemsCount) {
+        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForEmptyAreaDuringDragging(draggedItemLabel) });
+      } else {
+        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledAreaDuringDragging(draggedItem, area) });
+      }
+    });
+  }
+
+  function getKeyboardDescForEmptyAreaDuringDragging(dragItemLabel) {
+    return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel + ' inside. ';
+  }
+
+  function getKeyboardDescForFilledAreaDuringDragging(draggedItem, filledArea) {
+    var droppedInItem = filledArea.innerDragItems[0],
+        draggedItemLabel = draggedItem.getSetting('ariaLabel');
+
+    if (draggedItem === droppedInItem) {
+      return ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART + draggedItemLabel + ' inside the same area. ';
+    } else {
+      return getKeyboardDescForEmptyAreaDuringDragging(draggedItemLabel);
+    }
+  }
+
+  function updateFilledAreasKeyboardDescAfterStopDragging(dropAreas) {
+    dropAreas.forEach(function (area) {
+      if (area.innerDragItemsCount) {
+        area.changeCurrentKeyboardDesc(function () { return ARIA_FILLED_AREA_KEYBOARD_INSTRUCTION });
+      } else {
+        setEmptyDropAreaDescription(area);
+      }
+    });
+  }
+
+  function setCorrectDesc(item) {
+    item.changeCurrentAriaState(function (params) { return 'Correct! ' + params.item.currentAriaState });
   }
 
   var settings = {
@@ -64,7 +111,7 @@
         withDroppedItemCSSMargins: true
       },
       initAriaKeyboardAccessDesc: 'Press space or double touch to put drag item inside. ',
-      initAriaElementDesc: 'Area is empty. ',
+      initAriaElementDesc: 'Area is empty. ' + UNLIMITED_COUNT_DESC,
     },
     commonDragItemsSettings: {
       initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose other drag items, then press spase or double touch to drag it. '
@@ -129,15 +176,19 @@
       }
     ],
     onDragStart: function (e, item) {
+      changeDropAreasKeyBoardDescDuringDrag(item, dnd.dropAreas);
     },
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
+      params.dragItem.removeClass(CORRECT_ITEM_CLASSNAME);
+
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
         changeDropAreaAriaDescriptions(params.dropArea, params.previousDropArea);
         changeDragItemAriaDescription(params.dragItem);
+        updateFilledAreasKeyboardDescAfterStopDragging(dnd.dropAreas);
       }
     },
     onCreate: function (dndObj) {
@@ -164,11 +215,32 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
+    var areIncorrectItemsExist = false;
+
     dnd.resetIncorrectItems();
+    dnd.dragItems.forEach(function (item) {
+      if (item.correct) {
+        item.addClass(CORRECT_ITEM_CLASSNAME);
+        setCorrectDesc(item);
+      } else if (!areIncorrectItemsExist) {
+        areIncorrectItemsExist = true;
+      }
+    });
+
+    dnd.dropAreas.forEach(function (area) {
+      if (area.innerDragItemsCount) {
+        changeDropAreaAriaDescriptions(area);
+      }
+    });
+
+    if (areIncorrectItemsExist) {
+      liveRegion.innerHTML = INCORRECT_MESSAGE;
+    }
+    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset();
+    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
   });
 
   dnd.dropAreas.forEach(function (area) {

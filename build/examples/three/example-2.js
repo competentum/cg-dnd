@@ -2,6 +2,10 @@
   var exampleContainer = document.getElementById('second-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
+      liveRegion = document.getElementById('live-region'),
+      CORRECT_ITEM_CLASSNAME = 'correct-item',
+      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
       DRAG_START_ITEMS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ';
 
@@ -115,18 +119,27 @@
   var correctItems = [];
 
   checkButton.addEventListener('click', function () {
+    var areIncorrectItemsExist = false;
+
     dnd.dragItems.forEach((item) => {
       item.correct = item.index === item.data;
 
       if (item.correct) {
-        item.addClass('correct-item');
+        item.addClass(CORRECT_ITEM_CLASSNAME);
+      } else if (!areIncorrectItemsExist) {
+        areIncorrectItemsExist = true;
       }
     });
     dnd.disableFocusOnCorrectItems();
+
+    if (areIncorrectItemsExist) {
+      liveRegion.innerHTML = INCORRECT_MESSAGE;
+    }
+    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset({ removedClassName: 'correct-item' });
+    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
   });
 
   dnd.dragItems.forEach(function (item) {
