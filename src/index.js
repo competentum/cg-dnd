@@ -636,7 +636,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _insertToDropArea(dragItem, dropArea) {
-    dropArea.includeDragItem(dragItem);
+    dropArea.placeDragItem(dragItem);
     dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
 
     if (this._isSomethingToReplaceInDropAreas()) {
@@ -652,7 +652,7 @@ class CgDnd extends EventEmitter {
    */
   _removeFromDropArea(dragItem, dropArea) {
     dropArea.innerDragItems.length > 1 && this._updateSiblings(dragItem, true, dropArea.innerDragItems);
-    dropArea.excludeDragItem(dragItem);
+    dropArea.removeDragItem(dragItem);
     this._resetSiblings(dragItem);
   }
 
@@ -1373,11 +1373,19 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  /**
+   * Disable all dnd's elements
+   * @public
+   */
   disable() {
     this.dragItems.forEach((item) => item.disable());
     this.dropAreas.forEach((area) => area.disable());
   }
 
+  /**
+   * Enable all dnd's elements
+   * @public
+   */
   enable() {
     const areDroppedItemsPossibleToReplace = !this._isNothingToReplaceInDropAreas();
 
@@ -1430,11 +1438,6 @@ class CgDnd extends EventEmitter {
    * @param {object} params
    */
   _resetOnlyDragItemsCase(params = {}) {
-    // This.dragItems.forEach((item) => item.reset({
-    //   Coordinates: item.coordinates.default,
-    //   RemovedClassName: params.removedClassName
-    // }));
-
     this.dragItems.forEach((item, index) => {
       item.reset({
         coordinates: this.initDragItemsPlaces[index],

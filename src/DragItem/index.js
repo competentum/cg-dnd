@@ -242,7 +242,7 @@ class DragItem extends DefaultDndElement {
     this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || params.from);
 
     if (this.chosenDropArea) {
-      this.chosenDropArea.excludeDragItem(this);
+      this.chosenDropArea.removeDragItem(this);
     }
 
     if (this.disabled) {
@@ -325,14 +325,14 @@ class DragItem extends DefaultDndElement {
     const secondItemDropArea = replacedDragItem.chosenDropArea;
 
     if (firstItemDropArea) {
-      firstItemDropArea.excludeDragItem(this);
+      firstItemDropArea.removeDragItem(this);
       replacedDragItem.putIntoDropArea(firstItemDropArea);
     } else {
       replacedDragItem.reset({ from: secondItemDropArea });
     }
 
     if (secondItemDropArea) {
-      secondItemDropArea.excludeDragItem(replacedDragItem);
+      secondItemDropArea.removeDragItem(replacedDragItem);
       this.putIntoDropArea(secondItemDropArea);
     } else {
       this.reset({ from: firstItemDropArea });

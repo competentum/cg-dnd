@@ -39,6 +39,18 @@ class DropArea extends DefaultDndElement {
   }
 
   /**
+   * @return {{top: number, right: number, bottom: number, left: number}} - default indents for each dropped items
+   */
+  static get DEFAULT_MARGINS() {
+    return {
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0
+    };
+  }
+
+  /**
    * @return {string[]} vertical align settings for inner drag items
    */
   static get DROP_AREAS_VERTICAL_ALIGN_KINDS() {
@@ -216,7 +228,7 @@ class DropArea extends DefaultDndElement {
    * Place drag item to drop area
    * @param {dragItem} dragItem
    */
-  includeDragItem(dragItem) {
+  placeDragItem(dragItem) {
     if (this.innerDragItems.indexOf(dragItem) === -1) {
       this.innerDragItems.push(dragItem);
       this.innerDragItemsCount++;
@@ -229,7 +241,7 @@ class DropArea extends DefaultDndElement {
    * Remove drag item from drop area
    * @param {dragItem} dragItem
    */
-  excludeDragItem(dragItem) {
+  removeDragItem(dragItem) {
     const existingItemIndex = this.innerDragItems.indexOf(dragItem);
 
     if (existingItemIndex !== -1) {
@@ -411,13 +423,7 @@ class DropArea extends DefaultDndElement {
    * @private
    */
   _getDragItemIndents(dragItem) {
-    const defaultMargins = {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0
-    };
-    const itemMargins = this.snapAlignParams.withDroppedItemCSSMargins ? dragItem.margins : defaultMargins;
+    const itemMargins = this.snapAlignParams.withDroppedItemCSSMargins ? dragItem.margins : this.constructor.DEFAULT_MARGINS;
 
     return {
       top: this.snapAlignParams.eachDroppedItemIndents[0] + itemMargins.top,

@@ -58,11 +58,11 @@ class DefaultDndElement {
 
   /**
    * Unique IDs for aria descriptions elements
-   * @return {{KEYBOARD_ACCESS_DEC: string, CURRENT_STATE_DESC: string}} id for current desc and keyboard desc elements
+   * @return {{KEYBOARD_ACCESS_DESC: string, CURRENT_STATE_DESC: string}} id for current desc and keyboard desc elements
    */
   static get ARIA_DESC_IDS() {
     return {
-      KEYBOARD_ACCESS_DEC: `${this.DND_ELEM_KIND}-keyboard-description-${this.ID_UNIQUE_COUNTER}`,
+      KEYBOARD_ACCESS_DESC: `${this.DND_ELEM_KIND}-keyboard-description-${this.ID_UNIQUE_COUNTER}`,
       CURRENT_STATE_DESC: `${this.DND_ELEM_KIND}-current-state-description-${this.ID_UNIQUE_COUNTER}`
     };
   }
@@ -484,9 +484,9 @@ class DefaultDndElement {
     this.keyboardDescElement = utils.createHTML({
       html: `${this.initAriaKeyboardAccessDesc}`,
       container: this.hiddenDescContainer,
-      attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC }
+      attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC }
     });
-    this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DEC, true);
+    this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC, true);
 
     this.currentStateDescElement = utils.createHTML({
       html: `${this.initAriaElementDesc}`,

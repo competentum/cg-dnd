@@ -29,9 +29,7 @@ const utils = {
    * @param {string} validMessage - message, which contains correct value type
    */
   showSettingError(settingName, settingValue, validMessage) {
-    const errorValue = typeof settingValue === 'string' ? settingValue : typeof settingValue;
-
-    throw new Error(`${errorValue} isn't valid value for ${settingName}! ${validMessage}`);
+    throw new Error(`"${settingValue}" isn't valid value for "${settingName}"! ${validMessage}`);
   },
 
   getElement(element, container = document) {
