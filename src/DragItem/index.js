@@ -349,8 +349,9 @@ class DragItem extends DefaultDndElement {
   }
 
   breakTransition() {
-    const event = new Event('transitionend');
+    const event = document.createEvent('Event');
 
+    event.initEvent('transitionend', true, true);
     this.node.dispatchEvent(event);
   }
 

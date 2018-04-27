@@ -260,7 +260,7 @@ class DropArea extends DefaultDndElement {
       return true;
     }
 
-    return utils.findIndex(dragItem.groups, (item) => this.accept.includes(item)) > -1;
+    return utils.findIndex(dragItem.groups, (item) => utils.includes(this.accept, item)) > -1;
   }
 
   /**

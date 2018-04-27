@@ -189,6 +189,26 @@ const utils = {
   },
 
   /**
+   * Check, is item included to array
+   * @param {array} array
+   * @param {*} item
+   * @return {boolean} result
+   */
+  includes(array, item) {
+    if (Array.prototype.includes) {
+      return array.includes(item);
+    }
+
+    for (let i = 0; i < array.length; i++) {
+      if (array[i] === item) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  /**
    * Fill array by one value
    * @param {array} array
    * @param {number} value

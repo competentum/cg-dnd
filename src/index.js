@@ -1362,10 +1362,13 @@ class CgDnd extends EventEmitter {
       this.dropAreas.forEach((area) => area.resetIncorrectDragItems());
 
       if (this._isNothingToReplaceInDropAreas()) {
-        this.firstAllowedDropArea.tabIndex = -1;
         this.dropAreas.forEach((area) => {
           area.ariaHidden = true;
         });
+
+        if (this.firstAllowedDropArea) {
+          this.firstAllowedDropArea.tabIndex = -1;
+        }
       }
     }
   }
