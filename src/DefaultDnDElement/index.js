@@ -311,16 +311,20 @@ class DefaultDndElement {
     this.disabled = false;
   }
 
-  focus(delay = 0) {
-    if (delay) {
+  focus(delay) {
+    if (delay !== undefined) {
       setTimeout(() => this.node.focus(), delay);
     } else {
       this.node.focus();
     }
   }
 
-  select() {
-    this.node.click();
+  select(delay) {
+    if (delay !== undefined) {
+      setTimeout(() => this.node.click(), delay);
+    } else {
+      this.node.click();
+    }
   }
 
   addClass(className) {

@@ -186,7 +186,9 @@
       if (params.currentDraggedItem) {
         params.currentDraggedItem.putIntoDropArea(params.dropArea);
       } else if (params.droppedItems.length) {
-          params.droppedItems[0].select();
+        var DELAY = 0;
+
+        params.droppedItems[0].select(DELAY);
       }
     }
   };
