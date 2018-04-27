@@ -5,12 +5,20 @@ import utils from '../utils';
 import cgUtils from 'cg-component-utils';
 
 /**
- * Accessible drag item Component
+ * @typedef {Object} TooltipSettings
+ * @property {string} html - html-string, which will be shown in the tooltip.
+ * @property {string} className - tooltip's custom class name
+ * @property {number} marginLeft - left tooltip's indent of for more precise tooltip's display by user settings
+ * @property {number} marginBottom - bottom tooltip's indent of for more precise tooltip's display by user settings
+ */
+
+/**
+ * Tooltip for dnd's elements
  */
 class Tooltip {
   /**
-   *DragItem's customizing settings
-   * @typedef {Object} DragItemSettings
+   *Tooltip's customizing settings
+   * @type {TooltipSettings}
    */
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
@@ -38,6 +46,10 @@ class Tooltip {
     this._render();
   }
 
+  /**
+   * Set user's message, which he wants to show
+   * @param {string} htmlString
+   */
   set html(htmlString) {
     this._html = htmlString;
 
@@ -46,6 +58,9 @@ class Tooltip {
     }
   }
 
+  /**
+   * @return {string} current tooltip's message
+   */
   get html() {
     if (!this._html) {
       this._html = '';
@@ -54,15 +69,26 @@ class Tooltip {
     return this._html;
   }
 
+  /**
+   * Creates new html-container for tooltip
+   * @param {string|Element} htmlString
+   */
   set node(htmlString) {
     if (this._node) {
       document.body.removeChild(this._node);
     }
 
-    this._node = cgUtils.createHTML(htmlString);
-    document.body.appendChild(this._node);
+    if (typeof htmlString === 'string') {
+      this._node = cgUtils.createHTML(htmlString);
+      document.body.appendChild(this._node);
+    } else {
+      this._node = htmlString;
+    }
   }
 
+  /**
+   * @return {string|Element} current tooltip container
+   */
   get node() {
     if (!this._node) {
       this._node = '';
@@ -71,14 +97,26 @@ class Tooltip {
     return this._node;
   }
 
+  /**
+   * Creates new container inside tooltip's node for message only
+   * @param {string|Element} htmlString
+   */
   set messageContainer(htmlString) {
     if (this.node && this._messageContainer) {
       this.node.removeChild(this._messageContainer);
     }
-    this._messageContainer = cgUtils.createHTML(htmlString);
-    this.node.appendChild(this._messageContainer);
+
+    if (typeof htmlString === 'string') {
+      this._messageContainer = cgUtils.createHTML(htmlString);
+      this.node.appendChild(this._messageContainer);
+    } else {
+      this._messageContainer = htmlString;
+    }
   }
 
+  /**
+   * @return {string|Element} current tooltip's message container
+   */
   get messageContainer() {
     if (!this._messageContainer) {
       this._messageContainer = '';
@@ -132,6 +170,10 @@ class Tooltip {
     return verifiedValue;
   }
 
+  /**
+   * Create and add tooltip to document
+   * @private
+   */
   _render() {
     this.node = `<div aria-hidden="true" role="presentation" class="${this.constructor.DEFAULT_TOOLTIP_CLASS}
         ${this.className}"><div class="${this.constructor.TOOLTIP_MARKER_CLASS}"></div></div>`;
