@@ -2,12 +2,12 @@
   var exampleContainer = document.getElementById('first-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
-      liveRegion = document.getElementById('live-region'),
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       DRAG_START_ITEMS_KEYBOARD_DESC = 'Press space or double touch to replace this item by ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items';
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
+      RESET_MESSAGE = 'Activity was reset';
 
   function changeNotSelectedItemsAriaDesc(dragItems, chosenItem) {
     var chosenItemLabel = chosenItem.getSetting('ariaLabel');
@@ -137,12 +137,13 @@
     dnd.disableFocusOnCorrectItems();
 
     if (areIncorrectItemsExist) {
-      liveRegion.innerHTML = INCORRECT_MESSAGE;
+      setLiveText(INCORRECT_MESSAGE);
     }
-    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
+    setLiveText(areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE);
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
+    setLiveText(RESET_MESSAGE);
   });
 })();

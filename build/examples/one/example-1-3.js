@@ -3,7 +3,6 @@
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
       disableSwitcher = exampleContainer.querySelector('#disable-switcher'),
-      liveRegion = document.getElementById('live-region'),
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
       INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
@@ -14,7 +13,8 @@
       ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to replace',
       ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART = 'Press space or double touch to stay ',
       FILLED_DROP_AREA_KEYBOARD_DESC = 'Choose another empty drop area',
-      FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ';
+      FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ',
+      RESET_MESSAGE = 'Activity was reset';
 
   function getKeyboardDescForEmptyAreaDuringDragging(dragItemLabel) {
     return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel + ' inside. ';
@@ -214,13 +214,14 @@
     });
 
     if (areIncorrectItemsExist) {
-      liveRegion.innerHTML = INCORRECT_MESSAGE;
+      setLiveText(INCORRECT_MESSAGE);
     }
-    liveRegion.innerHTML = areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE;
+    setLiveText(areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE);
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
+    setLiveText(RESET_MESSAGE);
   });
 
   disableSwitcher.addEventListener('change', function () {

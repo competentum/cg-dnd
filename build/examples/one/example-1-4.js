@@ -1,6 +1,5 @@
 (function () {
-  var liveRegion = document.getElementById('live-region'),
-      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+  var ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
       CORRECT_MESSAGE = 'Correct!',
       INCORRECT_MESSAGE = 'Incorrect! Try again',
       DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ';
@@ -99,16 +98,16 @@
 
         if (params.dragItem.correct) {
           params.dragItem.addClass('correct-item');
-          liveRegion.innerHTML = CORRECT_MESSAGE;
+          setLiveText(CORRECT_MESSAGE);
 
           if (params.remainingDragItems[0]) {
             params.remainingDragItems[0].focus(visuallyDelay);
           } else {
-            liveRegion.innerHTML = ALL_CORRECT_MESSAGE;
+            setLiveText(ALL_CORRECT_MESSAGE);
           }
         } else {
           params.dragItem.addClass('incorrect-item');
-          liveRegion.innerHTML = INCORRECT_MESSAGE;
+          setLiveText(INCORRECT_MESSAGE);
           visuallyDelay = 500;
 
           setTimeout(function () {
