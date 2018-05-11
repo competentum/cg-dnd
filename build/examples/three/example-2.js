@@ -121,7 +121,7 @@
   checkButton.addEventListener('click', function () {
     var areIncorrectItemsExist = false;
 
-    dnd.dragItems.forEach((item) => {
+    dnd.dragItems.forEach(function (item) {
       item.correct = item.index === item.data;
 
       if (item.correct) {
