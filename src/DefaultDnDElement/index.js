@@ -99,6 +99,18 @@ class DefaultDndElement {
     return this._onKeyDownHandler;
   }
 
+  set onKeyUpHandler(handler) {
+    this._onKeyUpHandler = typeof handler === 'function' ? handler : () => {};
+  }
+
+  get onKeyUpHandler() {
+    if (!this._onKeyUpHandler) {
+      this._onKeyUpHandler = () => {};
+    }
+
+    return this._onKeyUpHandler;
+  }
+
   set onClickHandler(handler) {
     this._onClickHandler = typeof handler === 'function' ? handler : () => {};
   }

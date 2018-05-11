@@ -171,6 +171,7 @@ class CgDnd extends EventEmitter {
     if (!this._STANDARD_EVENTS) {
       this._STANDARD_EVENTS = {
         KEYDOWN: 'keydown',
+        KEYUP: 'keyup',
         CLICK: 'click'
       };
     }
@@ -310,19 +311,23 @@ class CgDnd extends EventEmitter {
     this.dragItems.forEach((item) => {
       item.onMouseDownHandler = this._onMouseDown.bind(this, item);
       item.onKeyDownHandler = this._onKeyDown.bind(this, item);
+      item.onKeyUpHandler = this._onKeyUp.bind(this, item);
       item.onClickHandler = this._onDragItemClick.bind(this, item);
 
       item.handler.addEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, item.onKeyDownHandler);
+      item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYUP, item.onKeyUpHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, item.onClickHandler);
     });
 
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => {
         area.onKeyDownHandler = this._onKeyDown.bind(this, area);
+        area.onKeyUpHandler = this._onKeyUp.bind(this, area);
         area.onClickHandler = this._onDropAreaClick.bind(this, area);
 
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, area.onKeyDownHandler);
+        area.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYUP, area.onKeyUpHandler);
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, area.onClickHandler);
       });
     }
@@ -456,10 +461,27 @@ class CgDnd extends EventEmitter {
       case KEY_CODES.ENTER:
       case KEY_CODES.SPACE:
         e.preventDefault();
-        this.isClick = true;
-        item.node.click();
         break;
       default:
+    }
+  }
+
+  /**
+   * We select element by keyup-event, because otherwise FF dispatches click-event on next focused DOM-element (not dnd),
+   * if in it's "space"-keydown handler focus will be set on this next element.
+   * Is relevant, when after last drag item was set to drop area,
+   * we set focus on check/submit button ( in case, when selecting will be appeared by keydown-event on "space" button,
+   * FF clicks on this button at once after focus - it's wrong. KeyUp fixes it).
+   * @param {dragItem|dropArea} item - dnd element
+   * @param {Object} e - event
+   * @private
+   */
+  _onKeyUp(item, e) {
+    const KEY_CODES = this.constructor.KEY_CODES;
+
+    if (e.keyCode === KEY_CODES.SPACE || e.keyCode === KEY_CODES.ENTER) {
+      this.isClick = true;
+      item.select();
     }
   }
 
@@ -1443,6 +1465,7 @@ class CgDnd extends EventEmitter {
   _removeStandardEventsHandlers(elems) {
     elems.forEach((elem) => {
       elem.node.removeEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, elem.onKeyDownHandler);
+      elem.node.removeEventListener(this.constructor.STANDARD_EVENTS.KEYUP, elem.onKeyUpHandler);
       elem.node.removeEventListener(this.constructor.STANDARD_EVENTS.CLICK, elem.onClickHandler);
     });
   }
