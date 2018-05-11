@@ -399,10 +399,18 @@ class CgDnd extends EventEmitter {
   }
 
   _onMouseUp(e) {
-    if (this.isClick) {
-      this.currentDragParams.draggedItem.node.click();
-    } else {
+    if (!this.isClick) {
+      /**
+       * If isClick flag wasn't set, then we are changing drag item position
+       * by mousemove or touchmove and then we should check it's position
+       */
       this._checkDragItemPosition(this.currentDragParams.draggedItem);
+    } else if (utils.IS_TOUCH) {
+      /**
+       * Some screenreaders (TB on android 7 for example) on touch devices fires touchstart and touchend events instead click-event
+       * during double touch, then we call it here by hands. (TB on android 8 fires click-event during double touch, when TB is enabled)
+       */
+      this.currentDragParams.draggedItem.node.click();
     }
     e.preventDefault();
 
@@ -462,7 +470,13 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _onDragItemClick(item, e) {
-    if (this.isClick) {
+    /**
+     * We set isClick flag for case, when we click on item by mouse or for touch devices, which fires touchstart and touchend events
+     * instead click-event during double touch with enabled screenreader.
+     * Also we check this flag on "undefined", if touch-devices screenreaders fires click-event at once instead touchstart
+     * and touchend events (TB on Android 8 for example)
+     */
+    if (this.isClick || this.isClick === undefined) {
       /**
        * Check for android - is click event was fired on dragItem or dropArea (if dragItem is placed on the center of dropArea)
        */
@@ -501,7 +515,7 @@ class CgDnd extends EventEmitter {
           allowedDropAreas: this.allowedDropAreas,
           firstAllowedDropArea: this.firstAllowedDropArea
         });
-        this.isClick = false;
+        this.isClick = undefined;
       } else if (utils.IS_TOUCH && item.chosenDropArea) {
         /**
          * We fire click-event on dropArea, inside of which this drag item is located,
