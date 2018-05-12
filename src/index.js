@@ -423,7 +423,18 @@ class CgDnd extends EventEmitter {
     document.removeEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
   }
 
-  _onDragItemReset(dragItem, chosenDropArea) {
+  /**
+   * Handler on drag item resetting
+   * @param {Object} params
+   * @param {dragItem} params.dragItem
+   * @param {dropArea} params.chosenDropArea - drop area, in which drag item is placed
+   * @param {boolean} params._shiftRemainingItems - if "true", remaining drag items will be aligned
+   * (if settings.alignRemainingDragItems === true). It's needed for disabling double remaining drag items shifting during replacing
+   * @private
+   */
+  _onDragItemReset(params) {
+    const { dragItem, chosenDropArea, _shiftRemainingItems } = params;
+
     if (this.remainingDragItems.indexOf(dragItem) === -1) {
       /**
        * If dropArea includes reseted drag item, we exclude it from dropArea
@@ -432,7 +443,7 @@ class CgDnd extends EventEmitter {
         this._removeFromDropArea(dragItem, chosenDropArea);
       }
 
-      this._insertToRemainingDragItems(dragItem);
+      this._insertToRemainingDragItems(dragItem, _shiftRemainingItems);
     }
 
     if (chosenDropArea && this.allowedDropAreas.indexOf(chosenDropArea) === -1) {
@@ -591,7 +602,7 @@ class CgDnd extends EventEmitter {
       if (chosenDropArea) {
         // Drag item was dropped on drop area
 
-        dragItem.putIntoDropArea(chosenDropArea);
+        dragItem.putIntoDropArea({ dropArea: chosenDropArea });
       } else {
         // Drag item wasn't dropped on drop area
 
@@ -611,12 +622,17 @@ class CgDnd extends EventEmitter {
 
   /**
    * Checks main setting's conditions before putting drag item into drop area
-   * @param {dragItem} dragItem
-   * @param {dropArea} dropArea
-   * @param {boolean} isSameDropArea - if true, drag item returns back to chosen drop area's position
+   * @param {Object} params
+   * @param {dragItem} params.dragItem
+   * @param {dropArea} params.dropArea
+   * @param {boolean} params._shiftRemainingItems - if "true", remaining drag items will be aligned
+   * (if settings.alignRemainingDragItems === true). It's needed for disabling double remaining drag items shifting during replacing
+   * @param {boolean} params.isSameDropArea - if true, drag item returns back to chosen drop area's position
    * @private
    */
-  _onDragItemDroppedOnDropArea(dragItem, dropArea, isSameDropArea) {
+  _onDragItemDroppedOnDropArea(params) {
+    const { dragItem, dropArea, isSameDropArea, _shiftRemainingItems } = params;
+
     const forUserArgs = {
       dragItem,
       dropArea,
@@ -647,7 +663,7 @@ class CgDnd extends EventEmitter {
     if (previousDropArea) {
       this._removeFromDropArea(dragItem, previousDropArea);
     } else {
-      this._removeFromRemainingDragItems(dragItem);
+      this._removeFromRemainingDragItems(dragItem, _shiftRemainingItems);
     }
 
     this._insertToDropArea(dragItem, dropArea);
@@ -695,18 +711,20 @@ class CgDnd extends EventEmitter {
   /**
    * Remove dragItem from remaining drag items array with shifting other remaining drag items, if it will be needed
    * @param {dragItem} dragItem
+   * @param {boolean} [isNeedForShift = true] - if "true", remaining drag items will be aligned
+   * (if settings.alignRemainingDragItems === true). It's needed for disabling double remaining drag items shifting during replacing
    * @private
    */
-  _removeFromRemainingDragItems(dragItem) {
+  _removeFromRemainingDragItems(dragItem, isNeedForShift = true) {
     this._excludeElementFromArray(this.remainingDragItems, dragItem);
 
-    this._shiftRemainingDragItems();
+    isNeedForShift && this._shiftRemainingDragItems();
   }
 
-  _insertToRemainingDragItems(dragItem) {
+  _insertToRemainingDragItems(dragItem, isNeedForShift = true) {
     this._includeElementToArray(this.remainingDragItems, dragItem);
 
-    if (this.dropAreas) {
+    if (this.dropAreas && isNeedForShift) {
       this._shiftRemainingDragItems();
     }
   }

@@ -111,7 +111,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea(params.dropArea);
+        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
 
         if (params.remainingDragItems[0]) {
           params.remainingDragItems[0].focus();

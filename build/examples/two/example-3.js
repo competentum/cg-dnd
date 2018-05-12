@@ -118,7 +118,10 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea(params.dropArea, true);
+        params.currentDraggedItem.putIntoDropArea({
+          dropArea: params.dropArea,
+          callCheckAfterAnimationEnd: true
+        });
       } else if (params.droppedItems.length) {
         params.droppedItems[0].focus();
       }

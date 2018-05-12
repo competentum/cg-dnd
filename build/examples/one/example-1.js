@@ -133,7 +133,10 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea(params.dropArea, true);
+        params.currentDraggedItem.putIntoDropArea({
+          dropArea: params.dropArea,
+          callCheckAfterAnimationEnd: true
+        });
       }
     }
   };
@@ -155,8 +158,10 @@
 
     if (areIncorrectItemsExist) {
       setLiveText(INCORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus();
+    } else {
+      setLiveText(ALL_CORRECT_MESSAGE);
     }
-    setLiveText(areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE);
   });
 
   resetButton.addEventListener('click', function () {

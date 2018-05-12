@@ -228,10 +228,15 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Reset item to default settings
-   * @param {{coordinates: object, from: dropArea, removedClassName: string}} params - additional settings for resettable element
+   * @param {Object} params
+   * @param {function} params.afterAnimationCB - callback function, which will be executed after animation end
+   * @param {dropArea} params.from - drop area, from which drag item will be removed
+   * @param {boolean} [params._shiftRemainingItems = true] - if "true", remaining drag items will be aligned
+   * (if settings.alignRemainingDragItems === true). It's needed for disabling double remaining drag items shifting during replacing
+   * @param {string} params.removedClassName - css class name, which will be removed after item resetting
    * @public
    */
-  reset(params = {}) {
+  reset(params = { _shiftRemainingItems: true }) {
     this.translateTo(params.coordinates || this.coordinates.currentStart, true, () => {
       this.coordinates.currentStart.update();
 
@@ -239,7 +244,12 @@ class DragItem extends DefaultDndElement {
         params.afterAnimationCB();
       }
     });
-    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, this, this.chosenDropArea || params.from);
+
+    this.emit(this.constructor.EVENTS.DRAG_ITEM_RESET, {
+      dragItem: this,
+      chosenDropArea: this.chosenDropArea || params.from,
+      _shiftRemainingItems: params._shiftRemainingItems
+    });
 
     if (this.chosenDropArea) {
       this.chosenDropArea.removeDragItem(this);
@@ -288,30 +298,43 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Try to put drag item to chosen drop area
-   * @param {dropArea} chosenDropArea - DropArea object
-   * @param {boolean} callCheckAfterAnimationEnd - if "true", checking will be executed after animation end,
+   * @param {Object} params
+   * @param {dropArea} params.dropArea - the chosen drop area, in which we want to put a drag item
+   * @param {function} params.afterAnimationCB - callback function, which will be executed after animation end
+   * @param {boolean} [params.callCheckAfterAnimationEnd = false] - if "true", checking will be executed after animation end,
    * else it will be executed in this function end
-   * @param {function} afterAnimationCB - callback function, which will be executed after animation end
+   * @param {boolean} [params._shiftRemainingItems = true] - if "true", remaining drag items will be aligned
+   * (if settings.alignRemainingDragItems === true). It's needed for disabling double remaining drag items shifting during replacing
    * @return {boolean} - return "true", if dragItem changes his position, otherwise return "false"
    * @public
    */
-  putIntoDropArea(chosenDropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}) {
-    if (this.chosenDropArea && this.chosenDropArea === chosenDropArea) {
+  putIntoDropArea(params) {
+    const { dropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}, _shiftRemainingItems = true } = params;
+    const paramsForCheck = {
+      dragItem: this,
+      dropArea,
+      isSameDropArea: true,
+      _shiftRemainingItems
+    };
+
+    if (this.chosenDropArea && this.chosenDropArea === dropArea) {
       this.translateTo(this.coordinates.droppedIn, true);
-      this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, true);
+      this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
 
       return false;
     }
 
-    this.translateTo(chosenDropArea.getAlignedCoords(this), true, () => {
+    paramsForCheck.isSameDropArea = false;
+
+    this.translateTo(dropArea.getAlignedCoords(this), true, () => {
       this.coordinates.droppedIn.update();
 
-      callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, false);
+      callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
 
-      afterAnimationCB(this, chosenDropArea);
+      afterAnimationCB(this, dropArea);
     });
 
-    !callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this, chosenDropArea, false);
+    !callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
 
     return true;
   }
@@ -324,16 +347,25 @@ class DragItem extends DefaultDndElement {
     const firstItemDropArea = this.chosenDropArea;
     const secondItemDropArea = replacedDragItem.chosenDropArea;
 
+    /**
+     * We don't call remaining items aligning after first item replacing by {_shiftRemainingItems: false}
+     */
     if (firstItemDropArea) {
       firstItemDropArea.removeDragItem(this);
-      replacedDragItem.putIntoDropArea(firstItemDropArea);
+      replacedDragItem.putIntoDropArea({
+        dropArea: firstItemDropArea,
+        _shiftRemainingItems: false
+      });
     } else {
-      replacedDragItem.reset({ from: secondItemDropArea });
+      replacedDragItem.reset({
+        from: secondItemDropArea,
+        _shiftRemainingItems: false
+      });
     }
 
     if (secondItemDropArea) {
       secondItemDropArea.removeDragItem(replacedDragItem);
-      this.putIntoDropArea(secondItemDropArea);
+      this.putIntoDropArea({ dropArea: secondItemDropArea });
     } else {
       this.reset({ from: firstItemDropArea });
     }

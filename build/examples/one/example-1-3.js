@@ -189,7 +189,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea(params.dropArea);
+        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
       } else if (params.droppedItems.length) {
         var DELAY = 0;
 
