@@ -4,7 +4,7 @@
       resetButton = exampleContainer.querySelector('.reset-btn'),
       DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
       RESET_MESSAGE = 'Activity was reset';
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
@@ -137,9 +137,10 @@
     });
 
     if (areIncorrectItemsExist) {
-      setLiveText(INCORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    } else {
+      setLiveText(ALL_CORRECT_MESSAGE);
     }
-    setLiveText(areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE);
   });
 
   resetButton.addEventListener('click', function () {

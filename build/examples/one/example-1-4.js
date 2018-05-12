@@ -1,7 +1,7 @@
 (function () {
   var ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      CORRECT_MESSAGE = 'Correct!',
-      INCORRECT_MESSAGE = 'Incorrect! Try again',
+      CORRECT_MESSAGE = 'Correct! ',
+      INCORRECT_MESSAGE = 'Incorrect! Try again. ',
       DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ';
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
@@ -98,22 +98,26 @@
 
         if (params.dragItem.correct) {
           params.dragItem.addClass('correct-item');
-          setLiveText(CORRECT_MESSAGE);
 
           if (params.remainingDragItems[0]) {
-            params.remainingDragItems[0].focus(visuallyDelay);
+            params.remainingDragItems[0].focus({
+              delay: visuallyDelay,
+              liveText: CORRECT_MESSAGE
+            });
           } else {
             setLiveText(ALL_CORRECT_MESSAGE);
           }
         } else {
           params.dragItem.addClass('incorrect-item');
-          setLiveText(INCORRECT_MESSAGE);
           visuallyDelay = 500;
 
           setTimeout(function () {
             params.dragItem.reset();
             params.dragItem.removeClass('incorrect-item');
-            params.remainingDragItems[0].focus(visuallyDelay);
+            params.remainingDragItems[0].focus({
+              delay: visuallyDelay,
+              liveText: INCORRECT_MESSAGE
+            });
           }, visuallyDelay);
         }
       }

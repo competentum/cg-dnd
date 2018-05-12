@@ -5,7 +5,7 @@
       disableSwitcher = exampleContainer.querySelector('#disable-switcher'),
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
       REPLACE_BY_CHOSEN_DRAG_ITEM_INSTRUCTION = 'Press space (double touch) to replace dropped in drag item by chosen drag item.',
       REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to select dropped item, that replace it',
 
@@ -214,9 +214,10 @@
     });
 
     if (areIncorrectItemsExist) {
-      setLiveText(INCORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    } else {
+      setLiveText(ALL_CORRECT_MESSAGE);
     }
-    setLiveText(areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE);
   });
 
   resetButton.addEventListener('click', function () {

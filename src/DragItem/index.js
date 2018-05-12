@@ -388,25 +388,27 @@ class DragItem extends DefaultDndElement {
   }
 
   /**
-   * Set focus, that screenreader will reads description
-   * @param {number} [delay=0] - setting focus delay, if it will be needed
+   * DefaultDnDElement.focus() extension for setting focus after transition end
+   * @param {Object} params
+   * @param {Number} params.delay - delay on focus setting
+   * @param {String} [params.liveText = ''] - text for screenreaders, which will be read first after focus
    * @public
    */
-  focus(delay) {
-    if (delay !== undefined) {
-      setTimeout(() => this.node.focus(), delay);
+  focus(params = {}) {
+    if (params.delay !== undefined) {
+      super.focus(params);
     } else if (this.hasTransition()) {
       /**
        * We set focus on element after his animation's end for NVDA + FF (otherwise NVDA reads element description twice)
        */
       const setFocusAfterTransition = () => {
-        this.node.focus();
+        super.focus(params);
         this.node.removeEventListener('transitionend', setFocusAfterTransition);
       };
 
       this.node.addEventListener('transitionend', setFocusAfterTransition);
     } else {
-      this.node.focus();
+      super.focus(params);
     }
   }
 

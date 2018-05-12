@@ -280,6 +280,34 @@ class DefaultDndElement {
     }
   }
 
+  set ariaLabel(label) {
+    this._ariaLabel = label;
+
+    this.node.setAttribute('aria-label', label);
+  }
+
+  get ariaLabel() {
+    if (this._ariaLabel === undefined) {
+      this._ariaLabel = '';
+    }
+
+    return this._ariaLabel;
+  }
+
+  set ariaDescribedBy(elemIDString) {
+    this._ariaDescribedBy = elemIDString;
+
+    this.node.setAttribute('aria-describedby', elemIDString);
+  }
+
+  get ariaDescribedBy() {
+    if (this._ariaDescribedBy === undefined) {
+      this._ariaDescribedBy = '';
+    }
+
+    return this._ariaDescribedBy;
+  }
+
   /**
    * Set common hidden aria descriptions container
    * @param {Element} node
@@ -296,19 +324,17 @@ class DefaultDndElement {
   }
 
   _applySettings(settings) {
-    const correctDeepMergedObj = merge.recursive(true, {}, this.constructor.DEFAULT_SETTINGS, settings);
+    const mergedSettings = merge.recursive(true, {}, this.constructor.DEFAULT_SETTINGS, settings);
 
-    merge.recursive(this, correctDeepMergedObj);
-
-    if (this.hasOwnProperty('node')) {
-      this.node = this._checkSetting('node', this.node);
+    if (mergedSettings.hasOwnProperty('node')) {
+      this.node = this._checkSetting('node', mergedSettings.node);
     } else {
       utils.showSettingError('node', undefined, 'Please set html-node element or html-selector');
     }
 
-    for (const key in this) {
-      if (this.hasOwnProperty(key) && key !== 'node') {
-        this[key] = this._checkSetting(key, this[key]);
+    for (const key in mergedSettings) {
+      if (mergedSettings.hasOwnProperty(key) && key !== 'node') {
+        this[key] = this._checkSetting(key, mergedSettings[key]);
       }
     }
 
@@ -323,7 +349,25 @@ class DefaultDndElement {
     this.disabled = false;
   }
 
-  focus(delay) {
+  /**
+   * Set focus on dnd's element with optional delay and liveText
+   * @param {Object} params
+   * @param {Number} params.delay - delay on focus setting
+   * @param {String} [params.liveText = ''] - text for screenreaders, which will be read first after focus
+   */
+  focus(params = {}) {
+    const { delay, liveText = '' } = params;
+    const TO_REMOVE_LIVE_TEXT_DELAY = 200;
+
+    if (liveText) {
+      const currentAriaLabel = this.ariaLabel;
+
+      this.ariaLabel = `${liveText} ${currentAriaLabel}`;
+      setTimeout(() => {
+        this.ariaLabel = currentAriaLabel;
+      }, TO_REMOVE_LIVE_TEXT_DELAY + (delay || 0));
+    }
+
     if (delay !== undefined) {
       setTimeout(() => this.node.focus(), delay);
     } else {
@@ -401,12 +445,8 @@ class DefaultDndElement {
         break;
       case 'ariaLabel':
       case 'ariaDescribedBy':
-      case 'ariaLabelledBy':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue;
-          if (verifiedValue.length) {
-            this.node.setAttribute(this.constructor.ARIA_ATTRIBUTES[settingName], verifiedValue);
-          }
         } else {
           utils.showSettingError(settingName, settingValue, 'Please set string.');
         }

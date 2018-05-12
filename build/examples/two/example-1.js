@@ -4,7 +4,7 @@
       resetButton = exampleContainer.querySelector('.reset-btn'),
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, drag remaining drag items',
+      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
       PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION = 'Press space or double touch to put chosen drag item to this drop area',
       REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION = 'Press space button or double touch to start choose dropped item, which you want to replace',
       ARIA_FILLED_AREA_KEYBOARD_INSTRUCTION = 'Press space or double touch to choose and replace dropped items inside. ',
@@ -207,7 +207,7 @@
           checkButton.focus();
         }
       } else if (params.droppedItems.length) {
-        params.droppedItems[0].focus(0);
+        params.droppedItems[0].focus({ delay: 0 });
       }
     }
   };
@@ -234,9 +234,10 @@
     });
 
     if (areIncorrectItemsExist) {
-      setLiveText(INCORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    } else {
+      setLiveText(ALL_CORRECT_MESSAGE);
     }
-    setLiveText(areIncorrectItemsExist ? INCORRECT_MESSAGE : ALL_CORRECT_MESSAGE);
   });
 
   resetButton.addEventListener('click', function () {
