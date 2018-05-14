@@ -681,6 +681,8 @@ class CgDnd extends EventEmitter {
 
     if (this._isNeedToReset(dragItem, dropArea)) {
       dragItem.reset();
+
+      delete forUserArgs.dropArea;
       this._finishDrag(forUserArgs);
 
       return;
