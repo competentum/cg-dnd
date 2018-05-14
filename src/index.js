@@ -113,6 +113,21 @@ class CgDnd extends EventEmitter {
           }
         },
         tooltipParams: {},
+        itemsOrderReadingParams: {
+          enabled: false,
+          liveTextElement: '',
+          hotKeyCode: 113,
+          usageInstruction: ' Press F2 to read current order of items. ',
+          getItemsCurrentOrderDesc: (currentItems) => {
+            let desc = '';
+
+            currentItems.forEach((item, index) => {
+              desc += ` ${item.ariaLabel} - position ${index + 1} of ${currentItems.length}. `;
+            });
+
+            return desc;
+          }
+        },
         onCreate: () => {},
         onDragStart: () => {},
         onDragMove: () => {},
@@ -336,6 +351,13 @@ class CgDnd extends EventEmitter {
     this.on(DragItem.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this._onDragItemDroppedOnDropArea);
   }
 
+  _readItemsCurrentOrder() {
+    const params = this.settings.itemsOrderReadingParams;
+
+    params.liveTextElement.innerHTML = '';
+    params.liveTextElement.innerHTML = params.getItemsCurrentOrderDesc(this.remainingDragItems);
+  }
+
   _onMouseDown(item, e) {
     if (!item.disabled) {
       e.preventDefault();
@@ -472,6 +494,12 @@ class CgDnd extends EventEmitter {
       case KEY_CODES.ENTER:
       case KEY_CODES.SPACE:
         e.preventDefault();
+        break;
+      case this.settings.itemsOrderReadingParams.hotKeyCode:
+        if (this.settings.itemsOrderReadingParams.enabled) {
+          e.preventDefault();
+          this._readItemsCurrentOrder();
+        }
         break;
       default:
     }
@@ -1082,10 +1110,18 @@ class CgDnd extends EventEmitter {
     dragItem1.translateTo(secondItemStartCoordinates, true, () => this._updateDragItem(dragItem1, secondItemStartCoordinates));
     dragItem2.translateTo(firstItemStartCoordinates, true, () => this._updateDragItem(dragItem2, firstItemStartCoordinates));
 
-    /**
-     * We change DOM-tree for touch devices -> focus will disappear, so we set it again
-     */
-    utils.IS_TOUCH && dragItem2.focus();
+
+    if (utils.IS_TOUCH) {
+      /**
+       * We change DOM-tree for touch devices -> focus will be disappear, so we set it again
+       */
+      dragItem2.focus();
+    } else {
+      /**
+       * Set focus, that screenreader will read element with it's new position
+       */
+      dragItem2.focus({ delay: 0 });
+    }
 
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
@@ -1139,6 +1175,11 @@ class CgDnd extends EventEmitter {
       this.remainingDragItems.forEach((item) => {
         item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
       });
+
+      /**
+       * Set focus, that screenreader will read element with it's new position
+       */
+      dragItem.focus({ delay: 0 });
     }
 
     this._finishDrag({
@@ -1231,6 +1272,13 @@ class CgDnd extends EventEmitter {
     this.initDragItemsPlaces = [];
     this.dragItems.forEach((item, index) => {
       this.initDragItemsPlaces[index] = merge.recursive(true, {}, item.coordinates.default);
+
+      /**
+       * Set hotkey postfix instruction for reading current items order
+       */
+      if (this.settings.itemsOrderReadingParams.enabled && !utils.IS_TOUCH) {
+        item.keyboardDescPostfix = this.settings.itemsOrderReadingParams.usageInstruction;
+      }
     });
   }
 
@@ -1252,6 +1300,7 @@ class CgDnd extends EventEmitter {
    * @return {string|number|object|boolean|dragItem|dropArea} - return verified value
    * @private
    */
+  /* eslint-disable max-statements */
   _checkSetting(settingName, settingValue) {
     const BOUNDS_ARRAY_LENGTH = 4;
     let verifiedValue;
@@ -1301,6 +1350,7 @@ class CgDnd extends EventEmitter {
         break;
       case 'snap':
       case 'disabled':
+      case 'enabled':
       case 'alignRemainingDragItems':
       case 'possibleToReplaceDroppedItem':
       case 'forbidFocusOnFilledDropAreas':
@@ -1338,6 +1388,49 @@ class CgDnd extends EventEmitter {
           verifiedValue = settingValue.replace(/^\./, '');
         } else {
           utils.showSettingError(settingName, settingValue, 'Please set string of class name.');
+        }
+        break;
+      case 'itemsOrderReadingParams':
+        if (typeof settingValue === 'object') {
+          for (const key in settingValue) {
+            if (settingValue.hasOwnProperty(key)) {
+              settingValue[key] = this._checkSetting(key, settingValue[key]);
+            }
+          }
+
+          verifiedValue = settingValue;
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set Object.');
+        }
+        break;
+      case 'liveTextElement':
+        if (this.settings.itemsOrderReadingParams.enabled) {
+          verifiedValue = utils.getElement(settingValue);
+
+          if (!verifiedValue) {
+            utils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
+          }
+        }
+        break;
+      case 'hotKeyCode':
+        if (typeof +settingValue === 'number') {
+          verifiedValue = +settingValue;
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set keyCode number');
+        }
+        break;
+      case 'usageInstruction':
+        if (typeof settingValue === 'string' && settingValue.length) {
+          verifiedValue = settingValue;
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set not empty string');
+        }
+        break;
+      case 'getItemsCurrentOrderDesc':
+        if (typeof settingValue === 'function') {
+          verifiedValue = settingValue;
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set function');
         }
         break;
       default:

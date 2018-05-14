@@ -534,17 +534,19 @@ class DefaultDndElement {
     this.constructor.ID_UNIQUE_COUNTER++;
 
     this.keyboardDescElement = utils.createHTML({
-      html: `${this.initAriaKeyboardAccessDesc}`,
+      html: '',
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC }
     });
+    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC, true);
 
     this.currentStateDescElement = utils.createHTML({
-      html: `${this.initAriaElementDesc}`,
+      html: '',
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC }
     });
+    this.currentAriaState = this.initAriaElementDesc;
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC, true);
   }
 

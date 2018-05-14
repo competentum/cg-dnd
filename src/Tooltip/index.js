@@ -203,6 +203,10 @@ class Tooltip {
   hide() {
     this.node.style.display = 'none';
   }
+
+  isVisible() {
+    return this.node.style.display !== 'none';
+  }
 }
 
 export default Tooltip;
