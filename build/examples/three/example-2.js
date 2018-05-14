@@ -45,10 +45,24 @@
     bounds: '#dnd-2',
     shiftDragItems: true,
     commonDragItemsSettings: {
-      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it'
+      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.'
     },
     selectedDragItemClassName: 'selected-item',
     container: '#second-example',
+    itemsOrderReadingParams: {
+      enabled: true,
+      liveTextElement: liveRegion,
+      usageInstruction: ' Press F2 to read current order of items. ',
+      getItemsCurrentOrderDesc: function (currentItems) {
+        var itemsOrderDesc = '';
+
+        currentItems.forEach(function (item, index) {
+          itemsOrderDesc += item.getSetting('ariaLabel') + ' has position ' + (index + 1) + ' of ' + currentItems.length + '. ';
+        });
+
+        return itemsOrderDesc;
+      }
+    },
     dragItems: [
       {
         node: '#drag-item-2-4',
@@ -142,15 +156,5 @@
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
     setLiveText(RESET_MESSAGE);
-  });
-
-  dnd.dragItems.forEach(function (item) {
-    item.node.addEventListener('focus', function () {
-      dnd.tooltip.show(item);
-    });
-
-    item.node.addEventListener('focusout', function () {
-      dnd.tooltip.hide();
-    });
   });
 })();

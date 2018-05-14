@@ -49,10 +49,14 @@
       className: 'custom-tooltip',
     },
     commonDragItemsSettings: {
-      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it'
+      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.'
     },
     selectedDragItemClassName: 'selected-item',
     container: '#first-example',
+    itemsOrderReadingParams: {
+      enabled: true,
+      liveTextElement: liveRegion
+    },
     dragItems: [
       {
         node: '#drag-item-4',

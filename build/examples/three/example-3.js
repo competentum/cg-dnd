@@ -47,6 +47,10 @@
       initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it'
     },
     selectedDragItemClassName: 'selected-item',
+    itemsOrderReadingParams: {
+      enabled: true,
+      liveTextElement: liveRegion
+    },
     dragItems: [
       {
         node: '#drag-item-3-4',
@@ -113,7 +117,7 @@
     },
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem !== params.dragItem && !params.chosenDraggedItem.disabled && !params.dragItem.disabled) {
-        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
+        this.shuffleDragItems(params.dragItem, params.chosenDraggedItem);
       }
     },
   };
