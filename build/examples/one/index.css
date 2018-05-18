@@ -8,17 +8,20 @@
 .with-handler {
   display: flex;
   position: relative;
+  padding: 0;
+  width: auto !important;
 }
 
 .with-handler .handler {
-  align-items: center;
-  display: flex;
+  flex: 1;
   background-color: red;
-  position: absolute;
-  right: 0;
-  height: 100%;
-  top: 0;
   cursor: pointer;
+  padding: 10px 0 10px 0;
+}
+
+.with-handler .not-handle-part {
+  flex: 1;
+    padding: 10px 0 10px 5px;
 }
 
 .transparent-drop-area {
