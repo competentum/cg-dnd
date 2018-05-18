@@ -102,12 +102,12 @@
 
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dropArea.checkAccept(params.dragItem);
+      }
 
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        } else {
-          checkButton.focus();
-        }
+      if (params.remainingDragItems[0]) {
+        params.remainingDragItems[0].focus();
+      } else {
+        checkButton.focus();
       }
     },
     onCreate: function (dndObj) {
@@ -141,9 +141,12 @@
         areIncorrectItemsExist = true;
       }
     });
+
+    dnd.remainingFirstDragItem.focus();
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
+    dnd.remainingFirstDragItem.focus();
   });
 })();
