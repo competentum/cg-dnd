@@ -11,7 +11,7 @@
       ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
       ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART = 'Press space or double touch to stay ',
       UNLIMITED_COUNT_DESC = 'This area accept an unlimited items count. ',
-      RESET_MESSAGE = 'Activity was reset';
+      RESET_MESSAGE = 'Activity was reset! ';
 
   function changeDropAreaAriaDescriptions(dropArea, previousDropArea) {
     if (dropArea.innerDragItems.length) {
@@ -242,7 +242,7 @@
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
-    setLiveText(RESET_MESSAGE);
+    dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
   });
 
   dnd.dropAreas.forEach(function (area) {

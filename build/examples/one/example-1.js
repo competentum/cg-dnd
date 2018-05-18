@@ -7,7 +7,7 @@
       FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
       INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
-      RESET_MESSAGE = 'Activity was reset';
+      RESET_MESSAGE = 'Activity was reset! ';
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
     var draggedItemLabel = draggedItem.getSetting('ariaLabel');
@@ -165,7 +165,7 @@
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: 'correct-item' });
-    setLiveText(RESET_MESSAGE);
+    dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
   });
 
   function showTooltip() {

@@ -14,7 +14,7 @@
       ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART = 'Press space or double touch to stay ',
       FILLED_DROP_AREA_KEYBOARD_DESC = 'Choose another empty drop area',
       FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ',
-      RESET_MESSAGE = 'Activity was reset';
+      RESET_MESSAGE = 'Activity was reset! ';
 
   function getKeyboardDescForEmptyAreaDuringDragging(dragItemLabel) {
     return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel + ' inside. ';
@@ -222,7 +222,7 @@
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
-    setLiveText(RESET_MESSAGE);
+    dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
   });
 
   disableSwitcher.addEventListener('change', function () {

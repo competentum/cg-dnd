@@ -7,7 +7,7 @@
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
       INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
-      RESET_MESSAGE = 'Activity was reset';
+      RESET_MESSAGE = 'Activity was reset! ';
 
   function changeNotSelectedItemsAriaDesc(dragItems, chosenItem) {
     var chosenItemLabel = chosenItem.getSetting('ariaLabel');
@@ -148,7 +148,14 @@
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
-    setLiveText(RESET_MESSAGE);
+    dnd.reset({
+      removedClassName: CORRECT_ITEM_CLASSNAME,
+      afterAnimationCB: function () {
+        /**
+         * We call focus after reset end, because on touch devices DOM-root was rebuilding
+         */
+        dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
+      }
+    });
   });
 })();

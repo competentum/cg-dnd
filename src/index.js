@@ -1592,9 +1592,15 @@ class CgDnd extends EventEmitter {
       item.reset({
         coordinates: this.initDragItemsPlaces[index],
         removedClassName: params.removedClassName,
-        afterAnimationCB: () => this.remainingDragItems.forEach((item, index) => {
-          this._updateNodeDOMPosition(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
-        })
+        afterAnimationCB: () => {
+          utils.IS_TOUCH && this._updateNodeDOMPosition(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
+          /**
+           * After last item's animation end we call user callback
+           */
+          if (index === this.dragItems.length - 1 && params.afterAnimationCB) {
+            params.afterAnimationCB();
+          }
+        }
       });
     });
 
@@ -1617,10 +1623,9 @@ class CgDnd extends EventEmitter {
         this._excludeElementFromArray(this.remainingDragItems, item);
         item.disable();
       });
-      this.remainingFirstDragItem = this.remainingDragItems.length ? this.remainingDragItems[0] : null;
-    } else {
-      this.remainingFirstDragItem = null;
     }
+
+    this.remainingFirstDragItem = this.remainingDragItems.length ? this.remainingDragItems[0] : null;
   }
 
   /**

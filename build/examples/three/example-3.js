@@ -4,7 +4,8 @@
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       DRAG_START_ITEMS_KEYBOARD_DESC = 'Press space or double touch to replace this item by ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
-      CORRECT_ITEM_KEYBOARD_DESC = 'Use arrow keys or swipes to choose another item';
+      CORRECT_ITEM_KEYBOARD_DESC = 'Use arrow keys or swipes to choose another item',
+      RESET_MESSAGE = 'Activity was reset! ';
 
   function changeNotSelectedItemsAriaDesc(dragItems, chosenItem) {
     var chosenItemLabel = chosenItem.getSetting('ariaLabel');
@@ -125,6 +126,14 @@
   var dnd = new CgDnd(settings);
 
   resetButton.addEventListener('click', function () {
-    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
+    dnd.reset({
+      removedClassName: CORRECT_ITEM_CLASSNAME,
+      afterAnimationCB: function () {
+        /**
+         * We call focus after reset end, because on touch devices DOM-root was rebuilding
+         */
+        dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
+      }
+    });
   });
 })();
