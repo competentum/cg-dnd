@@ -406,10 +406,12 @@ class CgDnd extends EventEmitter {
     const pageX = e.pageX || e.touches[0].pageX;
     const pageY = e.pageY || e.touches[0].pageY;
 
-    if (e.movementX !== undefined && e.movementY !== undefined) {
-      this.isClick = !e.movementX && !e.movementY;
-    } else {
-      this.isClick = pageX === this.currentDragParams.initPosition.x && pageY === this.currentDragParams.initPosition.y;
+    if (this.isClick) {
+      if (e.movementX !== undefined && e.movementY !== undefined) {
+        this.isClick = !e.movementX && !e.movementY;
+      } else {
+        this.isClick = pageX === this.currentDragParams.initPosition.x && pageY === this.currentDragParams.initPosition.y;
+      }
     }
 
     if (!this.isClick) {
