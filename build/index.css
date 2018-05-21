@@ -96,7 +96,7 @@ a {
 }
 
 .selected-item {
-    background-color: #2f21db;
+    background-color: #2f21db !important;
 }
 
 .disabled, button:disabled {

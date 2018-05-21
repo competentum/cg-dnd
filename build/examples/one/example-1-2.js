@@ -21,6 +21,7 @@
     bounds: '#second-example',
     forbidFocusOnFilledDropAreas: true,
     container: '#second-example',
+    selectedDragItemClassName: 'selected-item',
     commonDropAreasSettings: {
       initAriaElementDesc: 'Area is empty. '
     },

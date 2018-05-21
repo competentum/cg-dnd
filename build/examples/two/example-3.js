@@ -9,6 +9,7 @@
     bounds: '#third-example',
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
+    selectedDragItemClassName: 'selected-item',
     commonDropAreasSettings: {
       maxItemsInDropArea: 0,
       snapAlignParams: {
