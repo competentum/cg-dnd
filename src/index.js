@@ -384,7 +384,7 @@ class CgDnd extends EventEmitter {
         ? utils.getElementPosition(this.settings.bounds)
         : this.settings.bounds;
 
-      this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
+      this._removeCurrentDraggedItemSelection();
       this.currentDragParams = {
         draggedItem: item,
         currentBounds: utils.calculateCurrentBounds(box, boundsParams, pageX, pageY),
@@ -569,7 +569,7 @@ class CgDnd extends EventEmitter {
        * Check for android - is click event was fired on dragItem or dropArea (if dragItem is placed on the center of dropArea)
        */
       if (!item.disabled && (!utils.IS_TOUCH || (utils.IS_TOUCH && !item.ariaHidden))) {
-        this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
+        this._removeCurrentDraggedItemSelection();
         this.currentDragParams = {
           draggedItem: item,
           /**
@@ -632,7 +632,7 @@ class CgDnd extends EventEmitter {
         this._forbidTabletsFocusForRemainingDragItems();
       }
 
-      this.currentDragParams && this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
+      this._removeCurrentDraggedItemSelection();
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
         dropArea: area,
         droppedItems: area.innerDragItems,
@@ -856,11 +856,7 @@ class CgDnd extends EventEmitter {
 
     this._allowTabletsFocusForRemainingDragItems();
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);
-
-    if (this.currentDragParams) {
-      this.currentDragParams.draggedItem.ariaGrabbed = false;
-      this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
-    }
+    this._removeCurrentDraggedItemSelection();
 
     if (this.allowedDropAreas) {
       this.allowedDropAreas.forEach((area) => {
@@ -1535,6 +1531,9 @@ class CgDnd extends EventEmitter {
     } else {
       this._resetOnlyDragItemsCase(params);
     }
+
+    this._removeCurrentDraggedItemSelection();
+    this.currentDragParams = null;
   }
 
   resetIncorrectItems() {
@@ -1550,6 +1549,16 @@ class CgDnd extends EventEmitter {
           this.firstAllowedDropArea.tabIndex = -1;
         }
       }
+    }
+
+    this._removeCurrentDraggedItemSelection();
+    this.currentDragParams = null;
+  }
+
+  _removeCurrentDraggedItemSelection() {
+    if (this.currentDragParams) {
+      this.currentDragParams.draggedItem.ariaGrabbed = false;
+      this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
     }
   }
 
@@ -1657,6 +1666,8 @@ class CgDnd extends EventEmitter {
     }
 
     this.remainingFirstDragItem = this.remainingDragItems.length ? this.remainingDragItems[0] : null;
+    this._removeCurrentDraggedItemSelection();
+    this.currentDragParams = null;
   }
 
   /**
