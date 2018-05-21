@@ -224,12 +224,13 @@ class DragItem extends DefaultDndElement {
 
       /**
        * Transitionend event handler for disabling animation, when it was finished
+       * @param {Object} e - transitionend-event object
        */
-      const transitionEndListener = () => {
+      const transitionEndListener = (e) => {
         this.node.style.transition = '';
         this.coordinates.current.update();
         this.node.removeEventListener('transitionend', transitionEndListener);
-        animationEndCallback();
+        animationEndCallback(e);
         cgUtils.removeClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
       };
 
@@ -270,8 +271,11 @@ class DragItem extends DefaultDndElement {
    * @public
    */
   reset(params = { _shiftRemainingItems: true }) {
-    this.translateTo(params.coordinates || this.coordinates.currentStart, true, () => {
-      this.coordinates.currentStart.update();
+    this.translateTo(params.coordinates || this.coordinates.currentStart, true, (e) => {
+      /**
+       * If animation was broken by user mousedown-event, we don't update current start coordinates
+       */
+      !e.isAnimationAbortedByUser && this.coordinates.currentStart.update();
 
       if (params.afterAnimationCB) {
         params.afterAnimationCB();
@@ -417,6 +421,8 @@ class DragItem extends DefaultDndElement {
     const event = document.createEvent('Event');
 
     event.initEvent('transitionend', true, true);
+    event.isAnimationAbortedByUser = true;
+
     this.node.dispatchEvent(event);
   }
 
