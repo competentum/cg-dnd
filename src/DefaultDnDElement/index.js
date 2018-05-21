@@ -40,8 +40,16 @@ class DefaultDndElement {
     };
   }
 
+  static get DND_CLASS() {
+    return 'cg-dnd';
+  }
+
   static get DND_ELEM_KIND() {
     return 'drag-item';
+  }
+
+  static get CG_ELEM_CLASS() {
+    return `${this.DND_CLASS}-${this.DND_ELEM_KIND}`;
   }
 
   static get ID_UNIQUE_COUNTER() {
@@ -339,6 +347,7 @@ class DefaultDndElement {
     }
 
     this.tabIndex = -1;
+    this.addClass(this.constructor.CG_ELEM_CLASS);
   }
 
   disable() {

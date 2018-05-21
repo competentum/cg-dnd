@@ -187,7 +187,8 @@ class CgDnd extends EventEmitter {
       this._STANDARD_EVENTS = {
         KEYDOWN: 'keydown',
         KEYUP: 'keyup',
-        CLICK: 'click'
+        CLICK: 'click',
+        BLUR: 'focusout'
       };
     }
 
@@ -328,11 +329,13 @@ class CgDnd extends EventEmitter {
       item.onKeyDownHandler = this._onKeyDown.bind(this, item);
       item.onKeyUpHandler = this._onKeyUp.bind(this, item);
       item.onClickHandler = this._onDragItemClick.bind(this, item);
+      item.onBlurHandler = this._onBlur.bind(this, item);
 
       item.handler.addEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, item.onKeyDownHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYUP, item.onKeyUpHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, item.onClickHandler);
+      item.node.addEventListener(this.constructor.STANDARD_EVENTS.BLUR, item.onBlurHandler);
     });
 
     if (this.dropAreas) {
@@ -340,10 +343,12 @@ class CgDnd extends EventEmitter {
         area.onKeyDownHandler = this._onKeyDown.bind(this, area);
         area.onKeyUpHandler = this._onKeyUp.bind(this, area);
         area.onClickHandler = this._onDropAreaClick.bind(this, area);
+        area.onBlurHandler = this._onBlur.bind(this);
 
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, area.onKeyDownHandler);
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYUP, area.onKeyUpHandler);
         area.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, area.onClickHandler);
+        area.node.addEventListener(this.constructor.STANDARD_EVENTS.BLUR, area.onBlurHandler);
       });
     }
 
@@ -524,6 +529,26 @@ class CgDnd extends EventEmitter {
       this.isClick = true;
       item.select();
     }
+  }
+
+  /**
+   * Set tabindex="0" for first allowed drop area, when drag element is selected and drop area lose focus
+   * @param {Object} e - focusout-event
+   * @private
+   */
+  _onBlur(e) {
+    if (this.currentDragParams && this.firstAllowedDropArea && !this.isFocusOnDropArea(e)) {
+      this.firstAllowedDropArea.tabIndex = 0;
+    }
+  }
+
+  /**
+   * Check, is next focused element has dropArea css-class
+   * @param {Object} e - focusout-event
+   * @return {boolean} result
+   */
+  isFocusOnDropArea(e) {
+    return e.relatedTarget && e.relatedTarget.classList.contains(DropArea.CG_ELEM_CLASS);
   }
 
   /**
@@ -921,6 +946,10 @@ class CgDnd extends EventEmitter {
       });
     } else {
       this._updateElementSiblings(element, this.allowedDropAreas, this.firstAllowedDropArea, (area) => {
+        if (this.firstAllowedDropArea) {
+          this.firstAllowedDropArea.tabIndex = -1;
+        }
+
         this.firstAllowedDropArea = area;
       });
     }
