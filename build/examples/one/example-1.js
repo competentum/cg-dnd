@@ -111,18 +111,20 @@
     onDragStop: function (e, params) {
       dnd.dragItems.forEach(function (item) {item.resetKeyboardDesc()});
 
-      if (params.dragItem && params.dropArea) {
+      if (params.dropArea) {
         if (params.dragItem.data === params.dropArea.data) {
           params.dragItem.correct = true;
         }
 
         changeFilledDropAreaDesc(params.dropArea);
-      }
 
-      if (params.remainingDragItems[0]) {
-        params.remainingDragItems[0].focus();
+        if (params.remainingDragItems[0]) {
+          params.remainingDragItems[0].focus();
+        } else {
+          checkButton.focus();
+        }
       } else {
-        checkButton.focus();
+        params.dragItem.focus();
       }
     },
     onCreate: function (dndObj) {

@@ -686,12 +686,13 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _onDragItemDroppedOnDropArea(params) {
-    const { dragItem, dropArea, isSameDropArea, _shiftRemainingItems } = params;
+    const { dragItem, dropArea, isSameDropArea, _shiftRemainingItems, replacedDragItem } = params;
 
     const forUserArgs = {
       dragItem,
       dropArea,
-      remainingDragItems: this.remainingDragItems
+      remainingDragItems: this.remainingDragItems,
+      replacedDragItem
     };
 
     if (isSameDropArea) {

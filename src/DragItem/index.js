@@ -348,12 +348,14 @@ class DragItem extends DefaultDndElement {
    * @public
    */
   putIntoDropArea(params) {
-    const { dropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}, _shiftRemainingItems = true } = params;
+    const { dropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}, _shiftRemainingItems = true,
+            replacedDragItem } = params;
     const paramsForCheck = {
       dragItem: this,
       dropArea,
       isSameDropArea: true,
-      _shiftRemainingItems
+      _shiftRemainingItems,
+      replacedDragItem
     };
 
     if (this.chosenDropArea && this.chosenDropArea === dropArea) {
@@ -380,33 +382,41 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Replace two drag items between themselves
-   * @param {dragItem} replacedDragItem - second replaced drag item
+   * @param {dragItem} replaceByDragItem - drag item, which replace current drag item
    */
-  replaceBy(replacedDragItem) {
+  replaceBy(replaceByDragItem) {
     const firstItemDropArea = this.chosenDropArea;
-    const secondItemDropArea = replacedDragItem.chosenDropArea;
+    const secondItemDropArea = replaceByDragItem.chosenDropArea;
 
     /**
      * We don't call remaining items aligning after first item replacing by {_shiftRemainingItems: false}
      */
     if (firstItemDropArea) {
       firstItemDropArea.removeDragItem(this);
-      replacedDragItem.putIntoDropArea({
+      replaceByDragItem.putIntoDropArea({
         dropArea: firstItemDropArea,
-        _shiftRemainingItems: false
+        _shiftRemainingItems: false,
+        replacedDragItem: this
       });
     } else {
-      replacedDragItem.reset({
+      replaceByDragItem.reset({
         from: secondItemDropArea,
-        _shiftRemainingItems: false
+        _shiftRemainingItems: false,
+        replacedDragItem: this
       });
     }
 
     if (secondItemDropArea) {
-      secondItemDropArea.removeDragItem(replacedDragItem);
-      this.putIntoDropArea({ dropArea: secondItemDropArea });
+      secondItemDropArea.removeDragItem(replaceByDragItem);
+      this.putIntoDropArea({
+        dropArea: secondItemDropArea,
+        replacedDragItem: this
+      });
     } else {
-      this.reset({ from: firstItemDropArea });
+      this.reset({
+        from: firstItemDropArea,
+        replacedDragItem: this
+      });
     }
   }
 

@@ -163,6 +163,8 @@
     },
     onDragStop: function (e, params) {
       params.dragItem.removeClass(CORRECT_ITEM_CLASSNAME);
+      params.replacedDragItem && params.replacedDragItem.removeClass(CORRECT_ITEM_CLASSNAME);
+
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
@@ -175,7 +177,21 @@
         }
       }
 
-      if (params.remainingDragItems[0]) {
+      if (params.replacedDragItem) {
+        /**
+         * Use setTimeout, that transition was set and focus will be set after animation end, otherwise NVDA reads aria-label twice
+         */
+        setTimeout(function () {
+          if (params.replacedDragItem.chosenDropArea) {
+            /**
+             * When we replace drag items, which both are dropped
+             */
+            params.chosenDropArea.focus();
+          } else {
+            params.replacedDragItem.focus();
+          }
+        }, 0);
+      } else if (params.remainingDragItems[0]) {
         params.remainingDragItems[0].focus();
       } else {
         checkButton.focus();
