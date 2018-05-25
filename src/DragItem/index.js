@@ -242,15 +242,6 @@ class DragItem extends DefaultDndElement {
          * Transitionend event doesn't called, if duration = 0. So we call this handler manually
          */
         transitionEndListener();
-      } else {
-        /**
-         * Sometimes, 'transitionend' event doesn't fired, then we fire it manually
-         */
-        setTimeout(() => {
-          if (this.hasTransition()) {
-            this.breakTransition();
-          }
-        }, animProps.duration);
       }
 
     } else {
