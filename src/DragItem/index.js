@@ -209,6 +209,7 @@ class DragItem extends DefaultDndElement {
     const animProps = merge({}, this.animationParams, animateParams);
     const left = coords.left - this.coordinates.default.left;
     const top = coords.top - this.coordinates.default.top;
+    let timeoutId;
 
     cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
 
@@ -227,6 +228,7 @@ class DragItem extends DefaultDndElement {
        * @param {Object} e - transitionend-event object
        */
       const transitionEndListener = (e) => {
+        timeoutId && clearTimeout(timeoutId);
         this.node.style.transition = '';
         this.coordinates.current.update();
         this.node.removeEventListener('transitionend', transitionEndListener);
@@ -242,6 +244,15 @@ class DragItem extends DefaultDndElement {
          * Transitionend event doesn't called, if duration = 0. So we call this handler manually
          */
         transitionEndListener();
+      } else {
+        /**
+         * Sometimes, 'transitionend' event doesn't fired, then we fire it manually
+         */
+        timeoutId = setTimeout(() => {
+          if (this.hasTransition()) {
+            this.breakTransition();
+          }
+        }, animProps.duration);
       }
 
     } else {
