@@ -101,14 +101,16 @@
     onDragStop: function (e, params) {
       params.dragItem.removeClass(CORRECT_ITEM_CLASSNAME);
 
-      if (params.dragItem && params.dropArea) {
+      if (params.dropArea) {
         params.dragItem.correct = params.dropArea.checkAccept(params.dragItem);
-      }
 
-      if (params.remainingDragItems[0]) {
-        params.remainingDragItems[0].focus();
+        if (params.remainingDragItems[0]) {
+          params.remainingDragItems[0].focus();
+        } else {
+          checkButton.focus();
+        }
       } else {
-        checkButton.focus();
+        params.dragItem.focus();
       }
     },
     onCreate: function (dndObj) {

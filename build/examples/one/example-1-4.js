@@ -115,7 +115,7 @@
           setTimeout(function () {
             params.dragItem.reset();
             params.dragItem.removeClass('incorrect-item');
-            params.remainingDragItems[0].focus({
+            params.dragItem.focus({
               delay: visuallyDelay,
               liveText: INCORRECT_MESSAGE
             });

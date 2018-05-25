@@ -100,8 +100,16 @@
     },
     onDragStop: function (e, params) {
       console.log('stop')
-      if (params.dragItem && params.dropArea) {
+      if (params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
+
+        if (params.remainingDragItems[0]) {
+          params.remainingDragItems[0].focus();
+        } else {
+          checkButton.focus();
+        }
+      } else {
+        params.dragItem.focus();
       }
     },
     onCreate: function (dndObj) {
@@ -112,15 +120,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
-
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        } else {
-          checkButton.focus();
-        }
-      } else if (params.droppedItems.length) {
-        params.droppedItems[0].focus();
+        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea, callCheckAfterAnimationEnd: true });
       }
     }
   };
