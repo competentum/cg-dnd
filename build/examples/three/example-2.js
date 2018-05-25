@@ -4,6 +4,7 @@
       resetButton = exampleContainer.querySelector('.reset-btn'),
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
+      ALL_INCORRECT_MESSAGE = 'All items are incorrect! Try again. ',
       INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
       DRAG_START_ITEMS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
@@ -33,13 +34,40 @@
     item.changeCurrentAriaState(function () { return CORRECT_ITEM_ARIA_DESC + item.currentAriaState});
   }
 
-  function checkOnCorrect(item, correctItemsArray) {
-    item.correct = item.index === item.data;
+  function getCurrentResultMessage(reamainingItems, items) {
+    if (!reamainingItems.length) {
+      items.forEach(function (item) { item.addClass(CORRECT_ITEM_CLASSNAME) });
 
-    if (item.correct) {
-      correctItemsArray.push(item);
+      return {
+        message: ALL_CORRECT_MESSAGE,
+        isAllCorrect: true
+      };
     }
+
+    if (reamainingItems.length === items.length) {
+      return { message: ALL_INCORRECT_MESSAGE };
+    }
+
+    var copy = items.slice(),
+        correctMessagePart = ' Correct items are: ',
+        incorrectMessagePart = ' Incorrect items are: ',
+        commonItemsCount = items.length;
+
+    copy.sort(function (item1, item2) {
+      return item1.index > item2.index;
+    });
+
+    copy.forEach(function (item) {
+      if (item.correct) {
+        correctMessagePart += item.getSetting('ariaLabel') + ' - position ' + (item.index + 1) + ' of ' + commonItemsCount + ', ';
+      } else {
+        incorrectMessagePart += item.getSetting('ariaLabel') + ' - position ' + (item.index + 1) + ' of ' + commonItemsCount + ', ';
+      }
+    });
+
+    return { message: correctMessagePart + '. ' + incorrectMessagePart + '. ' };
   }
+
 
   var settings = {
     bounds: '#dnd-2',
@@ -110,9 +138,6 @@
       dnd.dragItems.forEach(function (item) {item.resetKeyboardDesc()});
 
       if (params.dragItem1 && params.dragItem2) {
-        checkOnCorrect(params.dragItem1, correctItems);
-        checkOnCorrect(params.dragItem2, correctItems);
-
         updateItemsDescriptions();
       }
     },
@@ -133,23 +158,18 @@
   var correctItems = [];
 
   checkButton.addEventListener('click', function () {
-    var areIncorrectItemsExist = false;
-
-    dnd.dragItems.forEach(function (item) {
+    dnd.dragItems.forEach(function(item) {
       item.correct = item.index === item.data;
-
-      if (item.correct) {
-        item.addClass(CORRECT_ITEM_CLASSNAME);
-      } else if (!areIncorrectItemsExist) {
-        areIncorrectItemsExist = true;
-      }
+      item.correct && item.addClass(CORRECT_ITEM_CLASSNAME);
     });
     dnd.disableFocusOnCorrectItems();
 
-    if (areIncorrectItemsExist) {
-      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems);
+
+    if (result.isAllCorrect) {
+      setLiveText(result.message);
     } else {
-      setLiveText(ALL_CORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: result.message });
     }
   });
 

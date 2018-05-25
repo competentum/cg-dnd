@@ -209,6 +209,7 @@ class DragItem extends DefaultDndElement {
     const animProps = merge({}, this.animationParams, animateParams);
     const left = coords.left - this.coordinates.default.left;
     const top = coords.top - this.coordinates.default.top;
+    const CUSTOM_TRANSITION_END_DELAY_TOLERANCE = 100;
     let timeoutId;
 
     cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
@@ -252,7 +253,7 @@ class DragItem extends DefaultDndElement {
           if (this.hasTransition()) {
             this.breakTransition();
           }
-        }, animProps.duration);
+        }, animProps.duration + CUSTOM_TRANSITION_END_DELAY_TOLERANCE);
       }
 
     } else {
