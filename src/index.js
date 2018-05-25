@@ -85,9 +85,9 @@ class CgDnd extends EventEmitter {
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
-        selectedDragItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
         commonDragItemsSettings: {
           handler: '',
+          selectedItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
           initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
                                       + ' then press space button or make double touch to select it',
           initAriaElementDesc: '',
@@ -578,7 +578,7 @@ class CgDnd extends EventEmitter {
           chosenDraggedItem: this.currentDragParams ? this.currentDragParams.chosenDraggedItem : item
         };
         this.currentDragParams.draggedItem.ariaGrabbed = true;
-        this.currentDragParams.draggedItem.addClass(this.settings.selectedDragItemClassName);
+        this.currentDragParams.draggedItem.selected = true;
 
         /**
          * Add copy of currentDragParams, which will be needed, when we try replace drag items,
@@ -1413,7 +1413,6 @@ class CgDnd extends EventEmitter {
         verifiedValue.setAttribute('role', 'application');
         break;
       case 'disabledClassName':
-      case 'selectedDragItemClassName':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
         } else {
@@ -1559,7 +1558,7 @@ class CgDnd extends EventEmitter {
   _removeCurrentDraggedItemSelection() {
     if (this.currentDragParams) {
       this.currentDragParams.draggedItem.ariaGrabbed = false;
-      this.currentDragParams.draggedItem.removeClass(this.settings.selectedDragItemClassName);
+      this.currentDragParams.draggedItem.selected = false;
     }
   }
 

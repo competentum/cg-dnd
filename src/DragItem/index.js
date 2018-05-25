@@ -69,6 +69,10 @@ class DragItem extends DefaultDndElement {
     };
   }
 
+  static get SELECTED_ITEM_LABEL() {
+    return 'Selected. ';
+  }
+
   constructor(settings, dndEmitterFunc) {
     super(settings);
 
@@ -149,6 +153,28 @@ class DragItem extends DefaultDndElement {
     return this._keyboardDescPostfix;
   }
 
+  set selected(flag) {
+    const selectedLabel = this.constructor.SELECTED_ITEM_LABEL;
+
+    if (flag) {
+      const currentAriaLabel = this.ariaLabel;
+
+      this.addClass(this.selectedItemClassName);
+      this.ariaLabel = `${selectedLabel}${currentAriaLabel}`;
+      this._selected = true;
+    } else {
+      const selectedRegExp = new RegExp(`^${selectedLabel}`);
+
+      this.removeClass(this.selectedItemClassName);
+      this.ariaLabel = this.ariaLabel.replace(selectedRegExp, '');
+      this._selected = false;
+    }
+  }
+
+  get selected() {
+    return this._selected;
+  }
+
   _checkSetting(settingName, settingValue) {
     let verifiedValue;
     const sheckingSetting = super._checkSetting(settingName, settingValue);
@@ -188,6 +214,13 @@ class DragItem extends DefaultDndElement {
           verifiedValue = settingValue;
         } else {
           utils.showSettingError(settingName, settingValue, `Please string of ${settingName}.`);
+        }
+        break;
+      case 'selectedItemClassName':
+        if (typeof settingValue === 'string') {
+          verifiedValue = settingValue.replace(/^\./, '');
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }
         break;
       default:

@@ -5,6 +5,7 @@
       DRAG_START_ITEMS_KEYBOARD_DESC = 'Press space or double touch to replace this item by ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
       CORRECT_ITEM_KEYBOARD_DESC = 'Use arrow keys or swipes to choose another item',
+      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
       RESET_MESSAGE = 'Activity was reset! ';
 
   function changeNotSelectedItemsAriaDesc(dragItems, chosenItem) {
@@ -40,14 +41,25 @@
       setCorrectDesc(item);
     }
   }
+  function areAllItemsCorrect(items) {
+    var areCorrect = true;
+
+    items.forEach(function (item) {
+      if (!item.correct) {
+        areCorrect = false;
+      }
+    });
+
+    return areCorrect;
+  };
 
   var settings = {
     bounds: '#dnd-3',
     container: '#third-example',
     commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item',
       initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it'
     },
-    selectedDragItemClassName: 'selected-item',
     itemsOrderReadingParams: {
       enabled: true,
       liveTextElement: liveRegion
@@ -95,6 +107,10 @@
       item.resetAriaStateDesc();
       item.resetKeyboardDesc();
       changeNotSelectedItemsAriaDesc(dnd.dragItems, item);
+
+      if (!DEVICES.IS_FF && item === dnd.currentDragParams.chosenDraggedItem) {
+        setLiveText('selected');
+      }
     },
     onDragMove: function (e, item) {
     },
@@ -108,6 +124,12 @@
         replaceItemsDescriptions(params.dragItem1, params.dragItem2);
         checkOnCorrect(params.dragItem1);
         checkOnCorrect(params.dragItem2);
+      }
+
+      if (areAllItemsCorrect(dnd.dragItems)) {
+        setTimeout(function () {
+          setLiveText(ALL_CORRECT_MESSAGE, 'polite');
+        }, 500);
       }
     },
     onCreate: function (dndObj) {

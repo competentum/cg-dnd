@@ -103,7 +103,6 @@
     bounds: '#first-example',
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
-    selectedDragItemClassName: 'selected-item',
     commonDropAreasSettings: {
       maxItemsInDropArea: 0,
       snapAlignParams: {
@@ -115,6 +114,7 @@
       initAriaElementDesc: 'Area is empty. ' + UNLIMITED_COUNT_DESC,
     },
     commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item',
       initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose other drag items, then press spase or double touch to drag it. '
     },
     container: '#first-example',

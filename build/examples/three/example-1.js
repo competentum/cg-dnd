@@ -76,6 +76,7 @@
       className: 'custom-tooltip',
     },
     commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item',
       initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.'
     },
     selectedDragItemClassName: 'selected-item',
@@ -123,6 +124,10 @@
     ],
     onDragStart: function (e, item) {
       changeNotSelectedItemsAriaDesc(dnd.dragItems, item);
+
+      if (!DEVICES.IS_FF && item === dnd.currentDragParams.chosenDraggedItem) {
+        setLiveText('selected');
+      }
     },
     onDragMove: function (e, item) {
     },

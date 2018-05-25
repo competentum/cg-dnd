@@ -77,7 +77,9 @@
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
     container: '#third-example',
-    selectedDragItemClassName: 'selected-item',
+    commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item'
+    },
     commonDropAreasSettings: {
       maxItemsInDropArea: 1,
       snapAlignParams: {

@@ -32,9 +32,9 @@
     bounds: '#first-example',
     alignRemainingDragItems: true,
     container: '#first-example',
-    selectedDragItemClassName: 'selected-item',
     commonDragItemsSettings: {
-      handler: '.handler'
+      handler: '.handler',
+      selectedItemClassName: 'selected-item',
     },
     commonDropAreasSettings: {
       initAriaElementDesc: 'Area is empty. '

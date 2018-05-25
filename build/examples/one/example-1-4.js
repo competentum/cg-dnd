@@ -19,7 +19,9 @@
     alignRemainingDragItems: true,
     forbidFocusOnFilledDropAreas: true,
     container: '#fourth-example',
-    selectedDragItemClassName: 'selected-item',
+    commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item'
+    },
     dragItems: [
       {
         node: '#drag-item-4-1',

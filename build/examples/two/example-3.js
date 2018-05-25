@@ -18,6 +18,9 @@
         withDroppedItemCSSMargins: true
       },
     },
+    commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item',
+    },
     dragItems: [
       {
         node: '#drag-item-3-1',

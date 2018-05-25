@@ -8,13 +8,15 @@
     bounds: '#second-example',
     //bounds: [0, 0, 800, 600],
     alignRemainingDragItems: true,
-    selectedDragItemClassName: 'selected-item',
     commonDropAreasSettings: {
       snapAlignParams: {
         horizontalAlign: 'center',
         verticalAlign: 'top',
         withDroppedItemCSSMargins: true
       }
+    },
+    commonDragItemsSettings: {
+      selectedItemClassName: 'selected-item',
     },
     dragItems: [
       {
