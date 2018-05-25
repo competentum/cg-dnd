@@ -1,7 +1,8 @@
 (function () {
   var exampleContainer = document.getElementById('second-example'),
       checkButton = exampleContainer.querySelector('.check-btn'),
-      resetButton = exampleContainer.querySelector('.reset-btn');
+      resetButton = exampleContainer.querySelector('.reset-btn'),
+      CORRECT_ITEM_CLASSNAME = 'correct-item';
 
   var settings = {
     bounds: '#second-example',
@@ -99,7 +100,8 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      console.log('stop')
+      params.dragItem.removeClass(CORRECT_ITEM_CLASSNAME);
+
       if (params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
@@ -128,10 +130,15 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
+    dnd.dragItems.forEach(function (item) {
+      if (item.correct) {
+        item.addClass(CORRECT_ITEM_CLASSNAME);
+      }
+    });
     dnd.resetIncorrectItems();
   });
 
   resetButton.addEventListener('click', function () {
-    dnd.reset();
+    dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
   });
 })();
