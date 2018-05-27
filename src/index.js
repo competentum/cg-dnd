@@ -671,7 +671,7 @@ class CgDnd extends EventEmitter {
       const chosenDragItem = this._getIntersectedElement(this.dragItems,
                                                          (item) => dragItem !== item && this._checkIntersection(dragItem, item));
 
-      this.shuffleDragItems(dragItem, chosenDragItem);
+      this.shuffleDragItems(chosenDragItem, dragItem);
     }
   }
 
