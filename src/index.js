@@ -1646,12 +1646,15 @@ class CgDnd extends EventEmitter {
         coordinates: this.initDragItemsPlaces[index],
         removedClassName: params.removedClassName,
         afterAnimationCB: () => {
-          utils.IS_TOUCH && this._updateNodeDOMPosition(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
           /**
-           * After last item's animation end we call user callback
+           * After last item's animation end we change DOM-tree on touch devices (for screenreader right focus order) and call user callback
            */
-          if (index === this.dragItems.length - 1 && params.afterAnimationCB) {
-            params.afterAnimationCB();
+          if (index === this.dragItems.length - 1) {
+            utils.IS_TOUCH && this.dragItems.forEach((item, index) => {
+              this._updateNodeDOMPosition(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
+            });
+
+            params.afterAnimationCB && params.afterAnimationCB();
           }
         }
       });
