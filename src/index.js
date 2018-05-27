@@ -444,7 +444,20 @@ class CgDnd extends EventEmitter {
        * Some screenreaders (TB on android 7 for example) on touch devices fires touchstart and touchend events instead click-event
        * during double touch, then we call it here by hands. (TB on android 8 fires click-event during double touch, when TB is enabled)
        */
-      this.currentDragParams.draggedItem.node.click();
+      if (utils.IS_IPAD) {
+        /**
+         * VO on ipad doesn't read next focused element's aria description and role (if we set nextElement.focus() in this handler),
+         * if current element has touchstart-event handler. Therefore, we set delay.
+         */
+        const TOUCH_END_IOS_DELAY = 100;
+
+        setTimeout(() => {
+          this.currentDragParams.draggedItem.node.click();
+        }, TOUCH_END_IOS_DELAY);
+
+      } else {
+        this.currentDragParams.draggedItem.node.click();
+      }
     }
     e.preventDefault();
 
