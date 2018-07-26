@@ -140,7 +140,7 @@
     },
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem !== params.dragItem && !params.chosenDraggedItem.disabled && !params.dragItem.disabled) {
-        this.shuffleDragItems(params.dragItem, params.chosenDraggedItem);
+        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
       }
     },
   };

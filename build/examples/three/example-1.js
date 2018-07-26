@@ -147,7 +147,7 @@
     },
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem && params.dragItem !== params.chosenDraggedItem) {
-        this.shuffleDragItems(params.dragItem, params.chosenDraggedItem);
+        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
       }
     },
   };

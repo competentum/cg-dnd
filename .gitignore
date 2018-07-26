@@ -10,3 +10,5 @@ npm-debug.log*
 # Dependency directories
 node_modules
 bower_components
+/build/cg-dnd.js
+/build/cg-dnd.min.js

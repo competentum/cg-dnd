@@ -684,7 +684,7 @@ class CgDnd extends EventEmitter {
       const chosenDragItem = this._getIntersectedElement(this.dragItems,
                                                          (item) => dragItem !== item && this._checkIntersection(dragItem, item));
 
-      this.shuffleDragItems(chosenDragItem, dragItem);
+      this.shuffleDragItems(dragItem, chosenDragItem);
     }
   }
 
@@ -1150,22 +1150,19 @@ class CgDnd extends EventEmitter {
     utils.replaceArrayItems(this.remainingDragItems, dragItem1, dragItem2);
     this._replaceSiblings(this.remainingDragItems);
 
-    dragItem1.translateTo(secondItemStartCoordinates, true, () => this._updateDragItem(dragItem1, secondItemStartCoordinates));
     dragItem2.translateTo(firstItemStartCoordinates, true, () => this._updateDragItem(dragItem2, firstItemStartCoordinates));
-
-
-    if (utils.IS_TOUCH) {
+    dragItem1.translateTo(secondItemStartCoordinates, true, () => {
+      this._updateDragItem(dragItem1, secondItemStartCoordinates);
       /**
-       * We change DOM-tree for touch devices -> focus will be disappear, so we set it again
+       * We change DOM-tree for touch devices -> focus will be disappear, so we set it again after DOM updating
        */
-      dragItem2.focus();
-    } else {
-      /**
-       * Set focus, that screenreader will read element with it's new position
-       */
-      dragItem2.focus({ delay: 0 });
-    }
+      utils.IS_TOUCH && dragItem1.focus();
+    });
 
+    /**
+     * Set focus, that screenreader will read element with it's new position (delay = 0 for FF + NVDA)
+     */
+    !utils.IS_TOUCH && dragItem1.focus({ delay: 0 });
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
       dragItems: this.dragItems,
@@ -1206,14 +1203,9 @@ class CgDnd extends EventEmitter {
 
     if (utils.IS_TOUCH) {
       /**
-       * We change DOM-tree for right focus by touch screenreaders, like TalkBack or VoiceOver
+       * We change DOM-tree for right sequent focus by touch screenreaders, like TalkBack or VoiceOver.
        */
-      this._updateAllNodesDOMPositions([...this.dragItems]);
-
-      /**
-       * We change DOM-tree for touch devices -> focus will disappear, so we set it again
-       */
-      dragItem.focus();
+      this._updateAllNodesDOMPositions([...this.dragItems], () => dragItem.focus());
     } else {
       this.remainingDragItems.forEach((item) => {
         item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
@@ -1257,9 +1249,10 @@ class CgDnd extends EventEmitter {
   /**
    * Move all drag items in DOM depending on which order they are shown on the screen
    * @param {dragItem[]} elemsArray - dragItem's array
+   * @param {function} updatedDOMcallback - callback function, which will be executed after DOM manipulating's end
    * @private
    */
-  _updateAllNodesDOMPositions(elemsArray) {
+  _updateAllNodesDOMPositions(elemsArray, updatedDOMcallback) {
     /**
      * Sort array to add nodes down up
      */
@@ -1271,6 +1264,7 @@ class CgDnd extends EventEmitter {
      */
     elemsArray[0].translateTo(this.initDragItemsPlaces[elemsArray[0].index], true, () => {
       elemsArray.forEach((item) => this._updateNodeDOMPosition(item, this.initDragItemsPlaces[item.index]));
+      updatedDOMcallback();
     });
 
     for (let i = 1; i < elemsArray.length; i++) {
