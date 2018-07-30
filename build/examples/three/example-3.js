@@ -125,12 +125,6 @@
         checkOnCorrect(params.dragItem1);
         checkOnCorrect(params.dragItem2);
       }
-
-      if (areAllItemsCorrect(dnd.dragItems)) {
-        setTimeout(function () {
-          setLiveText(ALL_CORRECT_MESSAGE, 'polite');
-        }, 500);
-      }
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
@@ -141,10 +135,13 @@
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem !== params.dragItem && !params.chosenDraggedItem.disabled && !params.dragItem.disabled) {
         this.shuffleDragItems(params.chosenDraggedItem, params.dragItem, function (item1, item2) {
-          var item2CorrectPart = item2.correct ? 'correct' : '';
+          var item2CorrectPart = item2.correct ? 'correct' : '',
+              feedback = areAllItemsCorrect(dnd.dragItems)
+                ? ALL_CORRECT_MESSAGE
+                : 'The ' + item2.getSetting('ariaLabel') + ' was translated to ' + item2CorrectPart + ' position ' + (item2.index + 1) + ' of 5';
 
           item1.focus();
-          setLiveText('The ' + item2.getSetting('ariaLabel') + ' was translated to ' + item2CorrectPart + ' position ' + (item2.index + 1) + ' of 5');
+          setLiveText(feedback);
         });
       }
     },
