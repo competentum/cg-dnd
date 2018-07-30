@@ -219,22 +219,20 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
-    var areIncorrectItemsExist = false;
-
     dnd.resetIncorrectItems();
     dnd.dragItems.forEach(function (item) {
       if (item.correct) {
         item.addClass(CORRECT_ITEM_CLASSNAME);
         setCorrectDesc(item.chosenDropArea);
-      } else if (!areIncorrectItemsExist) {
-        areIncorrectItemsExist = true;
       }
     });
 
-    if (areIncorrectItemsExist) {
-      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems);
+
+    if (result.isAllCorrect) {
+      setLiveText(result.message);
     } else {
-      setLiveText(ALL_CORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: result.message });
     }
   });
 

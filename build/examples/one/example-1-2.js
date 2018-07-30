@@ -3,8 +3,6 @@
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
       DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
-      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items',
       RESET_MESSAGE = 'Activity was reset! ';
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
@@ -128,21 +126,19 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
-    var areIncorrectItemsExist = false;
-
     dnd.resetIncorrectItems();
     dnd.dragItems.forEach(function (item) {
       if (item.correct) {
         item.addClass('correct-item');
-      } else if (!areIncorrectItemsExist) {
-        areIncorrectItemsExist = true;
       }
     });
 
-    if (areIncorrectItemsExist) {
-      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems);
+
+    if (result.isAllCorrect) {
+      setLiveText(result.message);
     } else {
-      setLiveText(ALL_CORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: result.message });
     }
   });
 

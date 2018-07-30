@@ -5,8 +5,6 @@
       CORRECT_ITEM_CLASSNAME = 'correct-item',
       DRAG_START_ITEMS_KEYBOARD_DESC = 'Press space or double touch to replace this item by ',
       CORRECT_ITEM_ARIA_DESC = ' Correct! ',
-      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      ALL_INCORRECT_MESSAGE = 'All items are incorrect! Try again. ',
       INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
       RESET_MESSAGE = 'Activity was reset! ';
 
@@ -32,40 +30,6 @@
 
   function setCorrectDesc(item) {
     item.changeCurrentAriaState(function () { return CORRECT_ITEM_ARIA_DESC + item.currentAriaState});
-  }
-
-  function getCurrentResultMessage(reamainingItems, items) {
-    if (!reamainingItems.length) {
-      items.forEach(function (item) { item.addClass(CORRECT_ITEM_CLASSNAME) });
-
-      return {
-        message: ALL_CORRECT_MESSAGE,
-        isAllCorrect: true
-      };
-    }
-
-    if (reamainingItems.length === items.length) {
-      return { message: ALL_INCORRECT_MESSAGE };
-    }
-
-    var copy = items.slice(),
-        correctMessagePart = ' Correct items are: ',
-        incorrectMessagePart = ' Incorrect items are: ',
-        commonItemsCount = items.length;
-
-    copy.sort(function (item1, item2) {
-      return item1.index > item2.index;
-    });
-
-    copy.forEach(function (item) {
-      if (item.correct) {
-        correctMessagePart += item.getSetting('ariaLabel') + ' - position ' + (item.index + 1) + ' of ' + commonItemsCount + ', ';
-      } else {
-        incorrectMessagePart += item.getSetting('ariaLabel') + ' - position ' + (item.index + 1) + ' of ' + commonItemsCount + ', ';
-      }
-    });
-
-    return { message: correctMessagePart + '. ' + incorrectMessagePart + '. ' };
   }
 
   var settings = {
@@ -162,7 +126,7 @@
     });
     dnd.disableFocusOnCorrectItems();
 
-    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems);
+    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems, true);
 
     if (result.isAllCorrect) {
       setLiveText(result.message);

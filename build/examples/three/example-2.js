@@ -34,41 +34,6 @@
     item.changeCurrentAriaState(function () { return CORRECT_ITEM_ARIA_DESC + item.currentAriaState});
   }
 
-  function getCurrentResultMessage(reamainingItems, items) {
-    if (!reamainingItems.length) {
-      items.forEach(function (item) { item.addClass(CORRECT_ITEM_CLASSNAME) });
-
-      return {
-        message: ALL_CORRECT_MESSAGE,
-        isAllCorrect: true
-      };
-    }
-
-    if (reamainingItems.length === items.length) {
-      return { message: ALL_INCORRECT_MESSAGE };
-    }
-
-    var copy = items.slice(),
-        correctMessagePart = ' Correct items are: ',
-        incorrectMessagePart = ' Incorrect items are: ',
-        commonItemsCount = items.length;
-
-    copy.sort(function (item1, item2) {
-      return item1.index > item2.index;
-    });
-
-    copy.forEach(function (item) {
-      if (item.correct) {
-        correctMessagePart += item.getSetting('ariaLabel') + ' - position ' + (item.index + 1) + ' of ' + commonItemsCount + ', ';
-      } else {
-        incorrectMessagePart += item.getSetting('ariaLabel') + ' - position ' + (item.index + 1) + ' of ' + commonItemsCount + ', ';
-      }
-    });
-
-    return { message: correctMessagePart + '. ' + incorrectMessagePart + '. ' };
-  }
-
-
   var settings = {
     bounds: '#dnd-2',
     shiftDragItems: true,
@@ -169,7 +134,7 @@
     });
     dnd.disableFocusOnCorrectItems();
 
-    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems);
+    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems, true);
 
     if (result.isAllCorrect) {
       setLiveText(result.message);

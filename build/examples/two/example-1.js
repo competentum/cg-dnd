@@ -3,8 +3,6 @@
       checkButton = exampleContainer.querySelector('.check-btn'),
       resetButton = exampleContainer.querySelector('.reset-btn'),
       CORRECT_ITEM_CLASSNAME = 'correct-item',
-      ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
-      INCORRECT_MESSAGE = 'Some drag items are incorrect, please, set remaining items. ',
       PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION = 'Press space or double touch to put chosen drag item to this drop area',
       REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION = 'Press space button or double touch to start choose dropped item, which you want to replace',
       ARIA_FILLED_AREA_KEYBOARD_INSTRUCTION = 'Press space or double touch to choose and replace dropped items inside. ',
@@ -216,15 +214,11 @@
   var dnd = new CgDnd(settings);
 
   checkButton.addEventListener('click', function () {
-    var areIncorrectItemsExist = false;
-
     dnd.resetIncorrectItems();
     dnd.dragItems.forEach(function (item) {
       if (item.correct) {
         item.addClass(CORRECT_ITEM_CLASSNAME);
         setCorrectDesc(item);
-      } else if (!areIncorrectItemsExist) {
-        areIncorrectItemsExist = true;
       }
     });
 
@@ -234,10 +228,12 @@
       }
     });
 
-    if (areIncorrectItemsExist) {
-      dnd.remainingFirstDragItem.focus({ liveText: INCORRECT_MESSAGE });
+    var result = getCurrentResultMessage(dnd.remainingDragItems, dnd.dragItems, dnd.dropAreas);
+
+    if (result.isAllCorrect) {
+      setLiveText(result.message);
     } else {
-      setLiveText(ALL_CORRECT_MESSAGE);
+      dnd.remainingFirstDragItem.focus({ liveText: result.message });
     }
   });
 
