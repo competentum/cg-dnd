@@ -1124,13 +1124,15 @@ class CgDnd extends EventEmitter {
    * Replaces drag items (for only drag items case (without existing drop areas))
    * @param {dragItem} dragItem1
    * @param {dragItem} dragItem2
+   * @param {function} userCallback - callback function, which will be executed after animation's end
    * @public
    */
-  shuffleDragItems(dragItem1, dragItem2) {
+  shuffleDragItems(dragItem1, dragItem2, userCallback) {
     if (dragItem1 && dragItem2 && !dragItem2.disabled) {
+      dragItem1.selected = dragItem2.selected = false;
       this.settings.shiftDragItems
-        ? this.moveDragItems(dragItem1, dragItem2)
-        : this.replaceDragItems(dragItem1, dragItem2);
+        ? this.moveDragItems(dragItem1, dragItem2, userCallback)
+        : this.replaceDragItems(dragItem1, dragItem2, userCallback);
     } else {
       dragItem1.reset();
       this._finishDrag({ dragItem1 });
@@ -1141,9 +1143,10 @@ class CgDnd extends EventEmitter {
    * Replace drag items between themselves, when drop areas don't exist
    * @param {object} dragItem1 - first replaced drag item
    * @param {object} dragItem2 - second replaced drag item
+   * @param {function} callback - callback function, which will be executed after animation's end
    * @public
    */
-  replaceDragItems(dragItem1, dragItem2) {
+  replaceDragItems(dragItem1, dragItem2, callback) {
     const firstItemStartCoordinates = merge.recursive(true, {}, dragItem1.coordinates.currentStart);
     const secondItemStartCoordinates = merge.recursive(true, {}, dragItem2.coordinates.currentStart);
 
@@ -1154,15 +1157,12 @@ class CgDnd extends EventEmitter {
     dragItem1.translateTo(secondItemStartCoordinates, true, () => {
       this._updateDragItem(dragItem1, secondItemStartCoordinates);
       /**
-       * We change DOM-tree for touch devices -> focus will be disappear, so we set it again after DOM updating
+       * We change DOM-tree for touch devices -> focus will be disappear, so we set it again after DOM updating,
+       * if callback is undefined
        */
-      utils.IS_TOUCH && dragItem1.focus();
+      callback ? callback(dragItem1, dragItem2) : dragItem1.focus();
     });
 
-    /**
-     * Set focus, that screenreader will read element with it's new position (delay = 0 for FF + NVDA)
-     */
-    !utils.IS_TOUCH && dragItem1.focus({ delay: 0 });
     this._finishDrag({
       remainingDragItems: this.remainingDragItems,
       dragItems: this.dragItems,
@@ -1193,9 +1193,10 @@ class CgDnd extends EventEmitter {
    * (for only drag items case (without existing drop areas)
    * @param {dragItem} dragItem
    * @param {dragItem} toDragItem
+   * @param {function} callback - callback function, which will be executed after animation's end
    * @public
    */
-  moveDragItems(dragItem, toDragItem) {
+  moveDragItems(dragItem, toDragItem, callback) {
     utils.moveArrayItems(this.remainingDragItems, this.remainingDragItems.indexOf(dragItem),
                               this.remainingDragItems.indexOf(toDragItem));
 
@@ -1205,16 +1206,18 @@ class CgDnd extends EventEmitter {
       /**
        * We change DOM-tree for right sequent focus by touch screenreaders, like TalkBack or VoiceOver.
        */
-      this._updateAllNodesDOMPositions([...this.dragItems], () => dragItem.focus());
+      this._updateAllNodesDOMPositions([...this.dragItems], () => {
+        /** Set focus, that screenreader will read element with it's new position, if callback is undefined */
+        callback ? callback(dragItem, toDragItem) : dragItem.focus();
+      });
     } else {
       this.remainingDragItems.forEach((item) => {
-        item.translateTo(this.initDragItemsPlaces[item.index], true, () => item.coordinates.currentStart.update());
+        item.translateTo(this.initDragItemsPlaces[item.index], true, () => {
+          item.coordinates.currentStart.update();
+          /** Set focus, that screenreader will read element with it's new position, if callback is undefined */
+          callback ? callback(dragItem, toDragItem) : dragItem.focus();
+        });
       });
-
-      /**
-       * Set focus, that screenreader will read element with it's new position
-       */
-      dragItem.focus({ delay: 0 });
     }
 
     this._finishDrag({
@@ -1564,8 +1567,15 @@ class CgDnd extends EventEmitter {
 
   _removeCurrentDraggedItemSelection() {
     if (this.currentDragParams) {
-      this.currentDragParams.draggedItem.ariaGrabbed = false;
-      this.currentDragParams.draggedItem.selected = false;
+      const { draggedItem } = this.currentDragParams;
+
+      if (draggedItem.ariaGrabbed !== '') {
+        /**
+         * If current attribute's value === '', then this attribute doesn't need to set
+         */
+        draggedItem.ariaGrabbed = false;
+      }
+      draggedItem.selected = false;
     }
   }
 

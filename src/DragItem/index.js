@@ -100,10 +100,10 @@ class DragItem extends DefaultDndElement {
   }
 
   /**
-   * @return {boolean} aria-grabbed current value
+   * @return {boolean|string} aria-grabbed current value
    */
   get ariaGrabbed() {
-    if (!this._ariaGrabbed) {
+    if (!this._ariaGrabbed && this._ariaGrabbed !== '') {
       this._ariaGrabbed = false;
     }
 
@@ -112,12 +112,16 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Set this aria-attribute in 'true', when drag item is dragged, set in 'false', when dragging was stopped
-   * @param {boolean} value
+   * @param {boolean|string} value
    */
   set ariaGrabbed(value) {
     this._ariaGrabbed = value;
 
-    this.node.setAttribute('aria-grabbed', value);
+    if (value === '') {
+      this.node.removeAttribute('aria-grabbed');
+    } else {
+      this.node.setAttribute('aria-grabbed', value);
+    }
   }
 
   set currentKeyboardDesc(text) {
@@ -230,6 +234,35 @@ class DragItem extends DefaultDndElement {
     return verifiedValue;
   }
 
+  resetAttributes(attrs) {
+    if (attrs.length) {
+      const carvedAttrs = {};
+
+      attrs.forEach((attr) => {
+        const attrName = Object.keys(attr)[0];
+        const attrValue = attr[attrName];
+
+        if (this.hasOwnProperty(`_${attrName}`)) {
+          /**
+           * Save current attribute's value, or set needed value, if it !== ''
+           */
+          carvedAttrs[attrName] = attrValue === '' ? this[attrName] : attrValue;
+          this[attrName] = '';
+        }
+      });
+
+      return carvedAttrs;
+    }
+  }
+
+  returnAttributes(attrs) {
+    for (const key in attrs) {
+      if (attrs.hasOwnProperty(key)) {
+        this[key] = attrs[key];
+      }
+    }
+  }
+
   /**
    * Moves drag item element to (x, y) coordinates by css-transform: translate with/without animation
    * @param {object} coords - object of 'left' 'top' node's coordinates
@@ -243,7 +276,8 @@ class DragItem extends DefaultDndElement {
     const left = coords.left - this.coordinates.default.left;
     const top = coords.top - this.coordinates.default.top;
     const CUSTOM_TRANSITION_END_DELAY_TOLERANCE = 100;
-    let timeoutId;
+    let timeoutId,
+      carvedAttributes;
 
     cgUtils.addClass(this.node, this.constructor.CSS_CLASS.CURRENT_DRAGGED_ITEM);
 
@@ -255,6 +289,13 @@ class DragItem extends DefaultDndElement {
      } */
 
     if (isAnimate) {
+      /**
+       * NVDA reads animated element twice, then we are removing it' attributes. Below we will set them again after animation's end
+       */
+      if (utils.IS_FF) {
+        carvedAttributes = this.resetAttributes([{ ariaDescribedBy: '' }, { ariaGrabbed: false }, { ariaLabel: '' }]);
+      }
+
       this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
 
       /**
@@ -262,6 +303,13 @@ class DragItem extends DefaultDndElement {
        * @param {Object} e - transitionend-event object
        */
       const transitionEndListener = (e) => {
+        /**
+         * Return carved attributes for NVDA + FF
+         */
+        if (utils.IS_FF) {
+          this.returnAttributes(carvedAttributes);
+        }
+
         timeoutId && clearTimeout(timeoutId);
         this.node.style.transition = '';
         this.coordinates.current.update();

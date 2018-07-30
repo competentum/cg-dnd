@@ -305,7 +305,11 @@ class DefaultDndElement {
   set ariaDescribedBy(elemIDString) {
     this._ariaDescribedBy = elemIDString;
 
-    this.node.setAttribute('aria-describedby', elemIDString);
+    if (elemIDString === '') {
+      this.node.removeAttribute('aria-describedby');
+    } else {
+      this.node.setAttribute('aria-describedby', elemIDString);
+    }
   }
 
   get ariaDescribedBy() {
