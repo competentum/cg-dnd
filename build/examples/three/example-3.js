@@ -51,7 +51,7 @@
     });
 
     return areCorrect;
-  };
+  }
 
   var settings = {
     bounds: '#dnd-3',
@@ -140,7 +140,12 @@
     },
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem !== params.dragItem && !params.chosenDraggedItem.disabled && !params.dragItem.disabled) {
-        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
+        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem, function (item1, item2) {
+          var item2CorrectPart = item2.correct ? 'correct' : '';
+
+          item1.focus();
+          setLiveText('The ' + item2.getSetting('ariaLabel') + ' was translated to ' + item2CorrectPart + ' position ' + (item2.index + 1) + ' of 5');
+        });
       }
     },
   };

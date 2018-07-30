@@ -1153,9 +1153,10 @@ class CgDnd extends EventEmitter {
     utils.replaceArrayItems(this.remainingDragItems, dragItem1, dragItem2);
     this._replaceSiblings(this.remainingDragItems);
 
-    dragItem2.translateTo(firstItemStartCoordinates, true, () => this._updateDragItem(dragItem2, firstItemStartCoordinates));
-    dragItem1.translateTo(secondItemStartCoordinates, true, () => {
-      this._updateDragItem(dragItem1, secondItemStartCoordinates);
+    dragItem1.translateTo(secondItemStartCoordinates, true, () => this._updateDragItem(dragItem1, secondItemStartCoordinates));
+    dragItem2.translateTo(firstItemStartCoordinates, true, () => {
+      this._updateDragItem(dragItem2, firstItemStartCoordinates);
+
       /**
        * We change DOM-tree for touch devices -> focus will be disappear, so we set it again after DOM updating,
        * if callback is undefined

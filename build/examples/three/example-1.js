@@ -111,7 +111,10 @@
     },
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem && params.dragItem !== params.chosenDraggedItem) {
-        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem);
+        this.shuffleDragItems(params.chosenDraggedItem, params.dragItem, function (item1, item2) {
+          item1.focus();
+          setLiveText('The ' + item2.getSetting('ariaLabel') + ' was translated to position ' + (item2.index + 1) + ' of 5');
+        });
       }
     },
   };
