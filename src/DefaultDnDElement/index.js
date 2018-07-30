@@ -86,7 +86,7 @@ class DefaultDndElement {
      */
     if (utils.IS_IE) {
       this.node.setAttribute('role', 'presentation');
-    } else if (utils.IS_IPAD) {
+    } else if (utils.IS_IOS) {
       this.node.setAttribute('role', 'button');
     }
   }
