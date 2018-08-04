@@ -564,6 +564,7 @@ class CgDnd extends EventEmitter {
     return e.relatedTarget && e.relatedTarget.classList.contains(DropArea.CG_ELEM_CLASS);
   }
 
+  // TODO: delete dobule call (mouseDown -> mouseUp --- and click)
   /**
    * Handler on drag item, which is selected by space/enter or touch event with enabled screenreader
    * @param {dragItem} item
@@ -608,7 +609,6 @@ class CgDnd extends EventEmitter {
           });
         }
 
-        this.emit(this.constructor.EVENTS.DRAG_START, e, item);
         this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
           dragItem: item,
           chosenDraggedItem: this.currentDragParams.chosenDraggedItem,
