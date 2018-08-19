@@ -119,10 +119,11 @@ class CgDnd extends EventEmitter {
           hotKeyCode: 113,
           usageInstruction: ' Press F2 to read current order of items. ',
           getItemsCurrentOrderDesc: (currentItems) => {
+            const sortedItems = [...currentItems].sort((item1, item2) => item1.index - item2.index);
             let desc = '';
 
-            currentItems.forEach((item, index) => {
-              desc += ` ${item.ariaLabel} - position ${index + 1} of ${currentItems.length}. `;
+            sortedItems.forEach((item) => {
+              desc += ` ${item.ariaLabel} - position ${item.index + 1} of ${currentItems.length}. `;
             });
 
             return desc;
@@ -360,7 +361,7 @@ class CgDnd extends EventEmitter {
     const params = this.settings.itemsOrderReadingParams;
 
     params.liveTextElement.innerHTML = '';
-    params.liveTextElement.innerHTML = params.getItemsCurrentOrderDesc(this.remainingDragItems);
+    params.liveTextElement.innerHTML = params.getItemsCurrentOrderDesc(this.dragItems);
   }
 
   _onMouseDown(item, e) {
