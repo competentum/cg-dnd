@@ -403,6 +403,7 @@ class CgDnd extends EventEmitter {
       document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
 
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+      this.isDragStart = true;
     }
   }
 
@@ -440,6 +441,7 @@ class CgDnd extends EventEmitter {
        * by mousemove or touchmove and then we should check it's position
        */
       this._checkDragItemPosition(this.currentDragParams.draggedItem);
+      this.isDragStart && delete this.isDragStart;
     } else if (utils.IS_TOUCH) {
       /**
        * Some screenreaders (TB on android 7 for example) on touch devices fires touchstart and touchend events instead click-event
@@ -453,11 +455,11 @@ class CgDnd extends EventEmitter {
         const TOUCH_END_IOS_DELAY = 100;
 
         setTimeout(() => {
-          this.currentDragParams.draggedItem.node.click();
+          this.currentDragParams.draggedItem.select();
         }, TOUCH_END_IOS_DELAY);
 
       } else {
-        this.currentDragParams.draggedItem.node.click();
+        this.currentDragParams.draggedItem.select();
       }
     }
     e.preventDefault();
@@ -565,7 +567,6 @@ class CgDnd extends EventEmitter {
     return e.relatedTarget && e.relatedTarget.classList.contains(DropArea.CG_ELEM_CLASS);
   }
 
-  // TODO: delete dobule call (mouseDown -> mouseUp --- and click)
   /**
    * Handler on drag item, which is selected by space/enter or touch event with enabled screenreader
    * @param {dragItem} item
@@ -608,6 +609,12 @@ class CgDnd extends EventEmitter {
             area.ariaDropEffect = 'move';
             area.ariaHidden = false;
           });
+        }
+
+        if (!this.isDragStart) {
+          this.emit(this.constructor.EVENTS.DRAG_START, e, item);
+        } else {
+          delete this.isDragStart;
         }
 
         this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {

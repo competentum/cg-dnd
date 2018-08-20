@@ -70,7 +70,7 @@ class DragItem extends DefaultDndElement {
   }
 
   static get SELECTED_ITEM_LABEL() {
-    return 'Selected. ';
+    return 'selected ';
   }
 
   constructor(settings, dndEmitterFunc) {
@@ -117,11 +117,7 @@ class DragItem extends DefaultDndElement {
   set ariaGrabbed(value) {
     this._ariaGrabbed = value;
 
-    if (value === '') {
-      this.node.removeAttribute('aria-grabbed');
-    } else {
-      this.node.setAttribute('aria-grabbed', value);
-    }
+    this.node.setAttribute('aria-grabbed', value);
   }
 
   set currentKeyboardDesc(text) {
@@ -247,7 +243,8 @@ class DragItem extends DefaultDndElement {
            * Save current attribute's value, or set needed value, if it !== ''
            */
           carvedAttrs[attrName] = attrValue === '' ? this[attrName] : attrValue;
-          this[attrName] = '';
+
+          this.node.setAttribute(attrName.toLowerCase().replace('aria', 'aria-'), attrValue);
         }
       });
 

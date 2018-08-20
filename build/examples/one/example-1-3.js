@@ -10,7 +10,7 @@
       REPLACE_DROPPED_ITEM_INSTRUCTION = 'Press space (double touch) to select dropped item, that replace it',
 
       ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
-      ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to replace',
+      ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to replace ',
       ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART = 'Press space or double touch to stay ',
       FILLED_DROP_AREA_KEYBOARD_DESC = 'Choose another empty drop area',
       FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ',
