@@ -515,6 +515,37 @@ class DropArea extends DefaultDndElement {
       this.hasTabletsAccessForInnerDragItems = false;
     }
   }
+
+  /**
+   * Update drop area's coordinates during the window resizing
+   */
+  updateOnResize() {
+    if (this.innerDragItems.length) {
+      const beforeResize = {
+        left: this.coordinates.default.left,
+        top: this.coordinates.default.top
+      };
+
+      this.coordinates.default.update();
+
+      const resizeShift = {
+        left: this.coordinates.default.left - beforeResize.left,
+        top: this.coordinates.default.top - beforeResize.top
+      };
+
+      this.innerDragItems.forEach((item) => {
+        item.translateTo({
+          left: item.coordinates.droppedIn.left + resizeShift.left,
+          top: item.coordinates.droppedIn.top + resizeShift.top },
+          false,
+          () => {
+            item.coordinates.droppedIn.update();
+          });
+      });
+    } else {
+      this.coordinates.default.update();
+    }
+  }
 }
 
 export default DropArea;

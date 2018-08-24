@@ -543,17 +543,29 @@ class DragItem extends DefaultDndElement {
   }
 
   /**
+   * @return {{left: number, top: number}} - item's current css-translation
+   */
+  getCurrentTranslation() {
+    const currentTranslation = getComputedStyle(this.node).transform.match(/matrix\(.*, (.*)?, (.*)?\)$/i) || [0, 0, 0];
+
+    return {
+      left: +currentTranslation[1],
+      top: +currentTranslation[2]
+    };
+  }
+
+  /**
    * Checks, will be drag item needed to update his position during a drag items shifting
    * @param {object} toShiftPosition - new position after shifting
    * @return {boolean} if 'true', it will be needed, otherwise - not needed
    * @public
    */
   isNeedForShiftTo(toShiftPosition) {
-    const atCurrentTimeShift = getComputedStyle(this.node).transform.match(/matrix\(.*, (.*)?, (.*)?\)$/i);
+    const currentShift = this.getCurrentTranslation();
 
-    if (atCurrentTimeShift) {
-      const currentLeft = this.coordinates.default.left + parseFloat(atCurrentTimeShift[1]);
-      const currentTop = this.coordinates.default.top + parseFloat(atCurrentTimeShift[2]);
+    if (currentShift.left || currentShift.top) {
+      const currentLeft = this.coordinates.default.left + parseFloat(currentShift.left);
+      const currentTop = this.coordinates.default.top + parseFloat(currentShift.top);
 
       return currentLeft !== toShiftPosition.left || currentTop !== toShiftPosition.top;
     }
@@ -570,6 +582,31 @@ class DragItem extends DefaultDndElement {
       item: this,
       chosenDropArea: this.chosenDropArea
     });
+  }
+
+  /**
+   * Update drag item's coordinates during the window resizing
+   * @return {{left: number, top: number}} - resizing's shift
+   */
+  updateOnResize() {
+    this.coordinates.current.update();
+
+    const currentTranslation = this.getCurrentTranslation();
+    const resizeShift = {
+      left: this.coordinates.default.left - (this.coordinates.current.left - currentTranslation.left),
+      top: this.coordinates.default.top - (this.coordinates.current.top - currentTranslation.top)
+    };
+
+    for (const key in this.coordinates) {
+      if (this.coordinates.hasOwnProperty(key) && !(this.chosenDropArea && key === 'droppedIn')) {
+        this.coordinates[key].update({
+          left: this.coordinates[key].left - resizeShift.left,
+          top: this.coordinates[key].top - resizeShift.top
+        });
+      }
+    }
+
+    return resizeShift;
   }
 }
 

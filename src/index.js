@@ -6,6 +6,9 @@ import utils from 'utils';
 import DragItem from 'DragItem';
 import DropArea from 'DropArea';
 import Tooltip from 'Tooltip';
+import debounce from 'lodash.debounce';
+
+const RESIZE_CALC_FREQUENCY = 150;
 
 /**
  * DnD's customizing settings
@@ -85,6 +88,7 @@ class CgDnd extends EventEmitter {
         possibleToReplaceDroppedItem: false,
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
+        debouncedResize: false,
         commonDragItemsSettings: {
           handler: '',
           selectedItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
@@ -189,7 +193,8 @@ class CgDnd extends EventEmitter {
         KEYDOWN: 'keydown',
         KEYUP: 'keyup',
         CLICK: 'click',
-        BLUR: 'focusout'
+        BLUR: 'focusout',
+        RESIZE: 'resize'
       };
     }
 
@@ -355,6 +360,23 @@ class CgDnd extends EventEmitter {
 
     this.on(DragItem.EVENTS.DRAG_ITEM_RESET, this._onDragItemReset);
     this.on(DragItem.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this._onDragItemDroppedOnDropArea);
+
+    this.onResizeHandler = this.settings.debouncedResize
+      ? debounce(this._onResize.bind(this), RESIZE_CALC_FREQUENCY)
+      : this._onResize.bind(this);
+
+    window.addEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this.onResizeHandler);
+  }
+
+  _onResize() {
+    this.dragItems.forEach((item, index) => {
+      const resizeShift = item.updateOnResize();
+
+      this.initDragItemsPlaces[index].left -= resizeShift.left;
+      this.initDragItemsPlaces[index].top -= resizeShift.top;
+    });
+
+    this.dropAreas && this.dropAreas.forEach((area) => area.updateOnResize());
   }
 
   _readItemsCurrentOrder() {
@@ -1403,6 +1425,7 @@ class CgDnd extends EventEmitter {
       case 'alignRemainingDragItems':
       case 'possibleToReplaceDroppedItem':
       case 'forbidFocusOnFilledDropAreas':
+      case 'debouncedResize':
         verifiedValue = utils.checkOnBoolean(settingValue);
 
         if (verifiedValue === null) {
@@ -1631,6 +1654,8 @@ class CgDnd extends EventEmitter {
     this.dragItems.forEach((item) => item.handler.removeEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler));
     this._removeStandardEventsHandlers(this.dragItems);
     this.dropAreas && this._removeStandardEventsHandlers(this.dropAreas);
+
+    window.removeEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this.onResizeHandler);
   }
 
   _removeEventsHandlers(eventsObj) {
