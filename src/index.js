@@ -93,7 +93,7 @@ class CgDnd extends EventEmitter {
           handler: '',
           selectedItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
           initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
-                                      + ' then press space button or make double touch to select it',
+                                      + ' then press space button or make double touch to select it.',
           initAriaElementDesc: '',
           animationParams: {
             animatedProperty: 'transform',
@@ -106,7 +106,7 @@ class CgDnd extends EventEmitter {
           maxItemsInDropArea: 1,
           snap: true,
           initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
-                                      + ' then press space button or make double touch to put drag item inside',
+                                      + ' then press space button or make double touch to put drag item inside.',
           initAriaElementDesc: '',
           snapAlignParams: {
             withShift: true,
@@ -117,11 +117,10 @@ class CgDnd extends EventEmitter {
           }
         },
         tooltipParams: {},
+        liveTextElement: null,
         itemsOrderReadingParams: {
-          enabled: false,
-          liveTextElement: '',
-          hotKeyCode: 113,
-          usageInstruction: ' Press F2 to read current order of items. ',
+          hotkeyCode: 113,
+          usageInstruction: '',
           getItemsCurrentOrderDesc: (currentItems) => {
             const sortedItems = [...currentItems].sort((item1, item2) => item1.index - item2.index);
             let desc = '';
@@ -132,6 +131,10 @@ class CgDnd extends EventEmitter {
 
             return desc;
           }
+        },
+        unselectParams: {
+          hotkeyCode: 27,
+          usageInstruction: ''
         },
         onCreate: () => {},
         onDragStart: () => {},
@@ -332,7 +335,7 @@ class CgDnd extends EventEmitter {
 
     this.dragItems.forEach((item) => {
       item.onMouseDownHandler = this._onMouseDown.bind(this, item);
-      item.onKeyDownHandler = this._onKeyDown.bind(this, item);
+      item.onKeyDownHandler = this._onElementKeyDown.bind(this, item);
       item.onKeyUpHandler = this._onKeyUp.bind(this, item);
       item.onClickHandler = this._onDragItemClick.bind(this, item);
       item.onBlurHandler = this._onBlur.bind(this, item);
@@ -346,7 +349,7 @@ class CgDnd extends EventEmitter {
 
     if (this.dropAreas) {
       this.dropAreas.forEach((area) => {
-        area.onKeyDownHandler = this._onKeyDown.bind(this, area);
+        area.onKeyDownHandler = this._onElementKeyDown.bind(this, area);
         area.onKeyUpHandler = this._onKeyUp.bind(this, area);
         area.onClickHandler = this._onDropAreaClick.bind(this, area);
         area.onBlurHandler = this._onBlur.bind(this);
@@ -366,6 +369,9 @@ class CgDnd extends EventEmitter {
       : this._onResize.bind(this);
 
     window.addEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this.onResizeHandler);
+
+    this.onAppKeyDownHandler = this._onAppKeyDown.bind(this);
+    this.container.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this.onAppKeyDownHandler);
   }
 
   _onResize() {
@@ -377,13 +383,6 @@ class CgDnd extends EventEmitter {
     });
 
     this.dropAreas && this.dropAreas.forEach((area) => area.updateOnResize());
-  }
-
-  _readItemsCurrentOrder() {
-    const params = this.settings.itemsOrderReadingParams;
-
-    params.liveTextElement.innerHTML = '';
-    params.liveTextElement.innerHTML = params.getItemsCurrentOrderDesc(this.dragItems);
   }
 
   _onMouseDown(item, e) {
@@ -518,7 +517,7 @@ class CgDnd extends EventEmitter {
     }
   }
 
-  _onKeyDown(item, e) {
+  _onElementKeyDown(item, e) {
     const KEY_CODES = this.constructor.KEY_CODES;
 
     switch (e.keyCode) {
@@ -540,12 +539,33 @@ class CgDnd extends EventEmitter {
       case KEY_CODES.SPACE:
         e.preventDefault();
         break;
-      case this.settings.itemsOrderReadingParams.hotKeyCode:
-        if (this.settings.itemsOrderReadingParams.enabled) {
+      default:
+    }
+  }
+
+  _onAppKeyDown(e) {
+    const { itemsOrderReadingParams, unselectParams } = this.settings;
+
+    switch (e.keyCode) {
+      case this.settings.itemsOrderReadingParams.hotkeyCode: {
+        const { usageInstruction, getItemsCurrentOrderDesc } = itemsOrderReadingParams;
+
+        if (usageInstruction) {
           e.preventDefault();
-          this._readItemsCurrentOrder();
+          this.setLiveText(getItemsCurrentOrderDesc(this.dragItems));
         }
         break;
+      }
+      case unselectParams.hotkeyCode: {
+        if (unselectParams.usageInstruction) {
+          this._finishDrag({
+            remainingDragItems: this.remainingDragItems,
+            dragItems: this.dragItems,
+            dragItem: this.currentDragParams.draggedItem
+          });
+        }
+        break;
+      }
       default:
     }
   }
@@ -1343,13 +1363,6 @@ class CgDnd extends EventEmitter {
     this.initDragItemsPlaces = [];
     this.dragItems.forEach((item, index) => {
       this.initDragItemsPlaces[index] = merge.recursive(true, {}, item.coordinates.default);
-
-      /**
-       * Set hotkey postfix instruction for reading current items order
-       */
-      if (this.settings.itemsOrderReadingParams.enabled && !utils.IS_TOUCH) {
-        item.keyboardDescPostfix = this.settings.itemsOrderReadingParams.usageInstruction;
-      }
     });
   }
 
@@ -1462,6 +1475,7 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'itemsOrderReadingParams':
+      case 'unselectParams':
         if (typeof settingValue === 'object') {
           for (const key in settingValue) {
             if (settingValue.hasOwnProperty(key)) {
@@ -1475,15 +1489,9 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'liveTextElement':
-        if (this.settings.itemsOrderReadingParams.enabled) {
-          verifiedValue = utils.getElement(settingValue);
-
-          if (!verifiedValue) {
-            utils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
-          }
-        }
+        verifiedValue = utils.getElement(settingValue);
         break;
-      case 'hotKeyCode':
+      case 'hotkeyCode':
         if (typeof +settingValue === 'number') {
           verifiedValue = +settingValue;
         } else {
@@ -1491,8 +1499,13 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'usageInstruction':
-        if (typeof settingValue === 'string' && settingValue.length) {
+        if (typeof settingValue === 'string') {
           verifiedValue = settingValue;
+
+          if (verifiedValue.length && !utils.IS_TOUCH) {
+            this.dragItems.forEach((item) => item.setCommonUsageInstruction(verifiedValue));
+            this.dropAreas && this.dropAreas.forEach((area) => area.setCommonUsageInstruction(verifiedValue));
+          }
         } else {
           utils.showSettingError(settingName, settingValue, 'Please set not empty string');
         }
@@ -1656,6 +1669,7 @@ class CgDnd extends EventEmitter {
     this.dropAreas && this._removeStandardEventsHandlers(this.dropAreas);
 
     window.removeEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this.onResizeHandler);
+    this.container.removeEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this.onAppKeyDownHandler);
   }
 
   _removeEventsHandlers(eventsObj) {
@@ -1748,6 +1762,15 @@ class CgDnd extends EventEmitter {
     }
 
     this.areRemainingDragitemsHiddenFromTabletsFocus = false;
+  }
+
+  setLiveText(message) {
+    const { liveTextElement } = this.settings;
+
+    if (liveTextElement) {
+      liveTextElement.innerHTML = '';
+      liveTextElement.innerHTML = message;
+    }
   }
 }
 

@@ -77,6 +77,9 @@
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
     container: '#third-example',
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
+    },
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item'
     },

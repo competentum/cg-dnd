@@ -19,6 +19,9 @@
     alignRemainingDragItems: true,
     forbidFocusOnFilledDropAreas: true,
     container: '#fourth-example',
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
+    },
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item'
     },

@@ -101,6 +101,9 @@
     bounds: '#first-example',
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
+    },
     commonDropAreasSettings: {
       maxItemsInDropArea: 0,
       snapAlignParams: {
@@ -189,6 +192,12 @@
         changeDragItemAriaDescription(params.dragItem);
         updateFilledAreasKeyboardDescAfterStopDragging(dnd.dropAreas);
       }
+
+      if (params.remainingDragItems[0]) {
+        params.remainingDragItems[0].focus();
+      } else {
+        checkButton.focus();
+      }
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
@@ -199,12 +208,6 @@
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
         params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
-
-        if (params.remainingDragItems[0]) {
-          params.remainingDragItems[0].focus();
-        } else {
-          checkButton.focus();
-        }
       } else if (params.droppedItems.length) {
         params.droppedItems[0].focus({ delay: 0 });
       }

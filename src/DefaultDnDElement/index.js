@@ -199,7 +199,7 @@ class DefaultDndElement {
    */
   set currentKeyboardDesc(text) {
     this._currentKeyboardDesc = text;
-    this.keyboardDescElement.innerHTML = this._currentKeyboardDesc;
+    this.keyboardDescElement.innerHTML = `${this._currentKeyboardDesc} ${this.commonKeyBoardDesc}`;
   }
 
   /**
@@ -211,6 +211,18 @@ class DefaultDndElement {
     }
 
     return this._currentKeyboardDesc;
+  }
+
+  set commonKeyBoardDesc(text) {
+    this._commonKeyboardDesc = text;
+  }
+
+  get commonKeyBoardDesc() {
+    if (!this._commonKeyboardDesc) {
+      this._commonKeyboardDesc = '';
+    }
+
+    return this._commonKeyboardDesc;
   }
 
   set nextSibling(dndElem) {
@@ -578,6 +590,13 @@ class DefaultDndElement {
         this.coordinates[key].update(newPositionDOMRectCoordinates);
       }
     }
+  }
+
+  setCommonUsageInstruction(text) {
+    this.commonKeyBoardDesc += text;
+
+    /** Update current keyboard description with new common part */
+    this.currentKeyboardDesc = this.currentKeyboardDesc;
   }
 }
 

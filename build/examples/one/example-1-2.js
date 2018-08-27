@@ -19,6 +19,9 @@
     bounds: '#second-example',
     forbidFocusOnFilledDropAreas: true,
     container: '#second-example',
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
+    },
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item'
     },

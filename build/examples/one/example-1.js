@@ -30,6 +30,10 @@
     bounds: '#first-example',
     alignRemainingDragItems: true,
     container: '#first-example',
+    liveTextElement: liveRegion,
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
+    },
     commonDragItemsSettings: {
       handler: '.handler',
       selectedItemClassName: 'selected-item',

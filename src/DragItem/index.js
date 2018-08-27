@@ -32,7 +32,7 @@ class DragItem extends DefaultDndElement {
         className: '',
         groups: [],
         handler: '',
-        _ariaGrabbed: false,
+        ariaGrabbed: false,
         _ariaHidden: false
       };
     }
@@ -118,39 +118,6 @@ class DragItem extends DefaultDndElement {
     this._ariaGrabbed = value;
 
     this.node.setAttribute('aria-grabbed', value);
-  }
-
-  set currentKeyboardDesc(text) {
-    this._currentKeyboardDesc = `${text} ${this.keyboardDescPostfix}`;
-    this.keyboardDescElement.innerHTML = this._currentKeyboardDesc;
-  }
-
-  get currentKeyboardDesc() {
-    return super.currentKeyboardDesc;
-  }
-
-  /**
-   * Set hotkey postfix instruction for reading current items order
-   * @param {string} value - instruction string
-   */
-  set keyboardDescPostfix(value) {
-    this._keyboardDescPostfix = value;
-
-    /**
-     * Update current keyboard aria description with new postfix
-     */
-    this.currentKeyboardDesc = this.currentKeyboardDesc;
-  }
-
-  /**
-   * @return {string} current instruction postfix
-   */
-  get keyboardDescPostfix() {
-    if (this._keyboardDescPostfix === undefined) {
-      this._keyboardDescPostfix = '';
-    }
-
-    return this._keyboardDescPostfix;
   }
 
   set selected(flag) {

@@ -60,9 +60,12 @@
       selectedItemClassName: 'selected-item',
       initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it'
     },
+    liveTextElement: liveRegion,
     itemsOrderReadingParams: {
-      enabled: true,
-      liveTextElement: liveRegion
+      usageInstruction: ' Press F2 to read current order of items. '
+    },
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
     },
     dragItems: [
       {
@@ -115,15 +118,18 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      params.dragItem1.removeClass(CORRECT_ITEM_CLASSNAME);
-      params.dragItem2.removeClass(CORRECT_ITEM_CLASSNAME);
-
       dnd.dragItems.forEach(function (item) { item.resetKeyboardDesc() });
 
       if (params.dragItem1 && params.dragItem2) {
+        params.dragItem1.removeClass(CORRECT_ITEM_CLASSNAME);
+        params.dragItem2.removeClass(CORRECT_ITEM_CLASSNAME);
+
         replaceItemsDescriptions(params.dragItem1, params.dragItem2);
         checkOnCorrect(params.dragItem1);
         checkOnCorrect(params.dragItem2);
+      } else {
+        /** User dropped current selection */
+        params.dragItem.focus();
       }
     },
     onCreate: function (dndObj) {

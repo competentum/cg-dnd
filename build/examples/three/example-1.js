@@ -45,9 +45,12 @@
     },
     selectedDragItemClassName: 'selected-item',
     container: '#first-example',
+    liveTextElement: liveRegion,
     itemsOrderReadingParams: {
-      enabled: true,
-      liveTextElement: liveRegion
+      usageInstruction: ' Press F2 to read current order of items. '
+    },
+    unselectParams: {
+      usageInstruction: ' Press ESC-button to drop current selection. '
     },
     dragItems: [
       {
@@ -96,11 +99,13 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      console.log(params)
       dnd.dragItems.forEach(function (item) {item.resetKeyboardDesc()});
 
       if (params.dragItem1 && params.dragItem2) {
         replaceItemsDescriptions(params.dragItem1, params.dragItem2);
+      } else {
+        /** User dropped current selection */
+        params.dragItem.focus();
       }
     },
     onCreate: function (dndObj) {
