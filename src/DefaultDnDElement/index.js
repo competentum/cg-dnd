@@ -1,6 +1,7 @@
 import merge from 'merge';
 import cgUtils from 'cg-component-utils';
 import utils from '../utils';
+import ElementTooltip from '../ElementTooltip';
 
 /**
  * @typedef {Object} DefaultDndElementSettings
@@ -345,6 +346,15 @@ class DefaultDndElement {
    */
   get hiddenDescContainer() {
     return this._hiddenDescContainer;
+  }
+
+  get tooltip() {
+    if (!this._tooltip) {
+      this._tooltip = new ElementTooltip(merge({}, this.tooltipParams, { container: this.node }));
+      this._tooltip.show = this._tooltip.show.bind(this._tooltip, this);
+    }
+
+    return this._tooltip;
   }
 
   _applySettings(settings) {

@@ -4,6 +4,26 @@ import merge from 'merge';
 import utils from '../utils';
 import cgUtils from 'cg-component-utils';
 
+const DEFAULT_SHIFT = 10;
+const LOCATION_SHIFT = {
+  top: {
+    x: 0,
+    y: -DEFAULT_SHIFT
+  },
+  bottom: {
+    x: 0,
+    y: DEFAULT_SHIFT
+  },
+  left: {
+    x: -DEFAULT_SHIFT,
+    y: 0
+  },
+  right: {
+    x: DEFAULT_SHIFT,
+    y: 0
+  }
+};
+
 /**
  * @typedef {Object} TooltipSettings
  * @property {string} html - html-string, which will be shown in the tooltip.
@@ -25,8 +45,10 @@ class Tooltip {
       this._DEFAULT_SETTINGS = {
         html: 'Use arrow keys or touch swipes to choose element and space button or double touch to select it.',
         className: '',
-        marginLeft: 0,
-        marginBottom: 10
+        location: 'top',
+        position: 'start',
+        maxWidth: 400,
+        container: document.body
       };
     }
 
@@ -35,10 +57,6 @@ class Tooltip {
 
   static get DEFAULT_TOOLTIP_CLASS() {
     return 'cg-dnd-tooltip';
-  }
-
-  static get TOOLTIP_MARKER_CLASS() {
-    return `${this.DEFAULT_TOOLTIP_CLASS}-marker`;
   }
 
   constructor(settings) {
@@ -75,12 +93,12 @@ class Tooltip {
    */
   set node(htmlString) {
     if (this._node) {
-      document.body.removeChild(this._node);
+      this.container.removeChild(this._node);
     }
 
     if (typeof htmlString === 'string') {
       this._node = cgUtils.createHTML(htmlString);
-      document.body.appendChild(this._node);
+      this.container.appendChild(this._node);
     } else {
       this._node = htmlString;
     }
@@ -125,6 +143,22 @@ class Tooltip {
     return this._messageContainer;
   }
 
+  get isVisible() {
+    return this.node && this.node.style.display !== 'none';
+  }
+
+  set currentMaxWidth(value) {
+    this._currentMaxWidth = value;
+
+    if (this.node) {
+      this.node.style.maxWidth = `${this._currentMaxWidth}px`;
+    }
+  }
+
+  get currentMaxWidth() {
+    return this._currentMaxWidth;
+  }
+
   _applySettings(settings) {
     const correctDeepMergedObj = merge.recursive(true, this.constructor.DEFAULT_SETTINGS, settings);
 
@@ -148,6 +182,21 @@ class Tooltip {
           utils.showSettingError(settingName, settingValue, `Please set html-string of ${settingName}.`);
         }
         break;
+      case 'container':
+        verifiedValue = utils.getElement(settingValue);
+
+        if (!verifiedValue) {
+          utils.showSettingError(settingName, settingValue, 'Please set html-node element or html-selector');
+        }
+        break;
+      case 'location':
+      case 'position':
+        if (typeof settingValue === 'string' && settingValue.length) {
+          verifiedValue = settingValue.toLowerCase();
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set left|right|top|left.');
+        }
+        break;
       case 'className':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue.replace(/^\./, '');
@@ -155,12 +204,26 @@ class Tooltip {
           utils.showSettingError(settingName, settingValue, 'Please set string of class name.');
         }
         break;
-      case 'marginLeft':
-      case 'marginBottom':
+      case 'shift':
+        if (typeof settingValue === 'object') {
+          for (const key in settingValue) {
+            if (settingValue.hasOwnProperty(key)) {
+              settingValue[key] = this._checkSetting(key, settingValue[key]);
+            }
+          }
+
+          verifiedValue = settingValue;
+        } else {
+          utils.showSettingError(settingName, settingValue, 'Please set Object with x and y properties.');
+        }
+        break;
+      case 'x':
+      case 'y':
+      case 'maxWidth':
         verifiedValue = parseFloat(settingValue);
 
         if (isNaN(verifiedValue)) {
-          utils.showSettingError(settingName, settingValue, 'Please set number of margin.');
+          utils.showSettingError(settingName, settingValue, 'Please set number.');
         }
         break;
       default:
@@ -175,37 +238,96 @@ class Tooltip {
    * @private
    */
   _render() {
-    this.node = `<div aria-hidden="true" role="presentation" class="${this.constructor.DEFAULT_TOOLTIP_CLASS}
-        ${this.className}"><div class="${this.constructor.TOOLTIP_MARKER_CLASS}"></div></div>`;
+    this.node = `<div aria-hidden="true" role="presentation" class="${this.constructor.DEFAULT_TOOLTIP_CLASS} ${this.className}"
+        data-tooltip-location="${this.location}"></div>`;
 
     this.messageContainer = `<div class="${this.constructor.DEFAULT_TOOLTIP_CLASS}-message-container">${this.html}</div>`;
 
+    this.currentMaxWidth = this.maxWidth;
     this.hide();
   }
 
-  show(elem, message = this.html) {
-    const coordinates = elem.coordinates.current || elem.coordinates.default;
+  getPosition(positions, sizeParam) {
+    return {
+      start: positions[0],
+      center: positions[0] + sizeParam / 2,
+      end: positions[1]
+    };
+  }
+
+  getCoordinates(elemCoords, location, position, shift) {
+    const { left, right, top, bottom, width, height } = elemCoords;
+    let x = shift.x;
+    let y = shift.y;
+
+    switch (location) {
+      case 'top':
+      case 'bottom':
+        x += this.getPosition([left, right], width)[position];
+        y += elemCoords[location];
+        break;
+      case 'left':
+      case 'right':
+        x += elemCoords[location];
+        y += this.getPosition([top, bottom], height)[position];
+        break;
+      default:
+    }
+
+    return {
+      x,
+      y
+    };
+  }
+
+  getOffset(location) {
+    return {
+      x: location === 'left' ? this.node.offsetWidth : 0,
+      y: location === 'top' ? this.node.offsetHeight : 0
+    };
+  }
+
+  checkMaxWidth(tooltipCoordinates, location) {
+    const { x } = tooltipCoordinates;
+    const availableMaxWidth = location === 'left' ? x : document.body.clientWidth - x;
+
+    if (availableMaxWidth < this.maxWidth) {
+      this.currentMaxWidth = availableMaxWidth;
+    } else if (this.currentMaxWidth !== this.maxWidth) {
+      this.currentMaxWidth = this.maxWidth;
+    }
+  }
+
+  show(elem, params = {}) {
+    const {
+      message = this.html,
+      location = this.location,
+      position = this.position,
+      shift = this.shift || LOCATION_SHIFT[location]
+    } = params;
+    const elemCoordinates = elem.coordinates.current || elem.coordinates.default;
+    const tooltipCoordinates = this.getCoordinates(elemCoordinates, location, position, shift);
 
     if (message) {
       this.messageContainer.innerHTML = message;
     }
+
+    this.node.setAttribute('data-tooltip-location', location);
+    this.checkMaxWidth(tooltipCoordinates, location);
 
     /**
      * At first, show tooltip, that calculate its height, then move it to needed coordinates
      * @type {string}
      */
     this.node.style.display = 'block';
-    this.node.style.left = `${coordinates.left + this.marginLeft}px`;
-    this.node.style.top = `${coordinates.top - this.marginBottom - this.node.offsetHeight}px`;
 
+    const offset = this.getOffset(location);
+
+    this.node.style.transform = `translate(${tooltipCoordinates.x - offset.x}px, ${tooltipCoordinates.y - offset.y}px)`;
   }
 
   hide() {
     this.node.style.display = 'none';
-  }
-
-  isVisible() {
-    return this.node.style.display !== 'none';
   }
 }
 

@@ -76,8 +76,17 @@ class DragItem extends DefaultDndElement {
   constructor(settings, dndEmitterFunc) {
     super(settings);
 
-    this._getMargins();
     this.emit = dndEmitterFunc;
+  }
+
+  _applySettings(settings) {
+    super._applySettings(settings);
+
+    this._getMargins();
+
+    if (this.cssProperties.position !== 'absolute') {
+      this.node.style.position = 'relative';
+    }
   }
 
   /**

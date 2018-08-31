@@ -35,13 +35,14 @@
   var settings = {
     bounds: '#dnd-1',
     alignRemainingDragItems: true,
-    tooltipParams: {
-      html: 'custom tooltip',
-      className: 'custom-tooltip',
-    },
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item',
-      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.'
+      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.',
+      tooltipParams: {
+        location: 'right',
+        position: 'center',
+        className: CORRECT_ITEM_CLASSNAME
+      }
     },
     selectedDragItemClassName: 'selected-item',
     container: '#first-example',
@@ -105,7 +106,7 @@
         replaceItemsDescriptions(params.dragItem1, params.dragItem2);
       } else {
         /** User dropped current selection */
-        params.dragItem.focus();
+        params.dragItem && params.dragItem.focus();
       }
     },
     onCreate: function (dndObj) {
@@ -130,7 +131,11 @@
   checkButton.addEventListener('click', function () {
     dnd.dragItems.forEach(function(item) {
       item.correct = item.index === item.data;
-      item.correct && item.addClass(CORRECT_ITEM_CLASSNAME);
+
+      if (item.correct) {
+        item.addClass(CORRECT_ITEM_CLASSNAME);
+        !item.tooltip.isVisible && item.tooltip.show({ message: 'correct' });
+      }
     });
     dnd.disableFocusOnCorrectItems();
 
@@ -152,6 +157,10 @@
          */
         dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
       }
+    });
+
+    dnd.dragItems.forEach(function(item) {
+      item.tooltip.isVisible && item.tooltip.hide();
     });
   });
 })();

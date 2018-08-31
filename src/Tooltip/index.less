@@ -1,24 +1,68 @@
-@prefix: cg-dnd-tooltip;
+@prefix: cg-dnd;
 @marker-size: 20px;
+@marker-z-index: 20;
 
-.@{prefix} {
+.tooltip-marker {
+  content: '';
   position: absolute;
-  max-width: 400px;
+  width: @marker-size;
+  height: @marker-size;
+  background-color: inherit;
+  z-index: -1;
+}
+
+.@{prefix}-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
   padding: 5px 5px;
-  border-radius: 25px;
   background-color: #ff953a;
   color: #ffffff;
+  box-sizing: border-box;
+  z-index: @marker-z-index;
 
-  .@{prefix}-marker {
-    position: absolute;
-    width: @marker-size;
-    height: @marker-size;
+  &[data-tooltip-location="top"] {
+    border-radius: 25px 25px 25px 0;
 
-    background-color: inherit;
+    &:before {
+      .tooltip-marker;
 
-    transform: rotate(45deg);
-    bottom: -2px;
-    left: 10px;
-    z-index: -1;
+      transform: skew(0, -30deg);
+      left: 0;
+      bottom: 0;
+    }
+  }
+  &[data-tooltip-location="left"] {
+    border-radius: 25px 0 25px 25px;
+
+    &::before {
+      .tooltip-marker;
+
+      transform: skew(-30deg);
+      right: 0;
+      top: 0;
+    }
+  }
+  &[data-tooltip-location="right"] {
+    border-radius: 0 25px 25px 25px;
+
+    &::before {
+      .tooltip-marker;
+
+      transform: skew(30deg);
+      left: 0;
+      top: 0;
+    }
+  }
+  &[data-tooltip-location="bottom"] {
+    border-radius: 0 25px 25px 25px;
+
+    &::before {
+      .tooltip-marker;
+
+      transform: skew(0, 30deg);
+      left: 0;
+      top: 0;
+    }
   }
 }

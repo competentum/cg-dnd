@@ -11,6 +11,8 @@
       UNLIMITED_COUNT_DESC = 'This area accept an unlimited items count. ',
       RESET_MESSAGE = 'Activity was reset! ';
 
+  var TOOLTIPS_PARAMS = [{ location: 'top' }, { location: 'bottom' }, { location: 'right' }];
+
   function changeDropAreaAriaDescriptions(dropArea, previousDropArea) {
     if (dropArea.innerDragItems.length) {
       setFilledDropAreaDescription(dropArea);
@@ -101,6 +103,9 @@
     bounds: '#first-example',
     alignRemainingDragItems: true,
     possibleToReplaceDroppedItem: true,
+    tooltipParams: {
+      position: 'center'
+    },
     unselectParams: {
       usageInstruction: ' Press ESC-button to drop current selection. '
     },
@@ -245,13 +250,15 @@
     dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
   });
 
-  dnd.dropAreas.forEach(function (area) {
+  dnd.dropAreas.forEach(function (area, index) {
+    var tooltipParams = TOOLTIPS_PARAMS[index];
+
     area.node.addEventListener('focus', function () {
-      if (area.innerDragItemsCount && !dnd.currentDragParams) {
-        dnd.tooltip.show(area, REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION);
-      } else if (dnd.currentDragParams) {
-        dnd.tooltip.show(area, PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION);
-      }
+      tooltipParams.message = area.innerDragItemsCount && !dnd.currentDragParams
+        ? REPLACE_DROPPED_ITEM_VISIBLE_INSTRUCTION
+        : PUT_DRAG_ITEM_TO_DROP_AREA_INSTRUCTION;
+
+      dnd.tooltip.show(area, tooltipParams);
     });
 
     area.node.addEventListener('focusout', function () {

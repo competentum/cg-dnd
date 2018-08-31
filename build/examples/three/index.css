@@ -8,7 +8,7 @@
   outline: 1px solid #2bb4f1;
 }
 
-.dnd-container .drag-item-container * {
+.dnd-container .drag-item-container > * {
   width: auto;
   margin: 15px 0;
 }

@@ -95,6 +95,7 @@ class CgDnd extends EventEmitter {
           initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
                                       + ' then press space button or make double touch to select it.',
           initAriaElementDesc: '',
+          tooltipParams: {},
           animationParams: {
             animatedProperty: 'transform',
             duration: 500,
@@ -108,6 +109,7 @@ class CgDnd extends EventEmitter {
           initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
                                       + ' then press space button or make double touch to put drag item inside.',
           initAriaElementDesc: '',
+          tooltipParams: {},
           snapAlignParams: {
             withShift: true,
             withDroppedItemCSSMargins: false,

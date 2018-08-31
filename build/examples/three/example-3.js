@@ -39,6 +39,9 @@
     if (item.correct) {
       item.addClass(CORRECT_ITEM_CLASSNAME);
       setCorrectDesc(item);
+      !item.tooltip.isVisible && item.tooltip.show({ message: 'correct' });
+    } else if (item.tooltip.isVisible) {
+      item.tooltip.hide();
     }
   }
   function areAllItemsCorrect(items) {
@@ -58,7 +61,12 @@
     container: '#third-example',
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item',
-      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it'
+      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it',
+      tooltipParams: {
+        location: 'right',
+        position: 'end',
+        className: CORRECT_ITEM_CLASSNAME
+      }
     },
     liveTextElement: liveRegion,
     itemsOrderReadingParams: {
@@ -109,6 +117,7 @@
       item.removeClass(CORRECT_ITEM_CLASSNAME);
       item.resetAriaStateDesc();
       item.resetKeyboardDesc();
+      item.tooltip.isVisible && item.tooltip.hide();
       changeNotSelectedItemsAriaDesc(dnd.dragItems, item);
 
       if (!DEVICES.IS_FF && item === dnd.currentDragParams.chosenDraggedItem) {
@@ -164,6 +173,10 @@
          */
         dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
       }
+    });
+
+    dnd.dragItems.forEach(function(item) {
+      item.tooltip.isVisible && item.tooltip.hide();
     });
   });
 })();
