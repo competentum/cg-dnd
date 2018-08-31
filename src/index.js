@@ -128,7 +128,7 @@ class CgDnd extends EventEmitter {
             let desc = '';
 
             sortedItems.forEach((item) => {
-              desc += ` ${item.ariaLabel} - position ${item.index + 1} of ${currentItems.length}. `;
+              desc += ` ${item.ariaLabel} - position ${item.index + 1} of ${currentItems.length}. ${item.correct ? 'Correct! ' : ''}`;
             });
 
             return desc;

@@ -89,6 +89,7 @@ a {
 
 .correct-item {
     background-color: #26ba13 !important;
+    font-style: italic;
 }
 
 .incorrect-item {

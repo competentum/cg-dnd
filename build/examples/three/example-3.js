@@ -143,9 +143,6 @@
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
-      dndObj.dragItems.forEach(function (item) {
-        item.correct = item.index === item.data;
-      });
     },
     onDragItemSelect: function (e, params) {
       if (params.chosenDraggedItem !== params.dragItem && !params.chosenDraggedItem.disabled && !params.dragItem.disabled) {
