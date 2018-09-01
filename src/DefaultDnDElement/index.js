@@ -296,6 +296,18 @@ class DefaultDndElement {
 
     if (!flag) {
       this.node.removeAttribute('aria-hidden');
+    } else if (utils.IS_TOUCH && document.activeElement === this.node) {
+
+      /**
+       * We set aria-hidden="true" after element's focusout for touch devices, otherwise screenreader focus (TB or VO) is lost.
+       */
+      const onBlurHandler = () => {
+        this.node.setAttribute('aria-hidden', flag);
+        this.node.removeEventListener('focusout', onBlurHandler);
+      };
+
+      this.node.addEventListener('focusout', onBlurHandler);
+
     } else {
       this.node.setAttribute('aria-hidden', flag);
     }

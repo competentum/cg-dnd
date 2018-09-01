@@ -2,7 +2,8 @@
   var ALL_CORRECT_MESSAGE = 'Congratulations! All drag items are correct.',
       CORRECT_MESSAGE = 'Correct! ',
       INCORRECT_MESSAGE = 'Incorrect! Try again. ',
-      DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ';
+      DRAG_START_DROP_AREAS_KEYBOARD_DESC_PART = 'Press space or double touch to place ',
+      VISUALLY_DELAY = 1100;
 
   function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
     var draggedItemLabel = draggedItem.getSetting('ariaLabel');
@@ -97,8 +98,6 @@
     onDragMove: function (e, item) {
     },
     onDragStop: function (e, params) {
-      var visuallyDelay;
-
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
@@ -106,25 +105,23 @@
           params.dragItem.addClass('correct-item');
 
           if (params.remainingDragItems[0]) {
-            params.remainingDragItems[0].focus({
-              delay: visuallyDelay,
-              liveText: CORRECT_MESSAGE
-            });
+            setLiveText(CORRECT_MESSAGE);
+
+            setTimeout(function () {
+              params.remainingDragItems[0].focus();
+            }, VISUALLY_DELAY);
           } else {
             setLiveText(ALL_CORRECT_MESSAGE);
           }
         } else {
           params.dragItem.addClass('incorrect-item');
-          visuallyDelay = 500;
+          setLiveText(INCORRECT_MESSAGE);
 
           setTimeout(function () {
             params.dragItem.reset();
             params.dragItem.removeClass('incorrect-item');
-            params.dragItem.focus({
-              delay: visuallyDelay,
-              liveText: INCORRECT_MESSAGE
-            });
-          }, visuallyDelay);
+            params.dragItem.focus();
+          }, VISUALLY_DELAY);
         }
       }
     },
