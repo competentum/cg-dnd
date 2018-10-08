@@ -462,11 +462,11 @@ class DefaultDndElement {
   }
 
   resetKeyboardDesc() {
-    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
+    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
   }
 
   resetAriaStateDesc() {
-    this.currentAriaState = this.initAriaElementDesc;
+    this.currentAriaState = this.initialAriaElementDesc;
   }
 
   _checkSetting(settingName, settingValue) {
@@ -508,8 +508,8 @@ class DefaultDndElement {
           utils.showSettingError(settingName, settingValue, 'Please set string or array of strings.');
         }
         break;
-      case 'initAriaKeyboardAccessDesc':
-      case 'initAriaElementDesc':
+      case 'initialAriaKeyboardDesc':
+      case 'initialAriaElementDesc':
         if (typeof settingValue === 'string') {
           verifiedValue = settingValue;
         } else {
@@ -585,7 +585,7 @@ class DefaultDndElement {
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC }
     });
-    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
+    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC, true);
 
     this.currentStateDescElement = utils.createHTML({
@@ -593,7 +593,7 @@ class DefaultDndElement {
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC }
     });
-    this.currentAriaState = this.initAriaElementDesc;
+    this.currentAriaState = this.initialAriaElementDesc;
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC, true);
   }
 

@@ -26,7 +26,7 @@
       selectedItemClassName: 'selected-item'
     },
     commonDropAreasSettings: {
-      initAriaElementDesc: 'Area is empty. '
+      initialAriaElementDesc: 'Area is empty. '
     },
     dragItems: [
       {
@@ -121,7 +121,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
+        params.currentDraggedItem.placeToDropArea({ dropArea: params.dropArea });
       }
     }
   };
@@ -141,12 +141,12 @@
     if (result.isAllCorrect) {
       setLiveText(result.message);
     } else {
-      dnd.remainingFirstDragItem.focus({ liveText: result.message });
+      dnd.firstRemainingDragItem.focus({ liveText: result.message });
     }
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: 'correct-item' });
-    dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
+    dnd.firstRemainingDragItem.focus({ liveText: RESET_MESSAGE });
   });
 })();

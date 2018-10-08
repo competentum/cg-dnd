@@ -210,7 +210,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
+        params.currentDraggedItem.placeToDropArea({ dropArea: params.dropArea });
       } else if (params.droppedItems.length) {
         var DELAY = 0;
 
@@ -235,13 +235,13 @@
     if (result.isAllCorrect) {
       setLiveText(result.message);
     } else {
-      dnd.remainingFirstDragItem.focus({ liveText: result.message });
+      dnd.firstRemainingDragItem.focus({ liveText: result.message });
     }
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
-    dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
+    dnd.firstRemainingDragItem.focus({ liveText: RESET_MESSAGE });
   });
 
   disableSwitcher.addEventListener('change', function () {

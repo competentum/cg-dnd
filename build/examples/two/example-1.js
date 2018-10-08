@@ -116,12 +116,12 @@
         verticalAlign: 'top',
         withDroppedItemCSSMargins: true
       },
-      initAriaKeyboardAccessDesc: 'Press space or double touch to put drag item inside. ',
-      initAriaElementDesc: 'Area is empty. ' + UNLIMITED_COUNT_DESC,
+      initialAriaKeyboardDesc: 'Press space or double touch to put drag item inside. ',
+      initialAriaElementDesc: 'Area is empty. ' + UNLIMITED_COUNT_DESC,
     },
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item',
-      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose other drag items, then press spase or double touch to drag it. '
+      initialAriaKeyboardDesc: 'Use arrow keys or swipes to choose other drag items, then press spase or double touch to drag it. '
     },
     container: '#first-example',
     dragItems: [
@@ -212,7 +212,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea({ dropArea: params.dropArea });
+        params.currentDraggedItem.placeToDropArea({ dropArea: params.dropArea });
       } else if (params.droppedItems.length) {
         params.droppedItems[0].focus({ delay: 0 });
       }
@@ -241,13 +241,13 @@
     if (result.isAllCorrect) {
       setLiveText(result.message);
     } else {
-      dnd.remainingFirstDragItem.focus({ liveText: result.message });
+      dnd.firstRemainingDragItem.focus({ liveText: result.message });
     }
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
-    dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
+    dnd.firstRemainingDragItem.focus({ liveText: RESET_MESSAGE });
   });
 
   dnd.dropAreas.forEach(function (area, index) {

@@ -133,7 +133,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea({
+        params.currentDraggedItem.placeToDropArea({
           dropArea: params.dropArea,
           callCheckAfterAnimationEnd: true
         });

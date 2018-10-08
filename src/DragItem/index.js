@@ -206,7 +206,7 @@ class DragItem extends DefaultDndElement {
     return verifiedValue;
   }
 
-  resetAttributes(attrs) {
+  _resetAttributes(attrs) {
     if (attrs.length) {
       const carvedAttrs = {};
 
@@ -228,7 +228,7 @@ class DragItem extends DefaultDndElement {
     }
   }
 
-  returnAttributes(attrs) {
+  _returnAttributes(attrs) {
     for (const key in attrs) {
       if (attrs.hasOwnProperty(key)) {
         this[key] = attrs[key];
@@ -266,7 +266,7 @@ class DragItem extends DefaultDndElement {
        * NVDA reads animated element twice, then we are removing it' attributes. Below we will set them again after animation's end
        */
       if (utils.IS_FF) {
-        carvedAttributes = this.resetAttributes([{ ariaDescribedBy: '' }, { ariaGrabbed: false }, { ariaLabel: '' }]);
+        carvedAttributes = this._resetAttributes([{ ariaDescribedBy: '' }, { ariaGrabbed: false }, { ariaLabel: '' }]);
       }
 
       this.node.style.transition = `${animProps.animatedProperty} ${animProps.duration}ms ${animProps.timingFunction} ${animProps.delay}ms`;
@@ -280,7 +280,7 @@ class DragItem extends DefaultDndElement {
          * Return carved attributes for NVDA + FF
          */
         if (utils.IS_FF) {
-          this.returnAttributes(carvedAttributes);
+          this._returnAttributes(carvedAttributes);
         }
 
         timeoutId && clearTimeout(timeoutId);
@@ -359,8 +359,8 @@ class DragItem extends DefaultDndElement {
 
     this.correct = this.ariaHidden = false;
 
-    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
-    this.currentAriaState = this.initAriaElementDesc;
+    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
+    this.currentAriaState = this.initialAriaElementDesc;
   }
 
   /**
@@ -394,7 +394,7 @@ class DragItem extends DefaultDndElement {
    * Try to put drag item to chosen drop area
    * @param {Object} params
    * @param {dropArea} params.dropArea - the chosen drop area, in which we want to put a drag item
-   * @param {function} params.afterAnimationCB - callback function, which will be executed after animation end
+   * @param {function} params.animationEndCallback - callback function, which will be executed after animation end
    * @param {boolean} [params.callCheckAfterAnimationEnd = false] - if "true", checking will be executed after animation end,
    * else it will be executed in this function end
    * @param {boolean} [params._shiftRemainingItems = true] - if "true", remaining drag items will be aligned
@@ -402,8 +402,8 @@ class DragItem extends DefaultDndElement {
    * @return {boolean} - return "true", if dragItem changes his position, otherwise return "false"
    * @public
    */
-  putIntoDropArea(params) {
-    const { dropArea, callCheckAfterAnimationEnd = false, afterAnimationCB = () => {}, _shiftRemainingItems = true,
+  placeToDropArea(params) {
+    const { dropArea, callCheckAfterAnimationEnd = false, animationEndCallback = () => {}, _shiftRemainingItems = true,
             replacedDragItem } = params;
     const paramsForCheck = {
       dragItem: this,
@@ -427,7 +427,7 @@ class DragItem extends DefaultDndElement {
 
       callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
 
-      afterAnimationCB(this, dropArea);
+      animationEndCallback(this, dropArea);
     });
 
     !callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
@@ -437,24 +437,24 @@ class DragItem extends DefaultDndElement {
 
   /**
    * Replace two drag items between themselves
-   * @param {dragItem} replaceByDragItem - drag item, which replace current drag item
+   * @param {dragItem} newDragItem - drag item, which replace current drag item
    */
-  replaceBy(replaceByDragItem) {
+  replaceBy(newDragItem) {
     const firstItemDropArea = this.chosenDropArea;
-    const secondItemDropArea = replaceByDragItem.chosenDropArea;
+    const secondItemDropArea = newDragItem.chosenDropArea;
 
     /**
      * We don't call remaining items aligning after first item replacing by {_shiftRemainingItems: false}
      */
     if (firstItemDropArea) {
       firstItemDropArea.removeDragItem(this);
-      replaceByDragItem.putIntoDropArea({
+      newDragItem.placeToDropArea({
         dropArea: firstItemDropArea,
         _shiftRemainingItems: false,
         replacedDragItem: this
       });
     } else {
-      replaceByDragItem.reset({
+      newDragItem.reset({
         from: secondItemDropArea,
         _shiftRemainingItems: false,
         replacedDragItem: this
@@ -462,8 +462,8 @@ class DragItem extends DefaultDndElement {
     }
 
     if (secondItemDropArea) {
-      secondItemDropArea.removeDragItem(replaceByDragItem);
-      this.putIntoDropArea({
+      secondItemDropArea.removeDragItem(newDragItem);
+      this.placeToDropArea({
         dropArea: secondItemDropArea,
         replacedDragItem: this
       });

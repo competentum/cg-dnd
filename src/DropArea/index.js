@@ -444,8 +444,8 @@ class DropArea extends DefaultDndElement {
       }
     }
 
-    this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
-    this.currentAriaState = this.initAriaElementDesc;
+    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
+    this.currentAriaState = this.initialAriaElementDesc;
   }
 
   /**
@@ -464,8 +464,8 @@ class DropArea extends DefaultDndElement {
       incorrectItems.forEach((item) => item.reset());
 
       if (!this.innerDragItems.length) {
-        this.currentKeyboardDesc = this.initAriaKeyboardAccessDesc;
-        this.currentAriaState = this.initAriaElementDesc;
+        this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
+        this.currentAriaState = this.initialAriaElementDesc;
       }
     }
   }

@@ -124,7 +124,7 @@
     },
     onDropAreaSelect: function (e, params) {
       if (params.currentDraggedItem) {
-        params.currentDraggedItem.putIntoDropArea({
+        params.currentDraggedItem.placeToDropArea({
           dropArea: params.dropArea,
           callCheckAfterAnimationEnd: true
         });
@@ -148,11 +148,11 @@
       }
     });
 
-    dnd.remainingFirstDragItem.focus();
+    dnd.firstRemainingDragItem.focus();
   });
 
   resetButton.addEventListener('click', function () {
     dnd.reset({ removedClassName: CORRECT_ITEM_CLASSNAME });
-    dnd.remainingFirstDragItem.focus();
+    dnd.firstRemainingDragItem.focus();
   });
 })();

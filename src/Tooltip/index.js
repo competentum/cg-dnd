@@ -43,7 +43,7 @@ class Tooltip {
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
       this._DEFAULT_SETTINGS = {
-        html: 'Use arrow keys or touch swipes to choose element and space button or double touch to select it.',
+        html: 'Use arrow keys or touch swipes to choose an element and space button or double touch to select it.',
         className: '',
         location: 'top',
         position: 'start',

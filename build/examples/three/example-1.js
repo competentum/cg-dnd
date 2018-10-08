@@ -37,7 +37,7 @@
     alignRemainingDragItems: true,
     commonDragItemsSettings: {
       selectedItemClassName: 'selected-item',
-      initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.',
+      initialAriaKeyboardDesc: 'Use arrow keys or swipes to choose item. Press space or double touch to select it.',
       tooltipParams: {
         location: 'right',
         position: 'center',
@@ -59,35 +59,35 @@
         data: 3,
         ariaLabel: 'drag item 4 ',
         className: 'custom-class',
-        initAriaElementDesc: 'Position 1 of 5. '
+        initialAriaElementDesc: 'Position 1 of 5. '
       },
       {
         node: '#drag-item-2',
         data: 1,
         ariaLabel: 'drag item 2 ',
         className: 'custom-class',
-        initAriaElementDesc: 'Position 2 of 5. '
+        initialAriaElementDesc: 'Position 2 of 5. '
       },
       {
         node: '#drag-item-5',
         data: 4,
         ariaLabel: 'drag item 5 ',
         className: 'custom-class',
-        initAriaElementDesc: 'Position 3 of 5. '
+        initialAriaElementDesc: 'Position 3 of 5. '
       },
       {
         node: '#drag-item-3',
         data: 2,
         ariaLabel: 'drag item 3 ',
         className: 'custom-class',
-        initAriaElementDesc: 'Position 4 of 5. '
+        initialAriaElementDesc: 'Position 4 of 5. '
       },
       {
         node: '#drag-item-1',
         data: 0,
         ariaLabel: 'drag item 1 ',
         className: 'custom-class',
-        initAriaElementDesc: 'Position 5 of 5. '
+        initialAriaElementDesc: 'Position 5 of 5. '
       }
     ],
     onDragStart: function (e, item) {
@@ -141,7 +141,7 @@
     if (result.isAllCorrect) {
       setLiveText(result.message);
     } else {
-      dnd.remainingFirstDragItem.focus({ liveText: result.message });
+      dnd.firstRemainingDragItem.focus({ liveText: result.message });
     }
   });
 
@@ -152,7 +152,7 @@
         /**
          * We call focus after reset end, because on touch devices DOM-root was rebuilding
          */
-        dnd.remainingFirstDragItem.focus({ liveText: RESET_MESSAGE });
+        dnd.firstRemainingDragItem.focus({ liveText: RESET_MESSAGE });
       }
     });
 

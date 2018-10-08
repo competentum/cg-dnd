@@ -92,9 +92,9 @@ class CgDnd extends EventEmitter {
         commonDragItemsSettings: {
           handler: '',
           selectedItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
-          initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
+          initialAriaKeyboardDesc: 'Use arrow keys or swipes to choose element,'
                                       + ' then press space button or make double touch to select it.',
-          initAriaElementDesc: '',
+          initialAriaElementDesc: '',
           tooltipParams: {},
           animationParams: {
             animatedProperty: 'transform',
@@ -106,9 +106,9 @@ class CgDnd extends EventEmitter {
         commonDropAreasSettings: {
           maxItemsInDropArea: 1,
           snap: true,
-          initAriaKeyboardAccessDesc: 'Use arrow keys or swipes to choose element,'
+          initialAriaKeyboardDesc: 'Use arrow keys or swipes to choose element,'
                                       + ' then press space button or make double touch to put drag item inside.',
-          initAriaElementDesc: '',
+          initialAriaElementDesc: '',
           tooltipParams: {},
           snapAlignParams: {
             withShift: true,
@@ -261,7 +261,7 @@ class CgDnd extends EventEmitter {
     this._applySettings(settings);
 
     this._initSiblings(this.dragItems);
-    this.remainingFirstDragItem = this.dragItems[0];
+    this.firstRemainingDragItem = this.dragItems[0];
 
     if (this.dropAreas) {
       this._initSiblings(this.dropAreas);
@@ -281,24 +281,24 @@ class CgDnd extends EventEmitter {
    * Sets remaining first drag item
    * @param {dragItem} dragItem
    */
-  set remainingFirstDragItem(dragItem) {
-    if (this._remainingFirstDragItem) {
-      this._remainingFirstDragItem.tabIndex = -1;
+  set firstRemainingDragItem(dragItem) {
+    if (this._firstRemainingDragItem) {
+      this._firstRemainingDragItem.tabIndex = -1;
     }
 
     if (dragItem) {
-      this._remainingFirstDragItem = dragItem;
-      this._remainingFirstDragItem.tabIndex = 0;
+      this._firstRemainingDragItem = dragItem;
+      this._firstRemainingDragItem.tabIndex = 0;
     } else {
-      this._remainingFirstDragItem = null;
+      this._firstRemainingDragItem = null;
     }
   }
 
   /**
    * @return {dragItem} first remaining dragItem
    */
-  get remainingFirstDragItem() {
-    return this._remainingFirstDragItem;
+  get firstRemainingDragItem() {
+    return this._firstRemainingDragItem;
   }
 
   /**
@@ -597,7 +597,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _onBlur(e) {
-    if (this.currentDragParams && this.firstAllowedDropArea && !this.isFocusOnDropArea(e)) {
+    if (this.currentDragParams && this.firstAllowedDropArea && !this._isFocusOnDropArea(e)) {
       this.firstAllowedDropArea.tabIndex = 0;
     }
   }
@@ -607,7 +607,7 @@ class CgDnd extends EventEmitter {
    * @param {Object} e - focusout-event
    * @return {boolean} result
    */
-  isFocusOnDropArea(e) {
+  _isFocusOnDropArea(e) {
     return e.relatedTarget && e.relatedTarget.classList.contains(DropArea.CG_ELEM_CLASS);
   }
 
@@ -722,7 +722,7 @@ class CgDnd extends EventEmitter {
       if (chosenDropArea) {
         // Drag item was dropped on drop area
 
-        dragItem.putIntoDropArea({ dropArea: chosenDropArea });
+        dragItem.placeToDropArea({ dropArea: chosenDropArea });
       } else {
         // Drag item wasn't dropped on drop area
 
@@ -1003,8 +1003,8 @@ class CgDnd extends EventEmitter {
     if (withoutCB) {
       this._updateElementSiblings(element, array);
     } else if (element instanceof DragItem) {
-      this._updateElementSiblings(element, this.remainingDragItems, this.remainingFirstDragItem, (item) => {
-        this.remainingFirstDragItem = item;
+      this._updateElementSiblings(element, this.remainingDragItems, this.firstRemainingDragItem, (item) => {
+        this.firstRemainingDragItem = item;
       });
     } else {
       this._updateElementSiblings(element, this.allowedDropAreas, this.firstAllowedDropArea, (area) => {
@@ -1128,7 +1128,7 @@ class CgDnd extends EventEmitter {
   _replaceSiblings(elementsArray) {
     this._resetAllSiblings(elementsArray);
     this._initSiblings(elementsArray, false);
-    this.remainingFirstDragItem = elementsArray[0];
+    this.firstRemainingDragItem = elementsArray[0];
   }
 
   /**
@@ -1183,8 +1183,8 @@ class CgDnd extends EventEmitter {
     if (dragItem1 && dragItem2 && !dragItem2.disabled) {
       dragItem1.selected = dragItem2.selected = false;
       this.settings.shiftDragItems
-        ? this.moveDragItems(dragItem1, dragItem2, userCallback)
-        : this.replaceDragItems(dragItem1, dragItem2, userCallback);
+        ? this._moveDragItems(dragItem1, dragItem2, userCallback)
+        : this._replaceDragItems(dragItem1, dragItem2, userCallback);
     } else {
       dragItem1.reset();
       this._finishDrag({ dragItem1 });
@@ -1198,7 +1198,7 @@ class CgDnd extends EventEmitter {
    * @param {function} callback - callback function, which will be executed after animation's end
    * @public
    */
-  replaceDragItems(dragItem1, dragItem2, callback) {
+  _replaceDragItems(dragItem1, dragItem2, callback) {
     const firstItemStartCoordinates = merge.recursive(true, {}, dragItem1.coordinates.currentStart);
     const secondItemStartCoordinates = merge.recursive(true, {}, dragItem2.coordinates.currentStart);
 
@@ -1249,7 +1249,7 @@ class CgDnd extends EventEmitter {
    * @param {function} callback - callback function, which will be executed after animation's end
    * @public
    */
-  moveDragItems(dragItem, toDragItem, callback) {
+  _moveDragItems(dragItem, toDragItem, callback) {
     utils.moveArrayItems(this.remainingDragItems, this.remainingDragItems.indexOf(dragItem),
                               this.remainingDragItems.indexOf(toDragItem));
 
@@ -1349,8 +1349,8 @@ class CgDnd extends EventEmitter {
     });
     this._createHiddenDescriptionBlock();
 
-    this.setHiddenAriaContainerFor(this.dragItems);
-    this.dropAreas && this.setHiddenAriaContainerFor(this.dropAreas);
+    this._setHiddenAriaContainerFor(this.dragItems);
+    this.dropAreas && this._setHiddenAriaContainerFor(this.dropAreas);
 
     for (const key in this.settings) {
       if (this.settings.hasOwnProperty(key)) {
@@ -1373,7 +1373,7 @@ class CgDnd extends EventEmitter {
    * @param {dragItem[]|dropAreas[]} dndElems
    * @private
    */
-  setHiddenAriaContainerFor(dndElems) {
+  _setHiddenAriaContainerFor(dndElems) {
     dndElems.forEach((item) => {
       item.initOwnAriaDescElement(this.hiddenDescContainer);
     });
@@ -1654,7 +1654,7 @@ class CgDnd extends EventEmitter {
       }
     });
 
-    this.remainingFirstDragItem.tabIndex = 0;
+    this.firstRemainingDragItem.tabIndex = 0;
     this.firstAllowedDropArea.tabIndex = areDroppedItemsPossibleToReplace ? 0 : -1;
   }
 
@@ -1716,7 +1716,7 @@ class CgDnd extends EventEmitter {
 
     this._resetAllSiblings(this.dragItems);
     this._initSiblings(this.dragItems);
-    this.remainingFirstDragItem = this.dragItems[0];
+    this.firstRemainingDragItem = this.dragItems[0];
     this.remainingDragItems = [...this.dragItems];
   }
 
@@ -1735,7 +1735,7 @@ class CgDnd extends EventEmitter {
       });
     }
 
-    this.remainingFirstDragItem = this.remainingDragItems.length ? this.remainingDragItems[0] : null;
+    this.firstRemainingDragItem = this.remainingDragItems.length ? this.remainingDragItems[0] : null;
     this._removeCurrentDraggedItemSelection();
     this.currentDragParams = null;
   }
