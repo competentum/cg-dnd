@@ -4,8 +4,8 @@ import Tooltip from '../Tooltip';
  * Tooltip for dnd's elements
  */
 class ElementTooltip extends Tooltip {
-  getCoordinates(elemCoords, location, position, shift) {
-    const { x, y } = super.getCoordinates(elemCoords, location, position, shift);
+  _getCoordinates(elemCoords, location, position, shift) {
+    const { x, y } = super._getCoordinates(elemCoords, location, position, shift);
     const { left, top } = elemCoords;
 
     return {
@@ -18,8 +18,8 @@ class ElementTooltip extends Tooltip {
     };
   }
 
-  checkMaxWidth(tooltipCoordinates, location) {
-    super.checkMaxWidth(tooltipCoordinates.global, location);
+  _checkMaxWidth(tooltipCoordinates, location) {
+    super._checkMaxWidth(tooltipCoordinates.global, location);
   }
 }
 

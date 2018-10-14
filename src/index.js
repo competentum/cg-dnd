@@ -333,7 +333,7 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _addListeners() {
-    this.deviceEvents = utils.getDeviceEvents();
+    this._deviceEvents = utils.getDeviceEvents();
 
     this.dragItems.forEach((item) => {
       item.onMouseDownHandler = this._onMouseDown.bind(this, item);
@@ -342,7 +342,7 @@ class CgDnd extends EventEmitter {
       item.onClickHandler = this._onDragItemClick.bind(this, item);
       item.onBlurHandler = this._onBlur.bind(this, item);
 
-      item.handler.addEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler);
+      item.handler.addEventListener(this._deviceEvents.dragStart, item.onMouseDownHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, item.onKeyDownHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.KEYUP, item.onKeyUpHandler);
       item.node.addEventListener(this.constructor.STANDARD_EVENTS.CLICK, item.onClickHandler);
@@ -366,22 +366,22 @@ class CgDnd extends EventEmitter {
     this.on(DragItem.EVENTS.DRAG_ITEM_RESET, this._onDragItemReset);
     this.on(DragItem.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, this._onDragItemDroppedOnDropArea);
 
-    this.onResizeHandler = this.settings.debouncedResize
+    this._onResizeHandler = this.settings.debouncedResize
       ? debounce(this._onResize.bind(this), RESIZE_CALC_FREQUENCY)
       : this._onResize.bind(this);
 
-    window.addEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this.onResizeHandler);
+    window.addEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this._onResizeHandler);
 
-    this.onAppKeyDownHandler = this._onAppKeyDown.bind(this);
-    this.container.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this.onAppKeyDownHandler);
+    this._onAppKeyDownHandler = this._onAppKeyDown.bind(this);
+    this.container.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this._onAppKeyDownHandler);
   }
 
   _onResize() {
     this.dragItems.forEach((item, index) => {
       const resizeShift = item.updateOnResize();
 
-      this.initDragItemsPlaces[index].left -= resizeShift.left;
-      this.initDragItemsPlaces[index].top -= resizeShift.top;
+      this._initialDragItemsCoordinates[index].left -= resizeShift.left;
+      this._initialDragItemsCoordinates[index].top -= resizeShift.top;
     });
 
     this.dropAreas && this.dropAreas.forEach((area) => area.updateOnResize());
@@ -422,8 +422,8 @@ class CgDnd extends EventEmitter {
       this.onMouseMoveHandler = this._onMouseMove.bind(this);
       this.onMouseUpHandler = this._onMouseUp.bind(this);
 
-      document.addEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler);
-      document.addEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
+      document.addEventListener(this._deviceEvents.dragMove, this.onMouseMoveHandler);
+      document.addEventListener(this._deviceEvents.draEnd, this.onMouseUpHandler);
 
       this.emit(this.constructor.EVENTS.DRAG_START, e, item);
       this.isDragStart = true;
@@ -487,8 +487,8 @@ class CgDnd extends EventEmitter {
     }
     e.preventDefault();
 
-    document.removeEventListener(this.deviceEvents.dragMove, this.onMouseMoveHandler);
-    document.removeEventListener(this.deviceEvents.draEnd, this.onMouseUpHandler);
+    document.removeEventListener(this._deviceEvents.dragMove, this.onMouseMoveHandler);
+    document.removeEventListener(this._deviceEvents.draEnd, this.onMouseUpHandler);
   }
 
   /**
@@ -1165,8 +1165,8 @@ class CgDnd extends EventEmitter {
   _shiftRemainingDragItems() {
     if (this.settings.alignRemainingDragItems) {
       this.remainingDragItems.forEach((item, index) => {
-        if (item.isNeedForShiftTo(this.initDragItemsPlaces[index])) {
-          item.translateTo(this.initDragItemsPlaces[index], true, () => item.coordinates.currentStart.update());
+        if (item.isNeedForShiftTo(this._initialDragItemsCoordinates[index])) {
+          item.translateTo(this._initialDragItemsCoordinates[index], true, () => item.coordinates.currentStart.update());
         }
       });
     }
@@ -1265,7 +1265,7 @@ class CgDnd extends EventEmitter {
       });
     } else {
       this.remainingDragItems.forEach((item) => {
-        item.translateTo(this.initDragItemsPlaces[item.index], true, () => {
+        item.translateTo(this._initialDragItemsCoordinates[item.index], true, () => {
           item.coordinates.currentStart.update();
           /** Set focus, that screenreader will read element with it's new position, if callback is undefined */
           callback ? callback(dragItem, toDragItem) : dragItem.focus();
@@ -1318,13 +1318,13 @@ class CgDnd extends EventEmitter {
      * Moves DOM-nodes in first element's animation end callback, that they were updated sequentially.
      * Otherwise, animations will not be ended sequentially and DOM elements will be moved randomize
      */
-    elemsArray[0].translateTo(this.initDragItemsPlaces[elemsArray[0].index], true, () => {
-      elemsArray.forEach((item) => this._updateNodeDOMPosition(item, this.initDragItemsPlaces[item.index]));
+    elemsArray[0].translateTo(this._initialDragItemsCoordinates[elemsArray[0].index], true, () => {
+      elemsArray.forEach((item) => this._updateNodeDOMPosition(item, this._initialDragItemsCoordinates[item.index]));
       updatedDOMcallback();
     });
 
     for (let i = 1; i < elemsArray.length; i++) {
-      elemsArray[i].translateTo(this.initDragItemsPlaces[elemsArray[i].index], true);
+      elemsArray[i].translateTo(this._initialDragItemsCoordinates[elemsArray[i].index], true);
     }
   }
 
@@ -1362,9 +1362,9 @@ class CgDnd extends EventEmitter {
 
     this.remainingDragItems = [...this.dragItems];
     this.allowedDropAreas = this.dropAreas ? [...this.dropAreas] : null;
-    this.initDragItemsPlaces = [];
+    this._initialDragItemsCoordinates = [];
     this.dragItems.forEach((item, index) => {
-      this.initDragItemsPlaces[index] = merge.recursive(true, {}, item.coordinates.default);
+      this._initialDragItemsCoordinates[index] = merge.recursive(true, {}, item.coordinates.default);
     });
   }
 
@@ -1375,7 +1375,7 @@ class CgDnd extends EventEmitter {
    */
   _setHiddenAriaContainerFor(dndElems) {
     dndElems.forEach((item) => {
-      item.initOwnAriaDescElement(this.hiddenDescContainer);
+      item.initOwnAriaDescElement(this._hiddenDescContainer);
     });
   }
 
@@ -1567,7 +1567,7 @@ class CgDnd extends EventEmitter {
   _createHiddenDescriptionBlock() {
     this.constructor.AT_PAGE_DND_COUNTER++;
 
-    this.hiddenDescContainer = utils.createHTML({
+    this._hiddenDescContainer = utils.createHTML({
       html: '',
       container: this.container,
       attrs: {
@@ -1666,12 +1666,12 @@ class CgDnd extends EventEmitter {
     this._removeEventsHandlers(this.constructor.EVENTS);
     this._removeEventsHandlers(DragItem.EVENTS);
 
-    this.dragItems.forEach((item) => item.handler.removeEventListener(this.deviceEvents.dragStart, item.onMouseDownHandler));
+    this.dragItems.forEach((item) => item.handler.removeEventListener(this._deviceEvents.dragStart, item.onMouseDownHandler));
     this._removeStandardEventsHandlers(this.dragItems);
     this.dropAreas && this._removeStandardEventsHandlers(this.dropAreas);
 
-    window.removeEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this.onResizeHandler);
-    this.container.removeEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this.onAppKeyDownHandler);
+    window.removeEventListener(this.constructor.STANDARD_EVENTS.RESIZE, this._onResizeHandler);
+    this.container.removeEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this._onAppKeyDownHandler);
   }
 
   _removeEventsHandlers(eventsObj) {
@@ -1697,7 +1697,7 @@ class CgDnd extends EventEmitter {
   _resetOnlyDragItemsCase(params = {}) {
     this.dragItems.forEach((item, index) => {
       item.reset({
-        coordinates: this.initDragItemsPlaces[index],
+        coordinates: this._initialDragItemsCoordinates[index],
         removedClassName: params.removedClassName,
         afterAnimationCB: () => {
           /**
@@ -1705,7 +1705,7 @@ class CgDnd extends EventEmitter {
            */
           if (index === this.dragItems.length - 1) {
             utils.IS_TOUCH && this.dragItems.forEach((item, index) => {
-              this._updateNodeDOMPosition(item, merge.recursive(true, {}, this.initDragItemsPlaces[index]), true);
+              this._updateNodeDOMPosition(item, merge.recursive(true, {}, this._initialDragItemsCoordinates[index]), true);
             });
 
             params.afterAnimationCB && params.afterAnimationCB();

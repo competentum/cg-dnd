@@ -255,7 +255,7 @@ class Tooltip {
     };
   }
 
-  getCoordinates(elemCoords, location, position, shift) {
+  _getCoordinates(elemCoords, location, position, shift) {
     const { left, right, top, bottom, width, height } = elemCoords;
     let x = shift.x;
     let y = shift.y;
@@ -280,14 +280,14 @@ class Tooltip {
     };
   }
 
-  getOffset(location) {
+  _getOffset(location) {
     return {
       x: location === 'left' ? this.node.offsetWidth : 0,
       y: location === 'top' ? this.node.offsetHeight : 0
     };
   }
 
-  checkMaxWidth(tooltipCoordinates, location) {
+  _checkMaxWidth(tooltipCoordinates, location) {
     const { x } = tooltipCoordinates;
     const availableMaxWidth = location === 'left' ? x : document.body.clientWidth - x;
 
@@ -306,14 +306,14 @@ class Tooltip {
       shift = this.shift || LOCATION_SHIFT[location]
     } = params;
     const elemCoordinates = elem.coordinates.current || elem.coordinates.default;
-    const tooltipCoordinates = this.getCoordinates(elemCoordinates, location, position, shift);
+    const tooltipCoordinates = this._getCoordinates(elemCoordinates, location, position, shift);
 
     if (message) {
       this.messageContainer.innerHTML = message;
     }
 
     this.node.setAttribute('data-tooltip-location', location);
-    this.checkMaxWidth(tooltipCoordinates, location);
+    this._checkMaxWidth(tooltipCoordinates, location);
 
     /**
      * At first, show tooltip, that calculate its height, then move it to needed coordinates
@@ -321,7 +321,7 @@ class Tooltip {
      */
     this.node.style.display = 'block';
 
-    const offset = this.getOffset(location);
+    const offset = this._getOffset(location);
 
     this.node.style.transform = `translate(${tooltipCoordinates.x - offset.x}px, ${tooltipCoordinates.y - offset.y}px)`;
   }
