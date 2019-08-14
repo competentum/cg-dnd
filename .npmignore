@@ -1,2 +1,17 @@
+# IntelliJ project files
+.idea
+*.iml
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules
+bower_components
+
 .gitignore
+
+# Development directories
 dev
