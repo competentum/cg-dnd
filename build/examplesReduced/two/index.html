@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>second example</title>
+    <link rel="stylesheet" href="../../index.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+<div id="main-container">
+    <ol>
+        <li>
+            <div class="content example-container" id="first-example">
+                <h1>with replacing, all focused, drop areas without limits</h1>
+                <div class="dnd-container">
+                    <div class="drag-item-container">
+                        <div id="drag-item-1" class="drag-item">drag item 1</div>
+                        <div id="drag-item-2" class="drag-item">drag item 2</div>
+                        <div id="drag-item-3" class="drag-item">drag item 3</div>
+                        <div id="drag-item-4" class="drag-item">drag item 4</div>
+                        <div id="drag-item-5" class="drag-item">drag item 5</div>
+                    </div>
+                    <div class="drop-area-container">
+                        <div id="drop-area-1" class="drop-area multiple">top</div>
+                        <div id="drop-area-2" class="drop-area multiple aligned-content bottom-content">bottom</div>
+                        <div id="drop-area-3" class="drop-area multiple aligned-content center-content">center</div>
+                    </div>
+                </div>
+                <div class="buttons-container">
+                    <button class="check-btn standard-btn">check</button>
+                    <button class="reset-btn standard-btn">reset</button>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="content example-container" id="second-example">
+                <h1>without accessibility, checks some settings-feats</h1>
+                <div class="dnd-container">
+                    <div class="drag-item-container">
+                        <div id="drag-item-2-1" class="drag-item">drag item 1</div>
+                        <div id="drag-item-2-2" class="drag-item">drag item 2</div>
+                        <div id="drag-item-2-3" class="drag-item">drag item 3</div>
+                        <div id="drag-item-2-4" class="drag-item">drag item 4</div>
+                        <div id="drag-item-2-5" class="drag-item">drag item 5</div>
+                    </div>
+                    <div class="drop-area-container">
+                        <div id="drop-area-2-1" class="drop-area multiple">top (max items count = 2) <br> without shifts</div>
+                        <div id="drop-area-2-2" class="drop-area multiple aligned-content bottom-content">bottom (max items count = 2)<br> with custom margins</div>
+                        <div id="drop-area-2-3" class="drop-area multiple aligned-content center-content">center (max items count = 4)<br> without margins</div>
+                        <div id="drop-area-2-4" class="drop-area multiple without-snap">without snap</div>
+                    </div>
+                </div>
+                <div class="buttons-container">
+                    <button class="check-btn standard-btn">check</button>
+                    <button class="reset-btn standard-btn">reset</button>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="content example-container" id="third-example">
+                <h1>without accessibility, with groups</h1>
+                <div class="dnd-container">
+                    <div id="drop-area-3-1" class="drop-area multiple accept-circles">
+                        accept all circles only
+                    </div>
+                    <div class="drag-item-container">
+                        <div id="drag-item-3-1" class="drag-item rect">1</div>
+                        <div id="drag-item-3-2" class="drag-item circle purple">2</div>
+                        <div id="drag-item-3-3" class="drag-item rect yellow">3</div>
+                        <div id="drag-item-3-4" class="drag-item circle yellow">4</div>
+                        <div id="drag-item-3-5" class="drag-item circle">5</div>
+                        <div id="drag-item-3-6" class="drag-item rect purple">6</div>
+                        <div id="drag-item-3-7" class="drag-item rect purple">7</div>
+                    </div>
+                    <div id="drop-area-3-2" class="drop-area multiple accept-rectangles">
+                        accept all rectangles only
+                    </div>
+                </div>
+                <div class="horizontal-areas-container">
+                    <div id="drop-area-3-3" class="drop-area horizontal-area accept-yellow-circles">
+                        accept yellow circles only
+                        <div class="yellow-circle"></div>
+                    </div>
+                    <div id="drop-area-3-4" class="drop-area horizontal-area accept-all-purple">
+                        accept all purple items only
+                    </div>
+                </div>
+                <div class="buttons-container">
+                    <button class="check-btn standard-btn">check</button>
+                    <button class="reset-btn standard-btn">reset</button>
+                </div>
+            </div>
+        </li>
+    </ol>
+    <div id="live-region" class="visually-hidden" aria-live="polite"></div>
+</div>
+
+<script type="text/javascript" src="../liveRegion.js"></script>
+<script type="text/javascript" src="feedback.js"></script>
+<script type="text/javascript" src="../../cg-dnd.js"></script>
+<script type="text/javascript" src="example-1.js"></script>
+<script type="text/javascript" src="example-2.js"></script>
+<script type="text/javascript" src="example-3.js"></script>
+</body>
+</html>

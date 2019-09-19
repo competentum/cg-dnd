@@ -395,7 +395,7 @@ class DragItem extends DefaultDndElement {
    * @param {Object} params
    * @param {dropArea} params.dropArea - the chosen drop area, in which we want to put a drag item
    * @param {function} params.animationEndCallback - callback function, which will be executed after animation end
-   * @param {boolean} [params.callCheckAfterAnimationEnd = false] - if "true", checking will be executed after animation end,
+   * @param {boolean} [params.checkAfterAnimation = false] - if "true", checking will be executed after animation end,
    * else it will be executed in this function end
    * @param {boolean} [params._shiftRemainingItems = true] - if "true", remaining drag items will be aligned
    * (if settings.alignRemainingDragItems === true). It's needed for disabling double remaining drag items shifting during replacing
@@ -403,7 +403,7 @@ class DragItem extends DefaultDndElement {
    * @public
    */
   placeToDropArea(params) {
-    const { dropArea, callCheckAfterAnimationEnd = false, animationEndCallback = () => {}, _shiftRemainingItems = true,
+    const { dropArea, checkAfterAnimation = false, animationEndCallback = () => {}, _shiftRemainingItems = true,
             replacedDragItem } = params;
     const paramsForCheck = {
       dragItem: this,
@@ -425,12 +425,12 @@ class DragItem extends DefaultDndElement {
     this.translateTo(dropArea.getAlignedCoords(this), true, () => {
       this.coordinates.droppedIn.update();
 
-      callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
+      checkAfterAnimation && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
 
       animationEndCallback(this, dropArea);
     });
 
-    !callCheckAfterAnimationEnd && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
+    !checkAfterAnimation && this.emit(this.constructor.EVENTS.ATTEMPT_TO_PUT_DRAG_ITEM, paramsForCheck);
 
     return true;
   }

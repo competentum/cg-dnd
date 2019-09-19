@@ -1,0 +1,14 @@
+.dnd-container {
+  max-width: 400px;
+  margin: auto;
+}
+
+.dnd-container .drag-item-container {
+  width: 100%;
+  outline: 1px solid #2bb4f1;
+}
+
+.dnd-container .drag-item-container > * {
+  width: auto;
+  margin: 15px 0;
+}

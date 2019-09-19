@@ -7,6 +7,7 @@ import DragItem from 'DragItem';
 import DropArea from 'DropArea';
 import Tooltip from 'Tooltip';
 import debounce from 'lodash.debounce';
+import { onDragItemSelect, onDropAreaSelect } from './defaultHandlers';
 
 const RESIZE_CALC_FREQUENCY = 150;
 
@@ -142,8 +143,8 @@ class CgDnd extends EventEmitter {
         onDragStart: () => {},
         onDragMove: () => {},
         onDragStop: () => {},
-        onDragItemSelect: () => {},
-        onDropAreaSelect: () => {}
+        onDragItemSelect,
+        onDropAreaSelect
       };
     }
 
@@ -662,11 +663,11 @@ class CgDnd extends EventEmitter {
         }
 
         this.emit(this.constructor.EVENTS.DRAG_ITEM_SELECT, e, {
+          dnd: this,
           dragItem: item,
           chosenDraggedItem: this.currentDragParams.chosenDraggedItem,
           dropAreas: this.dropAreas,
-          allowedDropAreas: this.allowedDropAreas,
-          firstAllowedDropArea: this.firstAllowedDropArea
+          allowedDropAreas: this.allowedDropAreas
         });
         this.isClick = undefined;
       } else if (utils.IS_TOUCH && item.chosenDropArea) {
@@ -699,6 +700,7 @@ class CgDnd extends EventEmitter {
 
       this._removeCurrentDraggedItemSelection();
       this.emit(this.constructor.EVENTS.DROP_AREA_SELECT, e, {
+        dnd: this,
         dropArea: area,
         droppedItems: area.innerDragItems,
         currentDraggedItem: this.currentDragParams ? this.currentDragParams.draggedItem : null,

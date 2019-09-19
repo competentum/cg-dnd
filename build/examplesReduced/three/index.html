@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>third example</title>
+    <link rel="stylesheet" href="../../index.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+<div id="main-container">
+    <ol>
+        <li>
+            <div class="content example-container" id="first-example">
+                <h1>without shift, disable focus on correct items</h1>
+                <div id="dnd-1" class="dnd-container">
+                    <div class="drag-item-container">
+                        <div id="drag-item-4" class="drag-item">drag item 4</div>
+                        <div id="drag-item-2" class="drag-item">drag item 2</div>
+                        <div id="drag-item-5" class="drag-item">drag item 5</div>
+                        <div id="drag-item-3" class="drag-item">drag item 3</div>
+                        <div id="drag-item-1" class="drag-item">drag item 1</div>
+                    </div>
+                </div>
+                <div class="buttons-container">
+                    <button class="check-btn standard-btn">check</button>
+                    <button class="reset-btn standard-btn">reset</button>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="content example-container" id="second-example">
+                <h1>with shift, disable focus on correct items</h1>
+                <div id="dnd-2" class="dnd-container">
+                    <div class="drag-item-container">
+                        <div id="drag-item-2-4" class="drag-item">drag item 4</div>
+                        <div id="drag-item-2-2" class="drag-item">drag item 2</div>
+                        <div id="drag-item-2-5" class="drag-item">drag item 5</div>
+                        <div id="drag-item-2-3" class="drag-item">drag item 3</div>
+                        <div id="drag-item-2-1" class="drag-item">drag item 1</div>
+                    </div>
+                </div>
+                <div class="buttons-container">
+                    <button class="check-btn standard-btn">check</button>
+                    <button class="reset-btn standard-btn">reset</button>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div class="content example-container" id="third-example">
+                <h1>without shift, enable focus on correct items</h1>
+                <div id="dnd-3" class="dnd-container">
+                    <div class="drag-item-container">
+                        <div id="drag-item-3-4" class="drag-item">drag item 4</div>
+                        <div id="drag-item-3-5" class="drag-item">drag item 5</div>
+                        <div id="drag-item-3-2" class="drag-item">drag item 2</div>
+                        <div id="drag-item-3-3" class="drag-item">drag item 3</div>
+                        <div id="drag-item-3-1" class="drag-item">drag item 1</div>
+                    </div>
+                </div>
+                <div class="buttons-container">
+                    <button class="reset-btn standard-btn">reset</button>
+                </div>
+            </div>
+        </li>
+    </ol>
+    <div id="live-region" class="visually-hidden" aria-live="polite"></div>
+</div>
+
+<script type="text/javascript" src="../liveRegion.js"></script>
+<script type="text/javascript" src="../devices.js"></script>
+<script type="text/javascript" src="feedback.js"></script>
+<script type="text/javascript" src="../../cg-dnd.js"></script>
+<script type="text/javascript" src="example-1.js"></script>
+<script type="text/javascript" src="example-2.js"></script>
+<script type="text/javascript" src="example-3.js"></script>
+</body>
+</html>

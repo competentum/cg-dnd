@@ -127,17 +127,6 @@
     },
     onCreate: function (dndObj) {
       console.log(dndObj);
-    },
-    onDragItemSelect: function (e, params) {
-      params.allowedDropAreas[0].focus();
-    },
-    onDropAreaSelect: function (e, params) {
-      if (params.currentDraggedItem) {
-        params.currentDraggedItem.placeToDropArea({
-          dropArea: params.dropArea,
-          callCheckAfterAnimationEnd: true
-        });
-      }
     }
   };
 

@@ -1,0 +1,98 @@
+.drop-area-container {
+  flex-grow: 2;
+  display: flex;
+  justify-content: space-around;
+  min-height: 400px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.multiple {
+  min-width: 160px;
+  min-height: 350px;
+}
+
+.horizontal-area {
+  min-height: 150px;
+  min-width: 300px;
+}
+
+.aligned-content {
+  display: flex;
+  justify-content: center;
+}
+
+.center-content {
+  align-items: center;
+}
+
+.bottom-content {
+  align-items: flex-end;
+}
+
+.without-snap {
+  min-height: 200px;
+  width: 90%;
+}
+
+#third-example .dnd-container {
+  justify-content: space-around;
+}
+
+#third-example .dnd-container .drag-item-container{
+  display: flex;
+  align-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.circle,
+.rect{
+  width: 30px;
+}
+
+.accept-circles {
+  border-radius: 50%;
+  border: 1px solid #060977;
+  outline: 1px solid transparent;
+  min-width: 400px;
+  min-height: 400px;
+  width: 100px !important;
+  height: 100px !important;
+}
+
+.horizontal-areas-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+
+.purple {
+  background-color: #8d19db;
+}
+
+.yellow {
+  background-color: #fdcf00;
+}
+
+.accept-all-purple {
+  border: 4px solid #8d19db;
+}
+
+.accept-yellow-circles {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.accept-yellow-circles .yellow-circle {
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid #fdcf00;
+  width: 50%;
+}
