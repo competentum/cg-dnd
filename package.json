@@ -41,7 +41,7 @@
     "cg-components-banner": "latest",
     "cli-color": "^1.2.0",
     "css-loader": "^0.28.9",
-    "eslint": "^3.19.0",
+    "eslint": "^4.18.2",
     "less": "^2.7.3",
     "less-loader": "^2.2.3",
     "lodash.debounce": "^4.0.8",
