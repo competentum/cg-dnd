@@ -471,15 +471,25 @@ class DropArea extends DefaultDndElement {
   }
 
   /**
-   * Change current drop area aria-description
-   * @param {function}userCB - user callback, that returns new description
+   * @callback descCB
+   * @param {DropArea} dragArea
+   * @param {Array} innerDragItems
+   * @param {number} innerDragItemsCount
+   * @return {string} - new element's aria-description
    */
-  changeCurrentAriaState(userCB) {
-    this.currentAriaState = userCB({
-      area: this,
-      innerDragItems: this.innerDragItems,
-      innerDragItemsCount: this.innerDragItemsCount
-    });
+
+  /**
+   * Change current drop area aria-description
+   * @param {descCB|string} userDesc - user callback, that returns new description
+   */
+  changeCurrentAriaState(userDesc) {
+    this.currentAriaState = typeof userDesc === 'function'
+        ? userDesc({
+          area: this,
+          innerDragItems: this.innerDragItems,
+          innerDragItemsCount: this.innerDragItemsCount
+        })
+        : userDesc;
   }
 
   allowKeyboardAccess(flag) {

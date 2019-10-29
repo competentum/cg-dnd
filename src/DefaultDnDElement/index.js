@@ -454,11 +454,11 @@ class DefaultDndElement {
 
   /**
    * Changes current hidden araia description for element
-   * @param {descCB} userCB
+   * @param {descCB|string} userDesc
    * @public
    */
-  changeCurrentKeyboardDesc(userCB) {
-    this.currentKeyboardDesc = userCB(this);
+  changeCurrentKeyboardDesc(userDesc) {
+    this.currentKeyboardDesc = typeof userDesc === 'function' ? userDesc(this) : userDesc;
   }
 
   resetKeyboardDesc() {

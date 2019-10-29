@@ -550,14 +550,23 @@ class DragItem extends DefaultDndElement {
   }
 
   /**
-   * Change current drop area aria-description
-   * @param {function}userCB - user callback, that returns new description
+   * @callback descCB
+   * @param {DragItem} dragItem
+   * @param {DropArea} chosenDropArea
+   * @return {string} - new element's aria-description
    */
-  changeCurrentAriaState(userCB) {
-    this.currentAriaState = userCB({
-      item: this,
-      chosenDropArea: this.chosenDropArea
-    });
+
+  /**
+   * Change current drop area aria-description
+   * @param {descCB|string} userDesc - user callback, that returns new description
+   */
+  changeCurrentAriaState(userDesc) {
+    this.currentAriaState = typeof userDesc === 'function'
+        ? userDesc({
+          item: this,
+          chosenDropArea: this.chosenDropArea
+        })
+        : userDesc;
   }
 
   /**

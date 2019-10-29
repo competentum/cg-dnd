@@ -16,58 +16,8 @@
       FILLED_DROP_AREA_ARIA_DESC_PART = 'Area was filled by ',
       RESET_MESSAGE = 'Activity was reset! ';
 
-  function getKeyboardDescForEmptyAreaDuringDragging(dragItemLabel) {
-    return ON_DRAG_START_EMPTY_DROP_AREAS_KEYBOARD_DESC_PART + dragItemLabel + ' inside. ';
-  }
-
-  function getKeyboardDescForFilledAreaDuringDragging(draggedItem, filledArea) {
-    var droppedInItem = filledArea.innerDragItems[0],
-        draggedItemLabel = draggedItem.getSetting('ariaLabel'),
-        droppedInItemLabel = droppedInItem.getSetting('ariaLabel');
-
-    if (draggedItem === droppedInItem) {
-      return ON_DRAG_START_SAME_FILLED_DROP_AREA_DESC_PART + draggedItemLabel + ' inside the same area. ';
-    } else {
-      return ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART + droppedInItemLabel + ' by ' + draggedItemLabel + '. ';
-    }
-  }
-
-  function getKeyboardDescForFilledArea(filledArea) {
-    return ON_DRAG_START_FILLED_DROP_AREAS_KEYBOARD_DESC_PART + filledArea.innerDragItems[0].getSetting('ariaLabel') + '. ';
-  }
-
-  function getAriaStateDescForFilledArea(filledArea) {
-    return FILLED_DROP_AREA_ARIA_DESC_PART + filledArea.innerDragItems[0].getSetting('ariaLabel') + '. ';
-  }
-
-
-  function changeDropAreasKeyBoardDescDuringDrag(draggedItem, dropAreas) {
-    var draggedItemLabel = draggedItem.getSetting('ariaLabel');
-
-    dropAreas.forEach(function (area) {
-      if (!area.innerDragItemsCount) {
-        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForEmptyAreaDuringDragging(draggedItemLabel) });
-      } else {
-        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledAreaDuringDragging(draggedItem, area) });
-      }
-    });
-  }
-
-  function changeFilledDropAreaDesc(area) {
-    area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledArea(area) });
-    area.changeCurrentAriaState(function (area) { return getAriaStateDescForFilledArea(area) });
-  }
-
   function setCorrectDesc(area) {
     area.changeCurrentAriaState(function (params) { return 'Correct! ' + params.area.currentAriaState });
-  }
-
-  function updateFilledAreasKeyboardDescAfterStopDragging(dropAreas) {
-    dropAreas.forEach(function (area) {
-      if (area.innerDragItemsCount) {
-        area.changeCurrentKeyboardDesc(function () { return getKeyboardDescForFilledArea(area) });
-      }
-    });
   }
 
   var settings = {
@@ -162,7 +112,6 @@
       }
     ],
     onDragStart: function (e, item) {
-      changeDropAreasKeyBoardDescDuringDrag(item, dnd.dropAreas);
     },
     onDragMove: function (e, item) {
     },
@@ -172,14 +121,6 @@
 
       if (params.dragItem && params.dropArea) {
         params.dragItem.correct = params.dragItem.data === params.dropArea.data;
-
-        changeFilledDropAreaDesc(params.dropArea);
-        updateFilledAreasKeyboardDescAfterStopDragging(dnd.dropAreas);
-
-        if (params.previousDropArea) {
-          params.previousDropArea.resetAriaStateDesc();
-          params.previousDropArea.resetKeyboardDesc();
-        }
       }
 
       if (params.replacedDragItem) {

@@ -11,6 +11,12 @@ import { onDragItemSelect, onDropAreaSelect } from './defaultHandlers';
 
 const RESIZE_CALC_FREQUENCY = 150;
 
+const DROP_AREA_STATUSES = {
+  empty: 'empty',
+  filled: 'filled',
+  multipleFilled: 'multipleFilled'
+};
+
 /**
  * DnD's customizing settings
  * @typedef {Object} DndSettings
@@ -90,6 +96,64 @@ class CgDnd extends EventEmitter {
         shiftDragItems: false,
         forbidFocusOnFilledDropAreas: false,
         debouncedResize: false,
+        a11yTexts: {
+          announced: {
+            onReset: 'All items were reset.',
+            onIncorrectResetOnly: 'All incorrect items ware reset.',
+            onFilledAreaAttempt: 'Area is not empty.',
+            onOverFilledAreaAttempt: 'Area is completely full.'
+          },
+          descriptions: {
+            dragItem: {
+              state: {
+                initial: '',
+                insideArea: (item) => {
+                  return item.chosenDropArea ? `This item is located inside the area - ${item.chosenDropArea}.` : '';
+                }
+              },
+              usage: {
+                initial: 'Press space to select the item. Use arrows keys to navigate between items.',
+                insideArea: 'Press space to select the item. Use arrows keys to navigate between another dropped items inside this area.',
+              }
+            },
+            dropArea: {
+              state: {
+                [DROP_AREA_STATUSES.empty]: 'Is empty.',
+                [DROP_AREA_STATUSES.filled]: (area) => `Area is filled by the item - ${area.innerDragItems[0].ariaLabel}`,
+                [DROP_AREA_STATUSES.multipleFilled]: (area) => {
+                  const innerItems = area.innerDragItems.reduce((item) => `${item.ariaLabel};`, '');
+
+                  return `Area contains the ${area.innerDragItems.length} items: ${innerItems}`;
+                }
+              },
+              usage: {
+                withReplace: {
+                  static: {
+                    [DROP_AREA_STATUSES.empty]: 'Choose item first. Use arrows keys to navigate between areas.',
+                    [DROP_AREA_STATUSES.filled]: 'Press space to select the element inside the area for its replacing. Use arrows keys to'
+                        + ' navigate between areas.',
+                    [DROP_AREA_STATUSES.multipleFilled]: 'Press space to navigate between dropped in items for its replacing.'
+                    + ' Use arrows keys to navigate between areas.'
+                  },
+                  dragging: {
+                    [DROP_AREA_STATUSES.empty]: 'Press space to place the grabbed item to this area. Use arrows keys to'
+                    + ' navigate between areas.',
+                    [DROP_AREA_STATUSES.filled]: 'Press space to replace the dropped item in this area by the grabbed item.'
+                        + ' Use arrows keys to navigate between areas.',
+                    [DROP_AREA_STATUSES.multipleFilled]: 'Press space to place the grabbed item to this area. Use arrows'
+                    + ' keys to navigate between areas.',
+                    sameArea: 'Press space to remain the item at the current area.'
+                  }
+                },
+                withoutReplace: {
+                  static: 'Choose item first. Use arrows keys to navigate between areas.',
+                  dragging: 'Press space to place the grabbed item to this area. Use arrows keys to navigate between areas.'
+                }
+              }
+            },
+            orderCase: {}
+          }
+        },
         commonDragItemsSettings: {
           handler: '',
           selectedItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
@@ -375,6 +439,76 @@ class CgDnd extends EventEmitter {
 
     this._onAppKeyDownHandler = this._onAppKeyDown.bind(this);
     this.container.addEventListener(this.constructor.STANDARD_EVENTS.KEYDOWN, this._onAppKeyDownHandler);
+
+    this._addDescriptionsListeners();
+    this._addUserEventHandlers();
+  }
+
+  _addUserEventHandlers() {
+    for (const key in this.constructor.EVENTS_HANDLER_RELATIONS) {
+      if (this.constructor.EVENTS_HANDLER_RELATIONS.hasOwnProperty(key) && this.settings[key]) {
+        this.addListener(this.constructor.EVENTS_HANDLER_RELATIONS[key], this.settings[key]);
+      }
+    }
+  }
+
+  _addDescriptionsListeners() {
+    this.addListener(this.constructor.EVENTS.DRAG_START, (e, item) => {
+      if (this.dropAreas.length) {
+        this.dropAreas.forEach((area) => {
+          area.changeCurrentKeyboardDesc(this._getDropAreaDescription(area, item));
+        });
+      }
+    });
+
+    this.addListener(this.constructor.EVENTS.DRAG_STOP, (e, params) => {
+      const { a11yTexts: { descriptions: { dragItem: itemDescriptions, dropArea: areaDescriptions } } } = this.settings;
+
+// TODO: add live announce for reset and same drop area
+      if (params.isReset) {
+        params.dragItem.changeCurrentKeyboardDesc(itemDescriptions.usage.initial);
+        params.dragItem.changeCurrentAriaState(itemDescriptions.state.initial);
+      } else if (params.isSameDropArea) {
+// TODO: add announce
+      } else {
+        params.dragItem.changeCurrentKeyboardDesc(itemDescriptions.usage.insideArea);
+        params.dragItem.changeCurrentAriaState(itemDescriptions.state.insideArea);
+      }
+
+      if (this.dropAreas.length) {
+        this.dropAreas.forEach((area) => {
+          area.changeCurrentKeyboardDesc(areaDescriptions.state[this._getDropAreaStatus(area)]);
+        });
+      }
+    });
+  }
+
+  _getDropAreaDescription(dropArea, draggedItem) {
+    const { a11yTexts: { descriptions: { dropArea: { usage: usageDesc } } } } = this.settings;
+    const isPossibleToReplace = this.settings.possibleToReplaceDroppedItem && dropArea.innerDragItems.length;
+
+    if (isPossibleToReplace) {
+      const { withReplace: { dragging: { sameArea: sameAreaDesc } } } = usageDesc;
+
+      return sameAreaDesc && dropArea.innerDragItems.includes(draggedItem)
+          ? sameAreaDesc
+          : usageDesc.withReplace.dragging[this._getDropAreaStatus(dropArea)];
+    }
+
+    return usageDesc.withoutReplace.dragging;
+  }
+
+  _getDropAreaStatus(dropArea) {
+    const { empty, filled, multipleFilled } = DROP_AREA_STATUSES;
+
+    switch (dropArea.innerDragItems.length) {
+      case 0:
+        return empty;
+      case 1:
+        return filled;
+      default:
+        return multipleFilled;
+    }
   }
 
   _onResize() {
@@ -742,6 +876,7 @@ class CgDnd extends EventEmitter {
     }
   }
 
+  // TODO: see there (for replacing or wrong dragging announce)
   /**
    * Checks main setting's conditions before putting drag item into drop area
    * @param {Object} params
@@ -759,10 +894,14 @@ class CgDnd extends EventEmitter {
       dragItem,
       dropArea,
       remainingDragItems: this.remainingDragItems,
-      replacedDragItem
+      replacedDragItem,
+      isSameDropArea: false,
+      isReset: false
     };
 
     if (isSameDropArea) {
+      forUserArgs.isSameDropArea = true;
+
       this._finishDrag(forUserArgs);
 
       return;
@@ -775,6 +914,8 @@ class CgDnd extends EventEmitter {
     }
 
     if (this._isNeedToReset(dragItem, dropArea)) {
+      forUserArgs.isReset = true;
+
       dragItem.reset();
 
       delete forUserArgs.dropArea;
@@ -1457,7 +1598,7 @@ class CgDnd extends EventEmitter {
       case 'onDropAreaSelect':
         if (typeof settingValue === 'function') {
           verifiedValue = settingValue;
-          this.on(this.constructor.EVENTS_HANDLER_RELATIONS[settingName], settingValue);
+       //   This.on(this.constructor.EVENTS_HANDLER_RELATIONS[settingName], settingValue);
         } else if (settingValue !== null) {
           utils.showSettingError(settingName, settingValue, 'Please set function as event handler.');
         }
@@ -1493,7 +1634,14 @@ class CgDnd extends EventEmitter {
         }
         break;
       case 'liveTextElement':
-        verifiedValue = utils.getElement(settingValue);
+        verifiedValue = utils.getElement(settingValue) || utils.createHTML({
+          html: '<span></span>',
+          container: document.documentElement,
+          className: 'visually-hidden',
+          attrs: {
+            'aria-live': 'polite'
+          }
+        });
         break;
       case 'hotkeyCode':
         if (typeof +settingValue === 'number') {
@@ -1521,8 +1669,37 @@ class CgDnd extends EventEmitter {
           utils.showSettingError(settingName, settingValue, 'Please set function');
         }
         break;
+      case 'a11yTexts':
+        verifiedValue = this.checkA11yTexts(settingName, settingValue);
+        break;
       default:
         verifiedValue = settingValue;
+    }
+
+    return verifiedValue;
+  }
+
+  checkA11yTexts(settingName, settingValue) {
+    let verifiedValue;
+
+    switch (typeof settingValue) {
+      case 'object':
+        verifiedValue = {};
+
+        for (const key in settingValue) {
+          if (settingValue.hasOwnProperty(key)) {
+            verifiedValue[key] = this.checkA11yTexts(key, settingValue[key]);
+          }
+        }
+        break;
+      case 'string':
+      case 'function':
+        verifiedValue = settingValue;
+        break;
+      default:
+        utils.showSettingError(settingName, settingValue, 'Please set string or function, which returns a string');
+
+        verifiedValue = '';
     }
 
     return verifiedValue;
