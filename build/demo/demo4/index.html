@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo 1</title>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="../index.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dnd-container">
+            <div class="drag-items">
+                <div id="item-1" class="drag-item">addition</div>
+                <div id="item-2" class="drag-item">multiplication</div>
+                <div id="item-3" class="drag-item">subtraction</div>
+                <div id="item-4" class="drag-item">exponentiation</div>
+                <div id="item-5" class="drag-item">division</div>
+                <div id="item-6" class="drag-item">root extraction</div>
+            </div>
+            <div class="text-container">
+                <span id="common-description" aria-hidden="true">The order of operations is a collection of rules that reflect conventions about which procedures to perform
+                    first in order to evaluate a given mathematical expression.</span>
+                <span class="rest-part" aria-labelledby="common-description">
+                    <span aria-hidden="true"> First, </span><span id="area-1" class="drop-area"></span><span> is(are) performed</span>.
+                <span aria-hidden="true">Then, </span><span id="area-2" class="drop-area"></span><span aria-hidden="true"> is(are) performed.</span>
+                <span aria-hidden="true">Finally, </span><span id="area-3" class="drop-area"></span><span aria-hidden="true"> is(are) performed.</span>
+                </span>
+            </div>
+        </div>
+        <div class="buttons-container">
+            <button class="check-btn standard-btn">check</button>
+            <button class="reset-btn standard-btn">reset</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="../../cg-dnd.js"></script>
+    <script type="text/javascript" src="../commonCheck.js"></script>
+    <script type="text/javascript" src="./index.js"></script>
+</body>
+</html>
