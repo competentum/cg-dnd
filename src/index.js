@@ -205,7 +205,7 @@ class CgDnd extends EventEmitter {
         },
         unselectParams: {
           hotkeyCode: 27,
-          usageInstruction: ''
+          usageInstruction: 'Press ESC-button to drop the current selection.'
         },
         onCreate: () => {},
         onDragStart: () => {},
@@ -1693,8 +1693,12 @@ class CgDnd extends EventEmitter {
           verifiedValue = settingValue;
 
           if (verifiedValue.length && !utils.IS_TOUCH) {
-            this.dragItems.forEach((item) => item.setCommonUsageInstruction(verifiedValue));
-            this.dropAreas && this.dropAreas.forEach((area) => area.setCommonUsageInstruction(verifiedValue));
+            this.dragItems.forEach((item) => {
+              item.commonKeyBoardDesc += verifiedValue;
+            });
+            this.dropAreas && this.dropAreas.forEach((area) => {
+              area.commonKeyBoardDesc += verifiedValue;
+            });
           }
         } else {
           utils.showSettingError(settingName, settingValue, 'Please set not empty string');

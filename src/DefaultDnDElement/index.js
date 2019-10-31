@@ -216,6 +216,9 @@ class DefaultDndElement {
 
   set commonKeyBoardDesc(text) {
     this._commonKeyboardDesc = text;
+
+    /** Update current keyboard description with new common part */
+    this.currentKeyboardDesc += '';
   }
 
   get commonKeyBoardDesc() {
@@ -629,13 +632,6 @@ class DefaultDndElement {
         this.coordinates[key].update(newPositionDOMRectCoordinates);
       }
     }
-  }
-
-  setCommonUsageInstruction(text) {
-    this.commonKeyBoardDesc += text;
-
-    /** Update current keyboard description with new common part */
-    this.currentKeyboardDesc = this.currentKeyboardDesc;
   }
 }
 
