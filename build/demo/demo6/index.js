@@ -4,7 +4,7 @@
         resetButton = document.querySelector('.reset-btn');
 
     // Quickly sketched this function without optimization =)
-    function imporveTargetHeight(dropTarget) {
+    function improveTargetHeight(dropTarget) {
         if (dropTarget.innerDragItems.length) {
             var droppedItemsCommonHeight = dropTarget.innerDragItems.reduce(function (result, item) {
                 result += item.node.getBoundingClientRect().height + droppedItemMargin;
@@ -86,11 +86,11 @@
             if (params.dragItem && params.dropArea) {
                 params.dragItem.correct = params.dragItem.data === params.dropArea.data;
 
-                imporveTargetHeight(params.dropArea);
+                improveTargetHeight(params.dropArea);
             }
 
             if (params.previousDropArea) {
-                imporveTargetHeight(params.previousDropArea);
+                improveTargetHeight(params.previousDropArea);
             }
 
             if (params.remainingDragItems[0]) {
@@ -108,10 +108,16 @@
 
     checkButton.addEventListener('click', function () {
         checkActivity(dnd);
+
+        improveTargetHeight(dnd.dropAreas[0]);
+        improveTargetHeight(dnd.dropAreas[1]);
     });
 
     resetButton.addEventListener('click', function () {
         dnd.reset();
         dnd.firstRemainingDragItem.focus({ liveText: 'Activity was reset.' });
+
+        improveTargetHeight(dnd.dropAreas[0]);
+        improveTargetHeight(dnd.dropAreas[1]);
     });
 })();
