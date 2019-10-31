@@ -227,7 +227,7 @@ class CgDnd extends EventEmitter {
     return {
       DND: this.DND_CLASS,
       DRAG: `${this.DND_CLASS}-drag-item`,
-      HIDDEN_DESC_CONTAINER: `${this.DND_CLASS}-visually-hidden`,
+      VISUALLY_HIDDEN: `${this.DND_CLASS}-visually-hidden`,
       CURRENT_DRAGGED_ITEM: `${this.DND_CLASS}-current-dragged-item`,
       SELECTED_DRAG_ITEM: `${this.DND_CLASS}-selected-item`
     };
@@ -703,7 +703,7 @@ class CgDnd extends EventEmitter {
 
         if (usageInstruction) {
           e.preventDefault();
-          this.setLiveText(getItemsCurrentOrderDesc(this.dragItems));
+          this.say(getItemsCurrentOrderDesc(this.dragItems));
         }
         break;
       }
@@ -1675,7 +1675,7 @@ class CgDnd extends EventEmitter {
         verifiedValue = utils.getElement(settingValue) || utils.createHTML({
           html: '<span></span>',
           container: document.documentElement,
-          className: 'visually-hidden',
+          className: this.constructor.CSS_CLASS.VISUALLY_HIDDEN,
           attrs: {
             'aria-live': 'polite'
           }
@@ -1789,7 +1789,7 @@ class CgDnd extends EventEmitter {
       container: this.container,
       attrs: {
         'aria-hidden': true,
-        class: this.constructor.CSS_CLASS.HIDDEN_DESC_CONTAINER,
+        class: this.constructor.CSS_CLASS.VISUALLY_HIDDEN,
         id: this.constructor.CSS_ID.HIDDEN_DESC_CONTAINER
       }
     });
@@ -1983,10 +1983,14 @@ class CgDnd extends EventEmitter {
     this.areRemainingDragitemsHiddenFromTabletsFocus = false;
   }
 
-  setLiveText(message) {
+  say(message, mode = 'polite') {
     const { liveTextElement } = this.settings;
 
     if (liveTextElement) {
+      if (liveTextElement.getAttribute('aria-live') !== mode) {
+        liveTextElement.setAttribute('aria-live', mode);
+      }
+
       liveTextElement.innerHTML = '';
       liveTextElement.innerHTML = message;
     }
