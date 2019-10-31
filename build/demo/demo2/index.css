@@ -1,0 +1,65 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    margin: auto;
+}
+
+.dnd-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.drop-areas {
+    /*position: relative;*/
+}
+
+img {
+    width: 100%;
+}
+
+.drag-items {
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+    display: flex;
+    justify-content: space-around;
+}
+
+.drag-item {
+    display: flex;
+    align-items: center;
+}
+
+.drag-item, .drop-container {
+    margin: 20px 0;
+}
+
+.drag-item, .drop-area {
+    width: 12%;
+    height: 5.3%;
+}
+
+.drop-area {
+    position: absolute;
+    right: 3%;
+    /*border-bottom: 1px solid #000;
+    background: rgba(6, 251, 251, 0.15);*/
+    z-index: 2;
+}
+
+#area-1 {
+    bottom: 53.5%;
+}
+
+#area-2 {
+    bottom: 47.5%;
+}
+
+#area-3 {
+    bottom: 41.5%;
+}

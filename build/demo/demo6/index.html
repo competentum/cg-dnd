@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo 1</title>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="../index.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dnd-container">
+            <div class="drag-items">
+                <div id="item-1" class="drag-item">
+                    <img src="../asset/Brachiosaurus.jpg" alt="">
+                    <div class="img-label">Brachiosaurus</div>
+                </div>
+                <div id="item-2" class="drag-item">
+                    <img src="../asset/allosaurus.jpg" alt="">
+                    <div class="img-label">Allosaurus</div>
+                </div>
+                <div id="item-3" class="drag-item">
+                    <img src="../asset/Spinosaurus.png" alt="">
+                    <div class="img-label">Spinosaurus</div>
+                </div>
+                <div id="item-4" class="drag-item">
+                    <img src="../asset/diplodocus.jpg" alt="">
+                    <div class="img-label">Diplodocus</div>
+                </div>
+                <div id="item-5" class="drag-item">
+                    <img src="../asset/stegosaurus.jpg" alt="">
+                    <div class="img-label">Stegosaurus</div>
+                </div>
+                <div id="item-6" class="drag-item">
+                    <img src="../asset/Triceratops.jpg" alt="">
+                    <div class="img-label">Triceratops</div>
+                </div>
+                <div id="item-7" class="drag-item">
+                    <img src="../asset/tyranosaurus.jpg" alt="">
+                    <div class="img-label">Tyranosaurus</div>
+                </div>
+            </div>
+            <div class="drop-areas">
+                <div class="drop-container">
+                    <div class="target-label">Herbivorous Dinosaurs</div>
+                    <div id="area-1" class="drop-area"></div>
+                </div>
+
+                <div class="drop-container">
+                    <div class="target-label">Predator Dinosaurs</div>
+                    <div id="area-2" class="drop-area"></div>
+                </div>
+            </div>
+        </div>
+        <div class="buttons-container">
+            <div class="buttons-container">
+                <button class="check-btn standard-btn">check</button>
+                <button class="reset-btn standard-btn">reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="../../cg-dnd.js"></script>
+    <script type="text/javascript" src="../commonCheck.js"></script>
+    <script type="text/javascript" src="./index.js"></script>
+</body>
+</html>

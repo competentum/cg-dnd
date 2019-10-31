@@ -1,0 +1,38 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    margin: auto;
+}
+
+.dnd-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.drop-areas {
+    max-width: 60%;
+}
+
+.drag-item {
+    display: flex;
+    align-items: center;
+}
+
+.drag-item, .drop-container {
+    margin: 20px 0;
+}
+
+.drag-item, .drop-area {
+    height: 25px;
+    width: 180px;
+}
+
+.drop-area {
+    display: inline-block;
+    border-bottom: 1px solid #000;
+    background: rgba(6, 251, 251, 0.15);
+}
