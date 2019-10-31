@@ -1,5 +1,12 @@
-.drag-item {
+.container {
+    max-width: 800px;
+}
 
+.buttons-container {
+    margin-top: 40px;
+}
+
+.drag-item {
     display: flex;
     flex-direction: column;
     align-items: center;

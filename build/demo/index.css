@@ -8,7 +8,7 @@
 
 .buttons-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .buttons-container button {
