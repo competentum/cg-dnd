@@ -131,9 +131,9 @@ class CgDnd extends EventEmitter {
                 [DROP_AREA_STATUSES.empty]: 'Is empty.',
                 [DROP_AREA_STATUSES.filled]: (area) => `Area is filled by the item - ${area.innerDragItems[0].ariaLabel}`,
                 [DROP_AREA_STATUSES.multipleFilled]: (area) => {
-                  const innerItems = area.innerDragItems.reduce((item) => `${item.ariaLabel};`, '');
+                  const innerItemsString = area.innerDragItems.reduce((result, item) => `${result} ${item.ariaLabel};`, '');
 
-                  return `Area contains the ${area.innerDragItems.length} items: ${innerItems}`;
+                  return `Area contains the ${area.innerDragItems.length} items: ${innerItemsString}`;
                 }
               },
               usage: {
