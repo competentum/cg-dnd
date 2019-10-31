@@ -47,13 +47,12 @@ img {
 .drop-area {
     position: absolute;
     right: 3%;
-    /*border-bottom: 1px solid #000;
-    background: rgba(6, 251, 251, 0.15);*/
+    border: 1px solid #000;
     z-index: 2;
 }
 
 #area-1 {
-    bottom: 53.5%;
+    bottom: 54%;
 }
 
 #area-2 {
@@ -61,5 +60,5 @@ img {
 }
 
 #area-3 {
-    bottom: 41.5%;
+    bottom: 41%;
 }

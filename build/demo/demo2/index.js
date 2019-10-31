@@ -11,17 +11,17 @@
             {
                 node: '#item-1',
                 data: 'blue',
-                ariaLabel: 'Pyotr Ilyich Tchaikovsky'
+                ariaLabel: 'mu equals 2, sigma squared equals 1'
             },
             {
                 node: '#item-2',
                 data: 'green',
-                ariaLabel: 'Wolfgang Amadeus Mozart'
+                ariaLabel: 'mu equals 0, sigma squared equals 0.2'
             },
             {
                 node: '#item-3',
                 data: 'yellow',
-                ariaLabel: 'Ludwig van Beethoven'
+                ariaLabel: 'mu equals minus 2, sigma squared equals 0.5'
             }
         ],
         dropAreas: [
@@ -47,13 +47,17 @@
 
                 if (params.dragItem.correct) {
                     if (params.remainingDragItems[0]) {
+                        dnd.say('Correct!');
+
                         setTimeout(function () {
                             params.remainingDragItems[0].focus();
                         }, VISUALLY_DELAY);
                     } else {
-                     //   setLiveText(ALL_CORRECT_MESSAGE);
+                        dnd.say('Congratulations! You passed the activity.');
                     }
                 } else {
+                    dnd.say('Incorrect!');
+
                     setTimeout(function () {
                         params.dragItem.reset();
                         params.dragItem.focus();
