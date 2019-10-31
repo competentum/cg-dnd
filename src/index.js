@@ -513,7 +513,7 @@ class CgDnd extends EventEmitter {
       case 0:
         return empty;
       case 1:
-        return filled;
+        return dropArea.maxItemsInDropArea === 1 ? filled : multipleFilled;
       default:
         return multipleFilled;
     }
