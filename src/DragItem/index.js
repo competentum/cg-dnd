@@ -359,8 +359,8 @@ class DragItem extends DefaultDndElement {
 
     this.correct = this.ariaHidden = false;
 
-    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
-    this.currentAriaState = this.initialAriaElementDesc;
+    this.resetKeyboardDesc();
+    this.resetAriaStateDesc();
   }
 
   /**

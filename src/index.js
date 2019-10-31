@@ -17,6 +17,16 @@ const DROP_AREA_STATUSES = {
   multipleFilled: 'multipleFilled'
 };
 
+const DROP_AREA_REPLACE_STATUSES = {
+  active: 'activeReplace',
+  passive: 'passiveReplace'
+};
+
+const INITIAL_DESC_TYPES = {
+  usage: 'initialAriaKeyboardDesc',
+  state: 'initialAriaElementDesc'
+};
+
 /**
  * DnD's customizing settings
  * @typedef {Object} DndSettings
@@ -127,7 +137,7 @@ class CgDnd extends EventEmitter {
                 }
               },
               usage: {
-                withReplace: {
+                [DROP_AREA_REPLACE_STATUSES.active]: {
                   static: {
                     [DROP_AREA_STATUSES.empty]: 'Choose item first. Use arrows keys to navigate between areas.',
                     [DROP_AREA_STATUSES.filled]: 'Press space to select the element inside the area for its replacing. Use arrows keys to'
@@ -145,7 +155,7 @@ class CgDnd extends EventEmitter {
                     sameArea: 'Press space to remain the item at the current area.'
                   }
                 },
-                withoutReplace: {
+                [DROP_AREA_REPLACE_STATUSES.passive]: {
                   static: 'Choose item first. Use arrows keys to navigate between areas.',
                   dragging: 'Press space to place the grabbed item to this area. Use arrows keys to navigate between areas.'
                 }
@@ -157,9 +167,6 @@ class CgDnd extends EventEmitter {
         commonDragItemsSettings: {
           handler: '',
           selectedItemClassName: this.CSS_CLASS.SELECTED_DRAG_ITEM,
-          initialAriaKeyboardDesc: 'Use arrow keys or swipes to choose element,'
-                                      + ' then press space button or make double touch to select it.',
-          initialAriaElementDesc: '',
           tooltipParams: {},
           animationParams: {
             animatedProperty: 'transform',
@@ -171,9 +178,6 @@ class CgDnd extends EventEmitter {
         commonDropAreasSettings: {
           maxItemsInDropArea: 1,
           snap: true,
-          initialAriaKeyboardDesc: 'Use arrow keys or swipes to choose element,'
-                                      + ' then press space button or make double touch to put drag item inside.',
-          initialAriaElementDesc: '',
           tooltipParams: {},
           snapAlignParams: {
             withShift: true,
@@ -456,49 +460,53 @@ class CgDnd extends EventEmitter {
     this.addListener(this.constructor.EVENTS.DRAG_START, (e, item) => {
       if (this.dropAreas.length) {
         this.dropAreas.forEach((area) => {
-          area.changeCurrentKeyboardDesc(this._getDropAreaDescription(area, item));
+          area.changeCurrentKeyboardDesc(this._getDropAreaDraggingDescription(area, item));
         });
       }
     });
 
     this.addListener(this.constructor.EVENTS.DRAG_STOP, (e, params) => {
+      const { dragItem, dropArea, previousDropArea, isReset, isSameDropArea } = params;
       const { a11yTexts: { descriptions: { dragItem: itemDescriptions, dropArea: areaDescriptions } } } = this.settings;
 
 // TODO: add live announce for reset and same drop area
-      if (params.isReset) {
-        params.dragItem.changeCurrentKeyboardDesc(itemDescriptions.usage.initial);
-        params.dragItem.changeCurrentAriaState(itemDescriptions.state.initial);
-      } else if (params.isSameDropArea) {
+      if (isReset) {
+        dragItem.changeCurrentKeyboardDesc(itemDescriptions.usage.initial);
+        dragItem.changeCurrentAriaState(itemDescriptions.state.initial);
+      } else if (isSameDropArea) {
 // TODO: add announce
       } else {
-        params.dragItem.changeCurrentKeyboardDesc(itemDescriptions.usage.insideArea);
-        params.dragItem.changeCurrentAriaState(itemDescriptions.state.insideArea);
+        dragItem.changeCurrentKeyboardDesc(itemDescriptions.usage.insideArea);
+        dragItem.changeCurrentAriaState(itemDescriptions.state.insideArea);
       }
 
       if (this.dropAreas.length) {
         this.dropAreas.forEach((area) => {
-          area.changeCurrentKeyboardDesc(areaDescriptions.state[this._getDropAreaStatus(area)]);
+          area.changeCurrentKeyboardDesc(areaDescriptions.usage[this._getAreaReplaceStatus(area)].static[this._getAreaFillStatus(area)]);
         });
+
+        dropArea && dropArea.changeCurrentAriaState(areaDescriptions.state[this._getAreaFillStatus(dropArea)]);
+        previousDropArea && previousDropArea.changeCurrentAriaState(areaDescriptions.state[this._getAreaFillStatus(previousDropArea)]);
       }
     });
   }
 
-  _getDropAreaDescription(dropArea, draggedItem) {
+  _getDropAreaDraggingDescription(dropArea, draggedItem) {
     const { a11yTexts: { descriptions: { dropArea: { usage: usageDesc } } } } = this.settings;
     const isPossibleToReplace = this.settings.possibleToReplaceDroppedItem && dropArea.innerDragItems.length;
 
     if (isPossibleToReplace) {
-      const { withReplace: { dragging: { sameArea: sameAreaDesc } } } = usageDesc;
+      const { activeReplace: { dragging: { sameArea: sameAreaDesc } } } = usageDesc;
 
       return sameAreaDesc && dropArea.innerDragItems.includes(draggedItem)
           ? sameAreaDesc
-          : usageDesc.withReplace.dragging[this._getDropAreaStatus(dropArea)];
+          : usageDesc.activeReplace.dragging[this._getAreaFillStatus(dropArea)];
     }
 
-    return usageDesc.withoutReplace.dragging;
+    return usageDesc.passiveReplace.dragging;
   }
 
-  _getDropAreaStatus(dropArea) {
+  _getAreaFillStatus(dropArea) {
     const { empty, filled, multipleFilled } = DROP_AREA_STATUSES;
 
     switch (dropArea.innerDragItems.length) {
@@ -509,6 +517,12 @@ class CgDnd extends EventEmitter {
       default:
         return multipleFilled;
     }
+  }
+
+  _getAreaReplaceStatus(dropArea) {
+    const { active, passive } = DROP_AREA_REPLACE_STATUSES;
+
+    return this.settings.possibleToReplaceDroppedItem && dropArea.innerDragItems.length ? active : passive;
   }
 
   _onResize() {
@@ -1509,6 +1523,30 @@ class CgDnd extends EventEmitter {
     this.dragItems.forEach((item, index) => {
       this._initialDragItemsCoordinates[index] = merge.recursive(true, {}, item.coordinates.default);
     });
+
+    this._setInitialDescriptions();
+  }
+
+  _setInitialDescriptions() {
+    const { a11yTexts: { descriptions: { dragItem: itemDescriptions, dropArea: areaDescriptions } } } = this.settings;
+
+    this.dragItems.forEach((item) => {
+      item.setSetting(INITIAL_DESC_TYPES.usage, itemDescriptions.usage.initial);
+      item.setSetting(INITIAL_DESC_TYPES.state, itemDescriptions.state.initial);
+
+      item.resetKeyboardDesc();
+      item.resetAriaStateDesc();
+    });
+
+    if (this.dropAreas.length) {
+      this.dropAreas.forEach((area) => {
+        area.setSetting(INITIAL_DESC_TYPES.usage, areaDescriptions.usage.passiveReplace.static);
+        area.setSetting(INITIAL_DESC_TYPES.state, areaDescriptions.state.empty);
+
+        area.resetKeyboardDesc();
+        area.resetAriaStateDesc();
+      });
+    }
   }
 
   /**

@@ -433,7 +433,7 @@ class DefaultDndElement {
   addClass(className) {
     const rightClassName = className.replace(/^\./, '');
 
-    if (!cgUtils.hasClass(this.node, rightClassName)) {
+    if (rightClassName && !cgUtils.hasClass(this.node, rightClassName)) {
       cgUtils.addClass(this.node, rightClassName);
     }
   }
@@ -448,7 +448,7 @@ class DefaultDndElement {
 
   /**
    * @callback descCB
-   * @param {dropArea} dropArea
+   * @param {dropArea|dragItem} dropArea
    * @return {string} - new element's aria-description
    */
 
@@ -461,12 +461,27 @@ class DefaultDndElement {
     this.currentKeyboardDesc = typeof userDesc === 'function' ? userDesc(this) : userDesc;
   }
 
+  /**
+   * @callback descCB
+   * @param {DragItem} dragItem
+   * @param {DropArea} chosenDropArea
+   * @return {string} - new element's aria-description
+   */
+
+  /**
+   * Change current drop area aria-description
+   * @param {descCB|string} userDesc - user callback, that returns new description
+   */
+  changeCurrentAriaState(userDesc) {
+    this.currentAriaState = typeof userDesc === 'function' ? userDesc(this) : userDesc;
+  }
+
   resetKeyboardDesc() {
-    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
+    this.changeCurrentKeyboardDesc(this.initialAriaKeyboardDesc);
   }
 
   resetAriaStateDesc() {
-    this.currentAriaState = this.initialAriaElementDesc;
+    this.changeCurrentAriaState(this.initialAriaElementDesc);
   }
 
   _checkSetting(settingName, settingValue) {
@@ -510,10 +525,10 @@ class DefaultDndElement {
         break;
       case 'initialAriaKeyboardDesc':
       case 'initialAriaElementDesc':
-        if (typeof settingValue === 'string') {
+        if (typeof settingValue === 'string' || typeof settingValue === 'function') {
           verifiedValue = settingValue;
         } else {
-          utils.showSettingError(settingName, settingValue, 'Please set string');
+          utils.showSettingError(settingName, settingValue, 'Please set string or function, which returns a string');
         }
         break;
       default:
@@ -585,7 +600,8 @@ class DefaultDndElement {
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC }
     });
-    this.currentKeyboardDesc = this.initialAriaKeyboardDesc;
+
+    this.resetKeyboardDesc();
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.KEYBOARD_ACCESS_DESC, true);
 
     this.currentStateDescElement = utils.createHTML({
@@ -593,7 +609,8 @@ class DefaultDndElement {
       container: this.hiddenDescContainer,
       attrs: { id: this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC }
     });
-    this.currentAriaState = this.initialAriaElementDesc;
+
+    this.resetAriaStateDesc();
     this.addToExistingAttribute('ariaDescribedBy', this.constructor.ARIA_DESC_IDS.CURRENT_STATE_DESC, true);
   }
 
