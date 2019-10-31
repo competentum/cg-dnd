@@ -118,7 +118,7 @@ class CgDnd extends EventEmitter {
               state: {
                 initial: '',
                 insideArea: (item) => {
-                  return item.chosenDropArea ? `This item is located inside the area - ${item.chosenDropArea}.` : '';
+                  return item.chosenDropArea ? `This item is located inside the area - ${item.chosenDropArea.ariaLabel}.` : '';
                 }
               },
               usage: {
