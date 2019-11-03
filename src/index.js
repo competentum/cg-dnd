@@ -157,7 +157,16 @@ class CgDnd extends EventEmitter {
                 },
                 [DROP_AREA_REPLACE_STATUSES.passive]: {
                   static: 'Choose item first. Use arrows keys to navigate between areas.',
-                  dragging: 'Press space to place the grabbed item to this area. Use arrows keys to navigate between areas.'
+                  dragging: {
+                    [DROP_AREA_STATUSES.empty]: 'Press space to place the grabbed item to this area. Use arrows keys'
+                    + ' to navigate between areas.',
+                    [DROP_AREA_STATUSES.filled]: 'Use arrows keys to navigate between areas.',
+                    [DROP_AREA_STATUSES.multipleFilled]: (dropArea) => {
+                      return dropArea.innerDragItems.length < dropArea.maxItemsInDropArea
+                          ? 'Press space to place the grabbed item to this area. Use arrows keys to navigate between areas.'
+                          : 'Use arrows keys to navigate between areas.';
+                    },
+                  }
                 }
               }
             },
@@ -503,7 +512,7 @@ class CgDnd extends EventEmitter {
           : usageDesc.activeReplace.dragging[this._getAreaFillStatus(dropArea)];
     }
 
-    return usageDesc.passiveReplace.dragging;
+    return usageDesc.passiveReplace.dragging[this._getAreaFillStatus(dropArea)];
   }
 
   _getAreaFillStatus(dropArea) {
