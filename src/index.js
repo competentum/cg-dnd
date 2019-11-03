@@ -96,6 +96,7 @@ class CgDnd extends EventEmitter {
   static get DEFAULT_SETTINGS() {
     if (!this._DEFAULT_SETTINGS) {
       this._DEFAULT_SETTINGS = {
+        autoCheck: true,
         disabled: false,
         disabledClassName: '',
         bounds: '',
@@ -1084,7 +1085,12 @@ class CgDnd extends EventEmitter {
    * @private
    */
   _finishDrag(params = {}) {
+    const { dragItem, dropArea } = params;
     const isNothingToReplaceInDropAreas = this._isNothingToReplaceInDropAreas();
+
+    if (this.settings.autoCheck && dragItem && dropArea) {
+      dragItem.correct = dragItem.data === dropArea.data;
+    }
 
     this._allowTabletsFocusForRemainingDragItems();
     this.emit(this.constructor.EVENTS.DRAG_STOP, null, params);

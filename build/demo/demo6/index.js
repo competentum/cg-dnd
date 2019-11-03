@@ -84,8 +84,6 @@
         ],
         onDragStop: function (e, params) {
             if (params.dragItem && params.dropArea) {
-                params.dragItem.correct = params.dragItem.data === params.dropArea.data;
-
                 improveTargetHeight(params.dropArea);
             }
 

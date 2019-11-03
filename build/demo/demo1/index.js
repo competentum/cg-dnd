@@ -75,10 +75,6 @@
         ],
         onDragStop: function (e, params) {
             if (params.dropArea) {
-                if (params.dragItem.data === params.dropArea.data) {
-                    params.dragItem.correct = true;
-                }
-
                 if (params.remainingDragItems[0]) {
                     params.remainingDragItems[0].focus();
                 } else {

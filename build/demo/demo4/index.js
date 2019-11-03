@@ -67,10 +67,6 @@
             }
         ],
         onDragStop: function (e, params) {
-            if (params.dragItem && params.dropArea) {
-                params.dragItem.correct = params.dragItem.data === params.dropArea.data;
-            }
-
             if (params.remainingDragItems[0]) {
                 params.remainingDragItems[0].focus();
             } else {

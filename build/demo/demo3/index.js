@@ -56,10 +56,6 @@
             }
         ],
         onDragStop: function (e, params) {
-            if (params.dragItem && params.dropArea) {
-                params.dragItem.correct = params.dragItem.data === params.dropArea.data;
-            }
-
             if (params.replacedDragItem) {
                 /**
                  * Use setTimeout, that transition was set and focus will be set after animation end, otherwise NVDA reads aria-label twice

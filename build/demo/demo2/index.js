@@ -43,8 +43,6 @@
         ],
         onDragStop: function (e, params) {
             if (params.dragItem && params.dropArea) {
-                params.dragItem.correct = params.dragItem.data === params.dropArea.data;
-
                 if (params.dragItem.correct) {
                     if (params.remainingDragItems[0]) {
                         dnd.say('Correct!');
