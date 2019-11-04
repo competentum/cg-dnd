@@ -387,15 +387,35 @@ class DropArea extends DefaultDndElement {
 
     for (let i = fromIndex; i < this.innerDragItems.length; i++) {
       const droppedItem = this.innerDragItems[i];
+      const newPosition = this._getShiftedCoordinates(droppedItem, shiftY);
 
-      droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, shiftY), true, () => droppedItem.coordinates.droppedIn.update());
+      droppedItem.translateTo(newPosition, true, () => {
+        droppedItem.coordinates.droppedIn.update();
+
+        // Update other coordinates, when animation was ended
+        droppedItem.coordinates.current.update();
+      });
+
+      // We update information about left and top coordinates of new position via the calculated coordinates now for
+      // Other items' new position correct calculating.
+      droppedItem.coordinates.current.update(newPosition);
     }
 
     if (aligningKind === 'center' && fromIndex) {
       for (let i = 0; i < fromIndex; i++) {
         const droppedItem = this.innerDragItems[i];
+        const newPosition = this._getShiftedCoordinates(droppedItem, -shiftY);
 
-        droppedItem.translateTo(this._getShiftedCoordinates(droppedItem, -shiftY), true, () => droppedItem.coordinates.droppedIn.update());
+        droppedItem.translateTo(newPosition, true, () => {
+          droppedItem.coordinates.droppedIn.update();
+
+          // Update other coordinates, when animation was ended
+          droppedItem.coordinates.current.update();
+        });
+
+        // We update information about left and top coordinates of new position via the calculated coordinates now for
+        // Other items' new position correct calculating.
+        droppedItem.coordinates.current.update(newPosition);
       }
     }
 
